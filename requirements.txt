@@ -1,0 +1,17 @@
+pandas
+numpy
+scikit-learn
+xgboost
+nba_api
+pbpstats
+duckdb
+pyarrow
+plotly
+streamlit
+jupyter
+python-dotenv
+tqdm
+joblib
+pytest
+ruff
+black
