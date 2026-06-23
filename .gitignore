@@ -10,6 +10,9 @@ dist/
 .ipynb_checkpoints/
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/nba_api/
+data/raw/nba_api/*
+!data/raw/nba_api/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
 data/features/*

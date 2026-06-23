@@ -54,7 +54,8 @@ def test_load_settings_allows_environment_overrides(tmp_path: Path) -> None:
 
     assert settings.environment == "test"
     assert settings.data_dir == tmp_path / "data"
-    assert settings.nba_api_cache_dir == tmp_path / "data" / "raw" / "nba_api_cache"
+    assert settings.nba_api_cache_dir == tmp_path / "data" / "raw" / "nba_api"
+    assert settings.nba_start_season == "2015-16"
     assert settings.log_level == "DEBUG"
 
 

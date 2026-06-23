@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
-from moreymachine.utils.paths import DATA_DIR, PROJECT_ROOT
+from moreymachine.utils.paths import DATA_DIR, NBA_API_RAW_DIR, PROJECT_ROOT
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class Settings:
     project_root: Path
     data_dir: Path
     nba_api_cache_dir: Path
+    nba_start_season: str
+    nba_latest_season: str
     log_level: str
 
 
@@ -33,7 +36,9 @@ def load_settings(
     data_dir = _resolve_path(values.get("MOREYMACHINE_DATA_DIR"), default=DATA_DIR)
     nba_api_cache_dir = _resolve_path(
         values.get("MOREYMACHINE_NBA_API_CACHE_DIR"),
-        default=data_dir / "raw" / "nba_api_cache",
+        default=(
+            NBA_API_RAW_DIR if data_dir == DATA_DIR else data_dir / "raw" / "nba_api"
+        ),
     )
 
     return Settings(
@@ -41,6 +46,11 @@ def load_settings(
         project_root=PROJECT_ROOT,
         data_dir=data_dir,
         nba_api_cache_dir=nba_api_cache_dir,
+        nba_start_season=values.get("MOREYMACHINE_NBA_START_SEASON", "2015-16"),
+        nba_latest_season=values.get(
+            "MOREYMACHINE_NBA_LATEST_SEASON",
+            _default_latest_nba_season(),
+        ),
         log_level=values.get("MOREYMACHINE_LOG_LEVEL", "INFO").upper(),
     )
 
@@ -68,3 +78,9 @@ def _resolve_path(value: str | None, *, default: Path) -> Path:
     if path.is_absolute():
         return path
     return PROJECT_ROOT / path
+
+
+def _default_latest_nba_season(today: date | None = None) -> str:
+    current_date = date.today() if today is None else today
+    start_year = current_date.year if current_date.month >= 7 else current_date.year - 1
+    return f"{start_year}-{str(start_year + 1)[-2:]}"

@@ -27,6 +27,7 @@ Optional local settings can be placed in `.env`:
 MOREYMACHINE_ENV=development
 MOREYMACHINE_LOG_LEVEL=INFO
 MOREYMACHINE_DATA_DIR=data
+MOREYMACHINE_NBA_LATEST_SEASON=2025-26
 ```
 
 ## Project Checks
@@ -42,6 +43,15 @@ Run tests:
 ```bash
 python -m pytest
 ```
+
+Fetch NBA team and player season stats into `data/processed`:
+
+```bash
+python scripts/fetch_nba_data.py --latest-season 2025-26
+```
+
+Raw NBA API responses are cached under `data/raw/nba_api`, so repeated runs reuse
+the cache instead of calling the same endpoints again.
 
 Format and lint:
 

@@ -14,6 +14,7 @@ REQUIRED_DIRECTORIES = (
     REPO_ROOT / "src" / "moreymachine" / "utils",
     REPO_ROOT / "data",
     REPO_ROOT / "data" / "raw",
+    REPO_ROOT / "data" / "raw" / "nba_api",
     REPO_ROOT / "data" / "processed",
     REPO_ROOT / "data" / "features",
     REPO_ROOT / "data" / "models",
@@ -28,6 +29,8 @@ REQUIRED_MODULES = (
     "moreymachine.utils.paths",
     "moreymachine.utils.logging",
     "moreymachine.utils.config",
+    "moreymachine.data.cache",
+    "moreymachine.data.fetch_nba",
 )
 
 
