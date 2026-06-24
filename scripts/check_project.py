@@ -34,6 +34,7 @@ REQUIRED_MODULES = (
     "moreymachine.data.fetch_nba",
     "moreymachine.data.playoff_tiers",
     "moreymachine.features.quality_tiers",
+    "moreymachine.features.team_fingerprints",
 )
 
 

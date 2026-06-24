@@ -96,6 +96,17 @@ point differential per game, win percentage, or wins.
 5 = top-5 net rating / elite
 ```
 
+Build team-season fingerprint features:
+
+```bash
+python scripts/build_team_fingerprints.py
+```
+
+Fingerprints are saved to `data/features/team_fingerprints.parquet` and include
+ratings, pace, shooting, turnover, rebounding, free-throw, and three-point
+profile columns, plus estimated shooting pressure, possession control, two-way
+balance, playoff labels, and quality labels.
+
 Format and lint:
 
 ```bash

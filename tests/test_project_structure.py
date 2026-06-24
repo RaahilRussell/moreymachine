@@ -33,6 +33,7 @@ def test_package_imports_work() -> None:
         "moreymachine.utils.config",
         "moreymachine.data.playoff_tiers",
         "moreymachine.features.quality_tiers",
+        "moreymachine.features.team_fingerprints",
     ):
         assert importlib.import_module(module_name)
 
