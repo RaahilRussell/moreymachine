@@ -142,6 +142,18 @@ The archetype builder clusters team fingerprints with median imputation,
 `data/features/team_roster_archetypes.parquet` and a cluster summary with
 suggested archetype names to `data/reports/roster_archetype_summary.csv`.
 
+Build player role archetype clusters:
+
+```bash
+python scripts/build_player_archetypes.py --min-minutes 500 --k 8 --pca-components 3
+```
+
+The player archetype builder filters to rotation players by minutes, derives
+role features from player season stats where possible, encodes position buckets
+when available, then clusters with median imputation, `StandardScaler`, PCA, and
+KMeans. It writes assignments to `data/features/player_archetypes.parquet` and a
+summary to `data/reports/player_archetype_summary.csv`.
+
 Format and lint:
 
 ```bash

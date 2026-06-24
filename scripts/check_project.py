@@ -33,6 +33,7 @@ REQUIRED_MODULES = (
     "moreymachine.data.cache",
     "moreymachine.data.fetch_nba",
     "moreymachine.data.playoff_tiers",
+    "moreymachine.features.player_archetypes",
     "moreymachine.features.quality_tiers",
     "moreymachine.features.team_fingerprints",
     "moreymachine.features.roster_archetypes",

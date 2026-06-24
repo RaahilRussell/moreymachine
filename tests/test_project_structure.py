@@ -31,6 +31,7 @@ def test_package_imports_work() -> None:
         "moreymachine.utils.paths",
         "moreymachine.utils.logging",
         "moreymachine.utils.config",
+        "moreymachine.features.player_archetypes",
         "moreymachine.data.playoff_tiers",
         "moreymachine.features.quality_tiers",
         "moreymachine.features.team_fingerprints",
