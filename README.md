@@ -131,6 +131,17 @@ predicted tier to `data/reports/outcome_tier_predictions.parquet`, and writes
 confusion matrices, mean absolute tier error, and top feature importances to
 `data/reports/outcome_tier_metrics.json`.
 
+Build roster construction archetype clusters:
+
+```bash
+python scripts/build_roster_archetypes.py --k 5 --pca-components 3
+```
+
+The archetype builder clusters team fingerprints with median imputation,
+`StandardScaler`, PCA, and KMeans. It writes assignments to
+`data/features/team_roster_archetypes.parquet` and a cluster summary with
+suggested archetype names to `data/reports/roster_archetype_summary.csv`.
+
 Format and lint:
 
 ```bash
