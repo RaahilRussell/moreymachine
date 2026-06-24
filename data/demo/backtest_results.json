@@ -1,0 +1,59 @@
+{
+  "average_value_of_top_targets_vs_baselines": {
+    "previous_impact": {
+      "average_value_top_targets": 78.0,
+      "delta_vs_moreymachine": -4.0
+    },
+    "previous_points": {
+      "average_value_top_targets": 28.0,
+      "delta_vs_moreymachine": 46.0
+    },
+    "random": {
+      "average_value_top_targets": 53.0,
+      "delta_vs_moreymachine": 21.0
+    },
+    "salary": {
+      "average_value_top_targets": 49.0,
+      "delta_vs_moreymachine": 25.0
+    }
+  },
+  "offseasons": [
+    "after_2023-24",
+    "after_2024-25"
+  ],
+  "overall": {
+    "moreymachine_fit": {
+      "average_value_top_targets": 74.0,
+      "hit_rate_top_targets": 1.0,
+      "spearman_correlation": 1.0,
+      "top_quartile_bottom_quartile_gap": 50.0
+    },
+    "previous_impact": {
+      "average_value_top_targets": 78.0,
+      "hit_rate_top_targets": 1.0,
+      "spearman_correlation": 0.8,
+      "top_quartile_bottom_quartile_gap": 42.0
+    },
+    "previous_points": {
+      "average_value_top_targets": 28.0,
+      "hit_rate_top_targets": 0.0,
+      "spearman_correlation": -0.5,
+      "top_quartile_bottom_quartile_gap": -50.0
+    },
+    "random": {
+      "average_value_top_targets": 53.0,
+      "hit_rate_top_targets": 0.5,
+      "spearman_correlation": 0.1,
+      "top_quartile_bottom_quartile_gap": 5.0
+    },
+    "salary": {
+      "average_value_top_targets": 49.0,
+      "hit_rate_top_targets": 0.0,
+      "spearman_correlation": -0.2,
+      "top_quartile_bottom_quartile_gap": -20.0
+    }
+  },
+  "row_count": 3,
+  "target_team": "PHI",
+  "top_k": 10
+}

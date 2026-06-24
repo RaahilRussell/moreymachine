@@ -19,6 +19,9 @@ data/features/*
 !data/features/.gitkeep
 data/models/*
 !data/models/.gitkeep
+!data/demo/
+!data/demo/**
 *.parquet
+!data/demo/*.parquet
 *.joblib
 *.pkl

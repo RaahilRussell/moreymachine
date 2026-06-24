@@ -205,9 +205,12 @@ python scripts/run_app.py
 ```
 
 The dashboard reads existing Parquet and JSON outputs only. It does not fetch
-live data. For Streamlit Community Cloud, use
-`src/moreymachine/app/streamlit_app.py` as the app entry point after the package
-dependencies are installed.
+live data. If full local artifacts are unavailable, it defaults to the checked-in
+demo files under `data/demo/`.
+
+For online deployment, use `src/moreymachine/app/streamlit_app.py` as the app
+entry point on Streamlit Community Cloud or Hugging Face Spaces. See
+`DEPLOYMENT.md` for step-by-step instructions.
 
 Format and lint:
 
