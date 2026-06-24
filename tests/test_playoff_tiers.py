@@ -56,7 +56,7 @@ def test_validate_all_teams_have_tiers_reports_missing_team() -> None:
         }
     )
 
-    with pytest.raises(ValueError, match="Missing playoff tiers: 2015-16/BOS"):
+    with pytest.raises(ValueError, match="Missing playoff tiers.*2015-16/BOS"):
         validate_all_teams_have_tiers(team_seasons, tiers)
 
 

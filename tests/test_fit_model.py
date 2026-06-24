@@ -36,7 +36,9 @@ def test_rank_candidates_outputs_required_columns_and_order() -> None:
         contracts=_toy_contracts(),
     )
 
-    assert rankings.columns.tolist() == list(REQUIRED_OUTPUT_COLUMNS)
+    required = list(REQUIRED_OUTPUT_COLUMNS)
+    assert rankings.columns.tolist()[: len(required)] == required
+    assert {"data_sources", "missing_data_flags"}.issubset(rankings.columns)
     assert rankings.loc[0, "player_name"] == "Portable Spacer"
     assert rankings.loc[0, "fit_score"] > rankings.loc[1, "fit_score"]
     assert rankings.loc[0, "need_match"] > 70

@@ -133,9 +133,7 @@ def _candidate_pool(
     return pool.reset_index(drop=True)
 
 
-def _load_salaries(
-    *, refresh: bool, timeout: int
-) -> tuple[dict[str, float], str]:
+def _load_salaries(*, refresh: bool, timeout: int) -> tuple[dict[str, float], str]:
     """Return {normalized_name: salary_dollars} and a human-readable source."""
     html = _read_contracts_html(refresh=refresh, timeout=timeout)
     if html is None:

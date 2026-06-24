@@ -85,9 +85,7 @@ def require_real_file(
 FIX_HINTS: Mapping[str, str] = {
     "team_seasons": "run `python scripts/fetch_nba_data.py`",
     "player_seasons": "run `python scripts/fetch_nba_data.py`",
-    "playoff_tiers": (
-        "add real results to data/manual/playoff_tiers.csv (tiers 0-5)"
-    ),
+    "playoff_tiers": ("add real results to data/manual/playoff_tiers.csv (tiers 0-5)"),
     "team_seasons_with_tiers": "run `python scripts/build_playoff_tiers.py`",
     "team_fingerprints": "run `python scripts/build_team_fingerprints.py`",
     "player_archetypes": "run `python scripts/build_player_archetypes.py`",

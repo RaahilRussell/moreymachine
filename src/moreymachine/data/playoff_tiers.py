@@ -113,8 +113,7 @@ def validate_all_teams_have_tiers(
     missing = modeling_keys - tier_keys
     if missing:
         raise ValueError(
-            "Missing playoff tiers for modeling seasons: "
-            f"{_format_key_set(missing)}"
+            "Missing playoff tiers for modeling seasons: " f"{_format_key_set(missing)}"
         )
 
 

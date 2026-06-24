@@ -6,6 +6,18 @@ contender roster construction and player fit.
 This project is not affiliated with Daryl Morey, the Philadelphia 76ers, or the
 NBA.
 
+## Real data only
+
+MoreyMachine runs in `REAL_DATA_MODE` by default. Every ranking is built from
+real sources with displayed provenance (`source`, `pulled_at`, season, row
+count) and an explanation. The app never silently falls back to demo data: a
+missing real file produces a loud "missing data" message with the exact command
+to build it. See `data/reports/real_data_audit.md` for the audit that motivated
+this, and the in-app **Data Sources** page for live provenance.
+
+Real sources: NBA.com advanced stats via `nba_api`; hand-verified playoff
+results (2015-16 to 2024-25); and real Basketball-Reference contract salaries.
+
 ## Setup
 
 Use Python 3.11 or newer.
@@ -24,6 +36,7 @@ while keeping reusable code under `src/moreymachine`.
 Optional local settings can be placed in `.env`:
 
 ```bash
+REAL_DATA_MODE=true
 MOREYMACHINE_ENV=development
 MOREYMACHINE_LOG_LEVEL=INFO
 MOREYMACHINE_DATA_DIR=data
@@ -53,14 +66,16 @@ python scripts/fetch_nba_data.py --latest-season 2025-26
 Raw NBA API responses are cached under `data/raw/nba_api`, so repeated runs reuse
 the cache instead of calling the same endpoints again.
 
-Add manual playoff outcomes in `data/manual/playoff_tiers_template.csv` with
-one row per team-season:
+Real playoff outcomes ship in `data/manual/playoff_tiers.csv` (one row per
+team-season, 2015-16 to 2024-25), generated from the auditable brackets in
+`moreymachine/data/playoff_results.py`:
 
 ```text
-season,team_abbr,playoff_tier,playoff_result
+season,team_abbr,playoff_tier,playoff_result,source_note
 ```
 
-Playoff tiers:
+The current, not-yet-resolved season is intentionally left unlabeled rather than
+fabricated. Playoff tiers:
 
 ```text
 0 = missed playoffs
@@ -170,10 +185,21 @@ when available, then clusters with median imputation, `StandardScaler`, PCA, and
 KMeans. It writes assignments to `data/features/player_archetypes.parquet` and a
 summary to `data/reports/player_archetype_summary.csv`.
 
+Build the real candidate watchlist (players + salaries):
+
+```bash
+python scripts/fetch_candidates.py --team PHI
+```
+
+This pulls the candidate pool from real `nba_api` players and matches real
+current salaries from Basketball-Reference's contracts page into
+`data/manual/candidates.csv`. Salaries that cannot be matched online are left
+blank and flagged `missing` (contracts are never invented) for manual entry.
+
 Rank acquisition candidates:
 
 ```bash
-python scripts/rank_candidates.py --top-n 50
+python scripts/rank_candidates.py --team PHI --top-n 50
 ```
 
 The candidate fit model ranks free agent or trade targets from player stats,
@@ -204,9 +230,11 @@ Run the Streamlit dashboard:
 python scripts/run_app.py
 ```
 
-The dashboard reads existing Parquet and JSON outputs only. It does not fetch
-live data. If full local artifacts are unavailable, it defaults to the checked-in
-demo files under `data/demo/`.
+The dashboard reads existing real Parquet/CSV outputs only and never fetches
+live data. In `REAL_DATA_MODE` it never reads `data/demo/`; missing artifacts
+render a loud "missing data" message with the command to build them. The
+**Data Sources** page shows every table's source, rows, seasons, last update,
+and real/manual status.
 
 For online deployment, use `src/moreymachine/app/streamlit_app.py` as the app
 entry point on Streamlit Community Cloud or Hugging Face Spaces. See
