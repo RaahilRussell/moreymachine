@@ -40,6 +40,7 @@ REQUIRED_MODULES = (
     "moreymachine.features.roster_archetypes",
     "moreymachine.features.roster_gaps",
     "moreymachine.models.contender_model",
+    "moreymachine.models.fit_model",
     "moreymachine.models.outcome_tier_model",
 )
 

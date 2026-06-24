@@ -170,6 +170,19 @@ when available, then clusters with median imputation, `StandardScaler`, PCA, and
 KMeans. It writes assignments to `data/features/player_archetypes.parquet` and a
 summary to `data/reports/player_archetype_summary.csv`.
 
+Rank acquisition candidates:
+
+```bash
+python scripts/rank_candidates.py --top-n 50
+```
+
+The candidate fit model ranks free agent or trade targets from player stats,
+target roster gaps, player archetypes, optional contract estimates, optional
+precomputed playoff portability scores, and the contender model artifact when
+available. It writes `data/reports/candidate_fit_rankings.parquet` with need
+match, contender similarity gain, playoff portability, contract value, risk,
+final GM Fit Score, recommendation labels, fit explanations, and concerns.
+
 Format and lint:
 
 ```bash
