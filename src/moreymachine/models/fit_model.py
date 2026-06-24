@@ -41,6 +41,19 @@ REQUIRED_OUTPUT_COLUMNS = (
     "concerns",
 )
 
+# Full output schema = the required scoring columns plus provenance and
+# missing-data transparency columns the app surfaces per candidate.
+OUTPUT_COLUMNS = (
+    *REQUIRED_OUTPUT_COLUMNS,
+    "season",
+    "player_id",
+    "candidate_type",
+    "salary_millions",
+    "salary_source",
+    "data_sources",
+    "missing_data_flags",
+)
+
 DEFAULT_NEED_WEIGHTS = {
     "shooting_pressure": 0.18,
     "role_player_shooting": 0.18,
@@ -69,6 +82,7 @@ def build_candidate_rankings(
     roster_gaps_path: str | Path = ROSTER_GAPS_PATH,
     player_archetypes_path: str | Path | None = PLAYER_ARCHETYPES_PATH,
     contracts_path: str | Path | None = None,
+    candidates_path: str | Path | None = None,
     contender_model_path: str | Path | None = CONTENDER_MODEL_PATH,
     output_path: str | Path = CANDIDATE_FIT_RANKINGS_PATH,
     season: str | None = None,
@@ -79,6 +93,7 @@ def build_candidate_rankings(
     roster_gaps = _read_table(roster_gaps_path)
     player_archetypes = _read_optional_table(player_archetypes_path)
     contracts = _read_optional_table(contracts_path)
+    candidates = _read_optional_table(candidates_path)
     contender_context = _read_optional_contender_model(contender_model_path)
 
     rankings = rank_candidates(
@@ -86,6 +101,7 @@ def build_candidate_rankings(
         roster_gaps=roster_gaps,
         player_archetypes=player_archetypes,
         contracts=contracts,
+        candidates=candidates,
         contender_model_context=contender_context,
         season=season,
     )
@@ -112,13 +128,16 @@ def rank_candidates(
     roster_gaps: pd.DataFrame,
     player_archetypes: pd.DataFrame | None = None,
     contracts: pd.DataFrame | None = None,
+    candidates: pd.DataFrame | None = None,
     contender_model_context: Mapping[str, Any] | None = None,
     season: str | None = None,
 ) -> pd.DataFrame:
     """Rank candidate players by need, contender fit, portability, value, and risk."""
-    candidates = _candidate_pool(player_stats, season=season)
-    candidates = _merge_player_context(candidates, player_archetypes)
-    candidates = _merge_player_context(candidates, contracts)
+    pool = _candidate_pool(player_stats, season=season)
+    pool = _restrict_to_watchlist(pool, candidates)
+    pool = _merge_player_context(pool, player_archetypes)
+    pool = _merge_player_context(pool, contracts)
+    candidates = pool
     need_weights = need_category_weights(roster_gaps)
 
     rows = []
@@ -190,16 +209,25 @@ def rank_candidates(
                 "recommendation": recommendation,
                 "why_fit": why_fit,
                 "concerns": concerns,
+                "season": _text(candidate, ("season",), default=""),
+                "player_id": _text(candidate, ("player_id",), default=""),
+                "candidate_type": _text(
+                    candidate, ("candidate_type",), default="manual_watchlist"
+                ),
+                "salary_millions": _salary_millions(candidate),
+                "salary_source": _text(candidate, ("salary_source",), default=""),
+                "data_sources": _candidate_data_sources(candidate),
+                "missing_data_flags": _candidate_missing_data_flags(candidate),
             }
         )
 
     if not rows:
-        return pd.DataFrame(columns=REQUIRED_OUTPUT_COLUMNS)
+        return pd.DataFrame(columns=OUTPUT_COLUMNS)
     return (
         pd.DataFrame(rows)
         .sort_values(["fit_score", "need_match", "portability"], ascending=False)
         .reset_index(drop=True)
-        .loc[:, REQUIRED_OUTPUT_COLUMNS]
+        .loc[:, OUTPUT_COLUMNS]
     )
 
 
@@ -327,7 +355,7 @@ def candidate_risk_score(candidate: Mapping[str, Any]) -> float:
     three_point_rate = _three_point_attempt_rate(candidate)
     three_point_percentage = _ratio(
         candidate,
-        ("three_point_percentage", "three_point_pct", "fg3_pct"),
+        ("three_point_percentage", "three_point_pct", "three_p_pct", "fg3_pct"),
     )
     defensive_metric = _number(
         candidate,
@@ -457,6 +485,33 @@ def _latest_player_rows(frame: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def _restrict_to_watchlist(
+    pool: pd.DataFrame,
+    candidates: pd.DataFrame | None,
+) -> pd.DataFrame:
+    """Restrict the candidate pool to a real watchlist and attach its columns.
+
+    When a candidates table is supplied (e.g. from fetch_candidates.py or a
+    manual import), only those players are ranked, and their candidate_type /
+    salary / source columns are joined on. Without it, the whole season pool is
+    ranked. Either way, only real player rows from nba_api are scored.
+    """
+    if candidates is None or candidates.empty or pool.empty:
+        return pool
+
+    keys = _merge_keys(pool, candidates)
+    if not keys:
+        return pool
+
+    extra_columns = [
+        column
+        for column in candidates.columns
+        if column in keys or column not in pool.columns
+    ]
+    watchlist = candidates.loc[:, extra_columns].drop_duplicates(subset=keys)
+    return pool.merge(watchlist, on=keys, how="inner")
+
+
 def _merge_player_context(
     players: pd.DataFrame,
     context: pd.DataFrame | None,
@@ -515,7 +570,12 @@ def _shooting_pressure_score(candidate: Mapping[str, Any]) -> float:
             _scale(
                 _ratio(
                     candidate,
-                    ("three_point_percentage", "three_point_pct", "fg3_pct"),
+                    (
+                        "three_point_percentage",
+                        "three_point_pct",
+                        "three_p_pct",
+                        "fg3_pct",
+                    ),
                 ),
                 low=0.32,
                 high=0.41,
@@ -533,7 +593,12 @@ def _role_player_shooting_score(candidate: Mapping[str, Any]) -> float:
             _scale(
                 _ratio(
                     candidate,
-                    ("three_point_percentage", "three_point_pct", "fg3_pct"),
+                    (
+                        "three_point_percentage",
+                        "three_point_pct",
+                        "three_p_pct",
+                        "fg3_pct",
+                    ),
                 ),
                 low=0.32,
                 high=0.41,
@@ -572,7 +637,13 @@ def _defense_score(candidate: Mapping[str, Any]) -> float:
             _scale(
                 _ratio(
                     candidate,
-                    ("rebound_rate", "rebound_percentage", "reb_pct", "trb_pct"),
+                    (
+                        "rebound_rate",
+                        "rebound_percentage",
+                        "rebound_pct",
+                        "reb_pct",
+                        "trb_pct",
+                    ),
                 ),
                 low=0.05,
                 high=0.16,
@@ -583,7 +654,10 @@ def _defense_score(candidate: Mapping[str, Any]) -> float:
 
 def _rebounding_score(candidate: Mapping[str, Any]) -> float:
     return _scale(
-        _ratio(candidate, ("rebound_rate", "rebound_percentage", "reb_pct", "trb_pct")),
+        _ratio(
+            candidate,
+            ("rebound_rate", "rebound_percentage", "rebound_pct", "reb_pct", "trb_pct"),
+        ),
         low=0.05,
         high=0.18,
     )
@@ -745,6 +819,7 @@ def _salary_millions(candidate: Mapping[str, Any]) -> float | None:
             "estimated_salary_millions",
             "annual_salary_millions",
             "salary",
+            "expected_salary",
             "estimated_salary",
             "contract_estimate",
             "annual_salary",
@@ -756,6 +831,37 @@ def _salary_millions(candidate: Mapping[str, Any]) -> float | None:
     if salary > 1000:
         salary = salary / 1_000_000
     return salary
+
+
+def _candidate_data_sources(candidate: Mapping[str, Any]) -> str:
+    """Describe the real provenance backing a candidate's scores."""
+    sources = ["Player stats: nba_api LeagueDash (NBA.com Stats)"]
+    salary_source = _text(candidate, ("salary_source",), default="")
+    if salary_source:
+        sources.append(f"Salary: {salary_source}")
+    archetype = _text(candidate, ("archetype", "archetype_name"), default="")
+    if archetype:
+        sources.append("Archetype: KMeans player clustering")
+    return "; ".join(sources)
+
+
+def _candidate_missing_data_flags(candidate: Mapping[str, Any]) -> str:
+    """List exactly which real inputs are missing for this candidate."""
+    flags: list[str] = []
+    if _salary_millions(candidate) is None:
+        flags.append("salary missing (contract value falls back to fit proxy)")
+    if not _is_known(_ratio(candidate, ("usage_rate", "usg_pct"))):
+        flags.append("usage rate missing")
+    if not _is_known(
+        _ratio(candidate, ("three_point_percentage", "three_p_pct", "fg3_pct"))
+    ):
+        flags.append("3-point percentage missing")
+    if not _text(candidate, ("position", "pos"), default=""):
+        flags.append("position not provided by source")
+    minutes = _number(candidate, ("minutes", "min", "mp"))
+    if _is_known(minutes) and minutes < 500:
+        flags.append("small minutes sample")
+    return "; ".join(flags) if flags else "none"
 
 
 def _shooting_efficiency(candidate: Mapping[str, Any]) -> float | None:
@@ -779,7 +885,13 @@ def _shooting_efficiency(candidate: Mapping[str, Any]) -> float | None:
 def _three_point_attempt_rate(candidate: Mapping[str, Any]) -> float | None:
     direct = _ratio(
         candidate,
-        ("three_point_attempt_rate", "three_point_rate", "fg3a_rate", "threepar"),
+        (
+            "three_point_attempt_rate",
+            "three_pa_rate",
+            "three_point_rate",
+            "fg3a_rate",
+            "threepar",
+        ),
     )
     if _is_known(direct):
         return direct
@@ -791,7 +903,9 @@ def _three_point_attempt_rate(candidate: Mapping[str, Any]) -> float | None:
 
 
 def _turnover_rate(candidate: Mapping[str, Any]) -> float | None:
-    direct = _ratio(candidate, ("turnover_rate", "turnover_percentage", "tov_pct"))
+    direct = _ratio(
+        candidate, ("turnover_rate", "turnover_percentage", "turnover_pct", "tov_pct")
+    )
     if _is_known(direct):
         return direct
     turnovers = _number(candidate, ("tov", "turnovers"))
@@ -805,7 +919,9 @@ def _turnover_rate(candidate: Mapping[str, Any]) -> float | None:
 
 
 def _assist_rate(candidate: Mapping[str, Any]) -> float | None:
-    direct = _ratio(candidate, ("assist_rate", "assist_percentage", "ast_pct"))
+    direct = _ratio(
+        candidate, ("assist_rate", "assist_percentage", "assist_pct", "ast_pct")
+    )
     if _is_known(direct):
         return direct
     return _event_rate(candidate, (), ("ast", "assists"))

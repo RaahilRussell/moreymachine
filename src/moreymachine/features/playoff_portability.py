@@ -324,13 +324,13 @@ def _player_features(player: Mapping[str, Any] | pd.Series) -> dict[str, Any]:
         "three_pa_per_36": _three_pa_per_36(player),
         "three_point_percentage": _ratio(
             player,
-            ("three_point_percentage", "three_point_pct", "fg3_pct", "fg3_pct"),
+            ("three_point_percentage", "three_point_pct", "three_p_pct", "fg3_pct"),
         ),
         "turnover_rate": _turnover_rate(player),
         "assist_rate": _assist_rate(player),
         "rebound_rate": _ratio(
             player,
-            ("rebound_rate", "rebound_percentage", "reb_pct", "trb_pct"),
+            ("rebound_rate", "rebound_percentage", "rebound_pct", "reb_pct", "trb_pct"),
         ),
         "steal_rate": _event_rate(player, ("steal_rate", "stl_rate"), ("stl",)),
         "block_rate": _event_rate(player, ("block_rate", "blk_rate"), ("blk",)),
@@ -391,7 +391,13 @@ def _shooting_efficiency(player: Mapping[str, Any] | pd.Series) -> float | None:
 def _three_point_attempt_rate(player: Mapping[str, Any] | pd.Series) -> float | None:
     direct = _ratio(
         player,
-        ("three_point_attempt_rate", "three_point_rate", "fg3a_rate", "threepar"),
+        (
+            "three_point_attempt_rate",
+            "three_pa_rate",
+            "three_point_rate",
+            "fg3a_rate",
+            "threepar",
+        ),
     )
     if _is_known(direct):
         return direct
@@ -416,7 +422,7 @@ def _three_pa_per_36(player: Mapping[str, Any] | pd.Series) -> float | None:
 def _turnover_rate(player: Mapping[str, Any] | pd.Series) -> float | None:
     direct = _ratio(
         player,
-        ("turnover_rate", "turnover_percentage", "tov_pct"),
+        ("turnover_rate", "turnover_percentage", "turnover_pct", "tov_pct"),
     )
     if _is_known(direct):
         return direct
@@ -432,7 +438,9 @@ def _turnover_rate(player: Mapping[str, Any] | pd.Series) -> float | None:
 
 
 def _assist_rate(player: Mapping[str, Any] | pd.Series) -> float | None:
-    direct = _ratio(player, ("assist_rate", "assist_percentage", "ast_pct"))
+    direct = _ratio(
+        player, ("assist_rate", "assist_percentage", "assist_pct", "ast_pct")
+    )
     if _is_known(direct):
         return direct
     return _event_rate(player, (), ("ast", "assists"))

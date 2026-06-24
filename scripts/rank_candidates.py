@@ -21,13 +21,21 @@ from moreymachine.models.fit_model import (  # noqa: E402
     CANDIDATE_FIT_RANKINGS_PATH,
     build_candidate_rankings,
 )
+from moreymachine.utils.paths import CANDIDATES_PATH  # noqa: E402
 
 
 def main() -> int:
     """CLI entry point for candidate fit ranking."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--team", default="PHI", help="Target team (context only).")
     parser.add_argument("--players", type=Path, default=PLAYER_SEASONS_BASIC_PATH)
     parser.add_argument("--roster-gaps", type=Path, default=ROSTER_GAPS_PATH)
+    parser.add_argument(
+        "--candidates",
+        type=Path,
+        default=CANDIDATES_PATH,
+        help="Real candidate watchlist (player+salary). Restricts the pool.",
+    )
     parser.add_argument(
         "--player-archetypes",
         type=Path,
@@ -50,11 +58,13 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=CANDIDATE_FIT_RANKINGS_PATH)
     args = parser.parse_args()
 
+    candidates_path = args.candidates if args.candidates.exists() else None
     result = build_candidate_rankings(
         player_stats_path=args.players,
         roster_gaps_path=args.roster_gaps,
         player_archetypes_path=args.player_archetypes,
         contracts_path=args.contracts,
+        candidates_path=candidates_path,
         contender_model_path=args.contender_model,
         output_path=args.output,
         season=args.season,

@@ -1,4 +1,6 @@
+beautifulsoup4
 black
+certifi
 joblib
 nba_api
 numpy
@@ -6,6 +8,7 @@ pandas
 pyarrow
 pytest
 python-dotenv
+requests
 ruff
 scikit-learn
 streamlit
