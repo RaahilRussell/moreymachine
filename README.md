@@ -142,6 +142,22 @@ The archetype builder clusters team fingerprints with median imputation,
 `data/features/team_roster_archetypes.parquet` and a cluster summary with
 suggested archetype names to `data/reports/roster_archetype_summary.csv`.
 
+Analyze Sixers roster gaps:
+
+```bash
+python scripts/analyze_roster_gaps.py --target-team PHI
+```
+
+The gap engine compares the target team-season, defaulting to the latest PHI
+season in `team_fingerprints.parquet`, against conference-finals-or-better
+teams, successful teams from the same roster archetype, and top-5 net rating
+teams. It writes `data/reports/phi_roster_gaps.parquet` and
+`data/reports/phi_roster_gaps.md` with target values, elite averages,
+percentiles, gap sizes, severity scores, and explanations for shooting
+pressure, role-player shooting, defense, rebounding, turnover control,
+pace/transition, bench or rotation depth when available, usage concentration
+when available, and a playoff portability proxy.
+
 Build player role archetype clusters:
 
 ```bash
