@@ -119,6 +119,18 @@ boosting candidates. It writes the selected model to `data/models`, validation
 metrics to `data/reports/contender_model_metrics.json`, and validation
 predictions to `data/reports/contender_model_predictions.parquet`.
 
+Train the playoff outcome tier model:
+
+```bash
+python scripts/train_outcome_tier_model.py
+```
+
+The outcome trainer predicts `playoff_tier` with random forest and gradient
+boosting candidates. It writes tier probabilities, expected playoff tier, and
+predicted tier to `data/reports/outcome_tier_predictions.parquet`, and writes
+confusion matrices, mean absolute tier error, and top feature importances to
+`data/reports/outcome_tier_metrics.json`.
+
 Format and lint:
 
 ```bash

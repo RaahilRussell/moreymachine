@@ -36,6 +36,7 @@ REQUIRED_MODULES = (
     "moreymachine.features.quality_tiers",
     "moreymachine.features.team_fingerprints",
     "moreymachine.models.contender_model",
+    "moreymachine.models.outcome_tier_model",
 )
 
 

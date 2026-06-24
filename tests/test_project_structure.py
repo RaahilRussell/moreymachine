@@ -35,6 +35,7 @@ def test_package_imports_work() -> None:
         "moreymachine.features.quality_tiers",
         "moreymachine.features.team_fingerprints",
         "moreymachine.models.contender_model",
+        "moreymachine.models.outcome_tier_model",
     ):
         assert importlib.import_module(module_name)
 
