@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+from moreymachine.models.backtest import (
+    BACKTEST_RANKINGS_PATH,
+    BACKTEST_RESULTS_PATH,
+    BACKTEST_SUMMARY_PATH,
+    BacktestBuildResult,
+    build_backtest,
+    evaluate_backtest_rankings,
+    run_backtest,
+)
 from moreymachine.models.contender_model import (
     CONTENDER_METRICS_PATH,
     CONTENDER_MODEL_PATH,
@@ -27,6 +36,9 @@ from moreymachine.models.outcome_tier_model import (
 )
 
 __all__ = [
+    "BACKTEST_RANKINGS_PATH",
+    "BACKTEST_RESULTS_PATH",
+    "BACKTEST_SUMMARY_PATH",
     "CANDIDATE_FIT_RANKINGS_PATH",
     "CONTENDER_METRICS_PATH",
     "CONTENDER_MODEL_PATH",
@@ -36,12 +48,16 @@ __all__ = [
     "OUTCOME_TIER_PREDICTIONS_PATH",
     "PLAYOFF_TIER_LABELS",
     "TARGET_COLUMN",
+    "BacktestBuildResult",
     "CandidateFitBuildResult",
     "ContenderModelTrainResult",
     "OutcomeTierModelTrainResult",
+    "build_backtest",
     "build_candidate_rankings",
     "calculate_gm_fit_score",
+    "evaluate_backtest_rankings",
     "rank_candidates",
+    "run_backtest",
     "train_contender_model",
     "train_outcome_tier_model",
 ]

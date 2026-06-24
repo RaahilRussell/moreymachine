@@ -183,6 +183,21 @@ available. It writes `data/reports/candidate_fit_rankings.parquet` with need
 match, contender similarity gain, playoff portability, contract value, risk,
 final GM Fit Score, recommendation labels, fit explanations, and concerns.
 
+Run offseason backtests:
+
+```bash
+python scripts/run_backtest.py --target-team PHI --top-k 10
+```
+
+The backtest uses only data before each offseason, builds the target team's
+historical roster gap, ranks that offseason's candidate pool, then joins to
+next-season outcomes. It compares MoreyMachine against previous-season points,
+previous-season impact, salary, and random baselines using Spearman correlation,
+top-quartile outcome gaps, top-target hit rates, and average top-target value.
+It writes `data/reports/backtest_results.json`,
+`data/reports/backtest_rankings.parquet`, and
+`data/reports/backtest_summary.md`.
+
 Format and lint:
 
 ```bash

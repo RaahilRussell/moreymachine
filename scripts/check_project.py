@@ -39,6 +39,7 @@ REQUIRED_MODULES = (
     "moreymachine.features.team_fingerprints",
     "moreymachine.features.roster_archetypes",
     "moreymachine.features.roster_gaps",
+    "moreymachine.models.backtest",
     "moreymachine.models.contender_model",
     "moreymachine.models.fit_model",
     "moreymachine.models.outcome_tier_model",
