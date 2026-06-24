@@ -174,6 +174,60 @@ GAP_CATEGORIES = (
 )
 
 
+# Why each gap matters in a playoff series.
+PLAYOFF_IMPORTANCE: dict[str, str] = {
+    "shooting_pressure": (
+        "Playoff defenses load up on stars; without floor-spacing pressure the "
+        "paint clogs and star efficiency collapses."
+    ),
+    "role_player_shooting": (
+        "Role-player shooting is the first thing playoff scouting tests; "
+        "non-shooters get ignored and turn the floor 4-on-5."
+    ),
+    "defense": (
+        "Series are won on stops in the half court; a weak defense gets hunted "
+        "in late-game possessions."
+    ),
+    "rebounding": (
+        "Second-chance points swing tight playoff games and compound over a "
+        "seven-game series."
+    ),
+    "turnover_control": (
+        "Half-court playoff offense magnifies turnovers into transition points "
+        "against."
+    ),
+    "pace_transition": (
+        "Easy transition points are scarce in the playoffs; teams that cannot "
+        "generate them must grind in the half court."
+    ),
+    "bench_rotation_depth": (
+        "Playoff rotations shorten, but injuries and foul trouble still demand "
+        "a trustworthy 8th-9th man."
+    ),
+    "usage_concentration": (
+        "Over-concentrated offense is easy to scheme against; defenses blitz the "
+        "lone creator when no one else can punish it."
+    ),
+    "playoff_portability_proxy": (
+        "Two-way, low-variance contributors hold up when series tighten and "
+        "matchups get targeted."
+    ),
+}
+
+# What kind of player most directly closes each gap.
+FIX_TYPE: dict[str, str] = {
+    "shooting_pressure": "a high-volume movement/catch-and-shoot shooter",
+    "role_player_shooting": "a low-usage 3-and-D wing who spaces the floor",
+    "defense": "a switchable wing stopper or rim-protecting anchor",
+    "rebounding": "a rebounding big or crash-the-glass forward",
+    "turnover_control": "a secure connector guard with a low turnover profile",
+    "pace_transition": "an athletic transition finisher and outlet runner",
+    "bench_rotation_depth": "a reliable two-way rotation veteran",
+    "usage_concentration": "a secondary shot-creator who can run offense off the bench",
+    "playoff_portability_proxy": "a low-usage, two-way role player who fits any lineup",
+}
+
+
 def build_roster_gaps(
     *,
     input_path: str | Path = TEAM_FINGERPRINTS_PATH,
@@ -298,6 +352,21 @@ def render_roster_gap_markdown(gaps: pd.DataFrame) -> str:
                 f"{_format_value(row.severity_score)} | "
                 f"{row.explanation} |"
             )
+        lines.append("")
+        lines.append("**Top gaps in detail**")
+        lines.append("")
+        for row in ordered.head(4).itertuples(index=False):
+            importance = getattr(row, "playoff_importance", "")
+            fix_type = getattr(row, "fix_type", "")
+            lines.append(
+                f"- **{row.category}** (severity "
+                f"{_format_value(row.severity_score)}, "
+                f"{_format_percentile(row.percentile)} pct): {row.explanation}"
+            )
+            if importance:
+                lines.append(f"  - *Why it matters in the playoffs:* {importance}")
+            if fix_type:
+                lines.append(f"  - *What fixes it:* {fix_type}.")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
@@ -495,6 +564,8 @@ def _gap_row(
             comparison_count=len(group_frame),
             source_columns=values.source_columns,
         ),
+        "playoff_importance": PLAYOFF_IMPORTANCE.get(category.key, ""),
+        "fix_type": FIX_TYPE.get(category.key, ""),
     }
 
 

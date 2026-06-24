@@ -33,7 +33,9 @@ def main() -> int:
         default=TEAM_ROSTER_ARCHETYPES_PATH,
         help="Optional roster archetype assignments used for same-archetype baselines.",
     )
-    parser.add_argument("--target-team", default=DEFAULT_TARGET_TEAM)
+    parser.add_argument(
+        "--target-team", "--team", dest="target_team", default=DEFAULT_TARGET_TEAM
+    )
     parser.add_argument("--target-season")
     parser.add_argument("--output", type=Path, default=ROSTER_GAPS_PATH)
     parser.add_argument(
