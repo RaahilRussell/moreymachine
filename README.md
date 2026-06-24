@@ -53,6 +53,30 @@ python scripts/fetch_nba_data.py --latest-season 2025-26
 Raw NBA API responses are cached under `data/raw/nba_api`, so repeated runs reuse
 the cache instead of calling the same endpoints again.
 
+Add manual playoff outcomes in `data/manual/playoff_tiers_template.csv` with
+one row per team-season:
+
+```text
+season,team_abbr,playoff_tier,playoff_result
+```
+
+Playoff tiers:
+
+```text
+0 = missed playoffs
+1 = lost first round
+2 = lost second round
+3 = lost conference finals
+4 = lost finals
+5 = champion
+```
+
+Join manual tiers onto team seasons:
+
+```bash
+python scripts/build_playoff_tiers.py
+```
+
 Format and lint:
 
 ```bash
