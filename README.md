@@ -198,6 +198,17 @@ It writes `data/reports/backtest_results.json`,
 `data/reports/backtest_rankings.parquet`, and
 `data/reports/backtest_summary.md`.
 
+Run the Streamlit dashboard:
+
+```bash
+python scripts/run_app.py
+```
+
+The dashboard reads existing Parquet and JSON outputs only. It does not fetch
+live data. For Streamlit Community Cloud, use
+`src/moreymachine/app/streamlit_app.py` as the app entry point after the package
+dependencies are installed.
+
 Format and lint:
 
 ```bash

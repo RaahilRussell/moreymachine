@@ -30,6 +30,7 @@ REQUIRED_MODULES = (
     "moreymachine.utils.paths",
     "moreymachine.utils.logging",
     "moreymachine.utils.config",
+    "moreymachine.app.streamlit_app",
     "moreymachine.data.cache",
     "moreymachine.data.fetch_nba",
     "moreymachine.data.playoff_tiers",
