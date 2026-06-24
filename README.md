@@ -107,6 +107,18 @@ ratings, pace, shooting, turnover, rebounding, free-throw, and three-point
 profile columns, plus estimated shooting pressure, possession control, two-way
 balance, playoff labels, and quality labels.
 
+Train the contender model:
+
+```bash
+python scripts/train_contender_model.py
+```
+
+The trainer predicts `deep_playoff` from `team_fingerprints.parquet` using
+chronological validation across logistic regression, random forest, and gradient
+boosting candidates. It writes the selected model to `data/models`, validation
+metrics to `data/reports/contender_model_metrics.json`, and validation
+predictions to `data/reports/contender_model_predictions.parquet`.
+
 Format and lint:
 
 ```bash

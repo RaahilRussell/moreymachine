@@ -35,6 +35,7 @@ REQUIRED_MODULES = (
     "moreymachine.data.playoff_tiers",
     "moreymachine.features.quality_tiers",
     "moreymachine.features.team_fingerprints",
+    "moreymachine.models.contender_model",
 )
 
 
