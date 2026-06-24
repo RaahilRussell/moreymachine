@@ -15,11 +15,12 @@ from sklearn.preprocessing import StandardScaler
 
 from moreymachine.utils.paths import (
     FEATURES_DATA_DIR,
-    PROCESSED_DATA_DIR,
+    PLAYER_SEASONS_PATH,
     REPORTS_DATA_DIR,
 )
 
-PLAYER_SEASONS_BASIC_PATH = PROCESSED_DATA_DIR / "player_seasons_basic.parquet"
+# Canonical real player-seasons file. Old name kept as an alias for importers.
+PLAYER_SEASONS_BASIC_PATH = PLAYER_SEASONS_PATH
 PLAYER_ARCHETYPES_PATH = FEATURES_DATA_DIR / "player_archetypes.parquet"
 PLAYER_ARCHETYPE_SUMMARY_PATH = REPORTS_DATA_DIR / "player_archetype_summary.csv"
 

@@ -76,7 +76,7 @@ def create_team_fingerprints(team_seasons: pd.DataFrame) -> pd.DataFrame:
     fingerprints["three_point_attempt_rate"] = _three_point_attempt_rate(source)
     fingerprints["three_point_percentage"] = _direct_feature(
         source,
-        ("three_point_percentage", "three_point_pct", "fg3_pct"),
+        ("three_point_percentage", "three_point_pct", "three_p_pct", "fg3_pct"),
     )
 
     fingerprints["estimated_shooting_pressure"] = _estimated_shooting_pressure(
@@ -186,7 +186,13 @@ def _free_throw_rate(frame: pd.DataFrame) -> pd.Series:
 def _three_point_attempt_rate(frame: pd.DataFrame) -> pd.Series:
     direct = _direct_feature(
         frame,
-        ("three_point_attempt_rate", "three_point_rate", "fg3a_rate", "threepar"),
+        (
+            "three_point_attempt_rate",
+            "three_pa_rate",
+            "three_point_rate",
+            "fg3a_rate",
+            "threepar",
+        ),
     )
     if direct.notna().any():
         return direct

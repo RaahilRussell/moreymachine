@@ -7,11 +7,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from moreymachine.utils.paths import MANUAL_DATA_DIR, PROCESSED_DATA_DIR
+from moreymachine.data.team_lookup import TEAM_ID_TO_ABBR, TEAM_NAME_TO_ABBR
+from moreymachine.utils.paths import (
+    PLAYOFF_TIERS_PATH,
+    TEAM_SEASONS_PATH,
+    TEAM_SEASONS_WITH_TIERS_PATH,
+)
 
-PLAYOFF_TIERS_PATH = MANUAL_DATA_DIR / "playoff_tiers_template.csv"
-TEAM_SEASONS_BASIC_PATH = PROCESSED_DATA_DIR / "team_seasons_basic.parquet"
-TEAM_SEASONS_WITH_TIERS_PATH = PROCESSED_DATA_DIR / "team_seasons_with_tiers.parquet"
+# Re-exported for callers that imported these names from this module.
+TEAM_SEASONS_BASIC_PATH = TEAM_SEASONS_PATH
 
 PLAYOFF_TIER_DEFINITIONS = {
     0: "missed playoffs",
@@ -22,72 +26,6 @@ PLAYOFF_TIER_DEFINITIONS = {
     5: "champion",
 }
 REQUIRED_TIER_COLUMNS = ("season", "team_abbr", "playoff_tier", "playoff_result")
-
-TEAM_ID_TO_ABBR = {
-    1610612737: "ATL",
-    1610612738: "BOS",
-    1610612751: "BKN",
-    1610612766: "CHA",
-    1610612741: "CHI",
-    1610612739: "CLE",
-    1610612742: "DAL",
-    1610612743: "DEN",
-    1610612765: "DET",
-    1610612744: "GSW",
-    1610612745: "HOU",
-    1610612754: "IND",
-    1610612746: "LAC",
-    1610612747: "LAL",
-    1610612763: "MEM",
-    1610612748: "MIA",
-    1610612749: "MIL",
-    1610612750: "MIN",
-    1610612740: "NOP",
-    1610612752: "NYK",
-    1610612760: "OKC",
-    1610612753: "ORL",
-    1610612755: "PHI",
-    1610612756: "PHX",
-    1610612757: "POR",
-    1610612758: "SAC",
-    1610612759: "SAS",
-    1610612761: "TOR",
-    1610612762: "UTA",
-    1610612764: "WAS",
-}
-TEAM_NAME_TO_ABBR = {
-    "atlanta hawks": "ATL",
-    "boston celtics": "BOS",
-    "brooklyn nets": "BKN",
-    "charlotte hornets": "CHA",
-    "chicago bulls": "CHI",
-    "cleveland cavaliers": "CLE",
-    "dallas mavericks": "DAL",
-    "denver nuggets": "DEN",
-    "detroit pistons": "DET",
-    "golden state warriors": "GSW",
-    "houston rockets": "HOU",
-    "indiana pacers": "IND",
-    "la clippers": "LAC",
-    "los angeles clippers": "LAC",
-    "los angeles lakers": "LAL",
-    "memphis grizzlies": "MEM",
-    "miami heat": "MIA",
-    "milwaukee bucks": "MIL",
-    "minnesota timberwolves": "MIN",
-    "new orleans pelicans": "NOP",
-    "new york knicks": "NYK",
-    "oklahoma city thunder": "OKC",
-    "orlando magic": "ORL",
-    "philadelphia 76ers": "PHI",
-    "phoenix suns": "PHX",
-    "portland trail blazers": "POR",
-    "sacramento kings": "SAC",
-    "san antonio spurs": "SAS",
-    "toronto raptors": "TOR",
-    "utah jazz": "UTA",
-    "washington wizards": "WAS",
-}
 
 
 @dataclass(frozen=True)
@@ -105,7 +43,10 @@ def load_playoff_tiers(path: str | Path = PLAYOFF_TIERS_PATH) -> pd.DataFrame:
     tier_frame.columns = [column.strip().lower() for column in tier_frame.columns]
     _validate_tier_columns(tier_frame)
 
-    tier_frame = tier_frame.loc[:, REQUIRED_TIER_COLUMNS].copy()
+    keep_columns = list(REQUIRED_TIER_COLUMNS)
+    if "source_note" in tier_frame.columns:
+        keep_columns.append("source_note")
+    tier_frame = tier_frame.loc[:, keep_columns].copy()
     tier_frame["season"] = tier_frame["season"].str.strip()
     tier_frame["team_abbr"] = tier_frame["team_abbr"].str.strip().str.upper()
     tier_frame["playoff_result"] = (

@@ -22,6 +22,7 @@ class Settings:
     nba_start_season: str
     nba_latest_season: str
     log_level: str
+    real_data_mode: bool
 
 
 def load_settings(
@@ -52,7 +53,15 @@ def load_settings(
             _default_latest_nba_season(),
         ),
         log_level=values.get("MOREYMACHINE_LOG_LEVEL", "INFO").upper(),
+        real_data_mode=_parse_bool(values.get("REAL_DATA_MODE"), default=True),
     )
+
+
+def _parse_bool(value: str | None, *, default: bool) -> bool:
+    """Parse a truthy/falsey string, falling back to ``default`` when unset."""
+    if value is None or value == "":
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _read_dotenv(env_file: str | Path | None) -> dict[str, str]:

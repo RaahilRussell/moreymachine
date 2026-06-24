@@ -18,6 +18,15 @@ FEATURES_DATA_DIR = DATA_DIR / "features"
 MODELS_DATA_DIR = DATA_DIR / "models"
 REPORTS_DATA_DIR = DATA_DIR / "reports"
 
+DEMO_DATA_DIR = DATA_DIR / "demo"
+
+# Canonical processed/manual data files (single source of truth for paths).
+TEAM_SEASONS_PATH = PROCESSED_DATA_DIR / "team_seasons.parquet"
+PLAYER_SEASONS_PATH = PROCESSED_DATA_DIR / "player_seasons.parquet"
+TEAM_SEASONS_WITH_TIERS_PATH = PROCESSED_DATA_DIR / "team_seasons_with_tiers.parquet"
+PLAYOFF_TIERS_PATH = MANUAL_DATA_DIR / "playoff_tiers.csv"
+CANDIDATES_PATH = MANUAL_DATA_DIR / "candidates.csv"
+
 NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 TESTS_DIR = PROJECT_ROOT / "tests"
