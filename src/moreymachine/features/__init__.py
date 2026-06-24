@@ -11,6 +11,11 @@ from moreymachine.features.player_archetypes import (
     select_player_features,
     suggest_archetype_name,
 )
+from moreymachine.features.playoff_portability import (
+    PlayoffPortabilityScore,
+    add_playoff_portability_scores,
+    score_player_playoff_portability,
+)
 from moreymachine.features.quality_tiers import (
     QUALITY_TIER_DEFINITIONS,
     QualityTierBuildResult,
@@ -57,10 +62,12 @@ __all__ = [
     "TEAM_FINGERPRINTS_PATH",
     "TEAM_ROSTER_ARCHETYPES_PATH",
     "PlayerArchetypeBuildResult",
+    "PlayoffPortabilityScore",
     "QualityTierBuildResult",
     "RosterArchetypeBuildResult",
     "RosterGapBuildResult",
     "TeamFingerprintBuildResult",
+    "add_playoff_portability_scores",
     "add_quality_tiers",
     "build_player_archetypes",
     "build_roster_gaps",
@@ -72,6 +79,7 @@ __all__ = [
     "create_team_fingerprints",
     "create_roster_archetypes",
     "render_roster_gap_markdown",
+    "score_player_playoff_portability",
     "select_player_features",
     "select_cluster_features",
     "suggest_archetype_name",
