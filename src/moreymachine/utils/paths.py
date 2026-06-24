@@ -24,8 +24,31 @@ DEMO_DATA_DIR = DATA_DIR / "demo"
 TEAM_SEASONS_PATH = PROCESSED_DATA_DIR / "team_seasons.parquet"
 PLAYER_SEASONS_PATH = PROCESSED_DATA_DIR / "player_seasons.parquet"
 TEAM_SEASONS_WITH_TIERS_PATH = PROCESSED_DATA_DIR / "team_seasons_with_tiers.parquet"
+PLAYER_BIO_PATH = PROCESSED_DATA_DIR / "player_bio.parquet"
+PLAYER_TRACKING_PATH = PROCESSED_DATA_DIR / "player_tracking.parquet"
+LINEUP_ON_OFF_PATH = PROCESSED_DATA_DIR / "lineup_on_off.parquet"
+CONTRACTS_PATH = PROCESSED_DATA_DIR / "contracts.parquet"
 PLAYOFF_TIERS_PATH = MANUAL_DATA_DIR / "playoff_tiers.csv"
 CANDIDATES_PATH = MANUAL_DATA_DIR / "candidates.csv"
+MANUAL_CONTRACTS_PATH = MANUAL_DATA_DIR / "contracts.csv"
+
+# Candidate board outputs split by acquisition feasibility.
+CANDIDATE_RANKINGS_ALL_PATH = REPORTS_DATA_DIR / "candidate_fit_rankings_all.parquet"
+CANDIDATE_RANKINGS_REALISTIC_PATH = (
+    REPORTS_DATA_DIR / "candidate_fit_rankings_realistic.parquet"
+)
+CANDIDATE_RANKINGS_FREE_AGENTS_PATH = (
+    REPORTS_DATA_DIR / "candidate_fit_rankings_free_agents.parquet"
+)
+CANDIDATE_RANKINGS_TRADE_TARGETS_PATH = (
+    REPORTS_DATA_DIR / "candidate_fit_rankings_trade_targets.parquet"
+)
+CANDIDATE_RANKINGS_WATCHLIST_PATH = (
+    REPORTS_DATA_DIR / "candidate_fit_rankings_unrealistic_watchlist.parquet"
+)
+PLAYER_ROLE_EXPLANATIONS_PATH = REPORTS_DATA_DIR / "player_role_explanations.parquet"
+CURRENT_ROSTER_REFERENCE_PATH = REPORTS_DATA_DIR / "current_roster_reference.parquet"
+DATA_FRESHNESS_REPORT_PATH = REPORTS_DATA_DIR / "data_freshness_report.md"
 
 NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
