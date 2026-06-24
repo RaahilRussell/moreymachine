@@ -1,0 +1,299 @@
+{
+  "feature_columns": [
+    "offensive_rating",
+    "defensive_rating",
+    "net_rating",
+    "pace",
+    "efg_percentage",
+    "turnover_percentage",
+    "offensive_rebounding_percentage",
+    "defensive_rebounding_percentage",
+    "free_throw_rate",
+    "three_point_attempt_rate",
+    "three_point_percentage",
+    "estimated_shooting_pressure",
+    "estimated_possession_control",
+    "estimated_two_way_balance",
+    "quality_tier"
+  ],
+  "models": {
+    "gradient_boosting": {
+      "accuracy": 0.5666666666666667,
+      "confusion_matrix": {
+        "labels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "matrix": [
+          [
+            24,
+            3,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            5,
+            8,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            4,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            3,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "expected_tier_mean_absolute_error": 0.6247202329770638,
+      "mean_absolute_tier_error": 0.65,
+      "top_feature_importances": [
+        {
+          "feature": "net_rating",
+          "importance": 0.2846503611884743
+        },
+        {
+          "feature": "quality_tier",
+          "importance": 0.16303009267074395
+        },
+        {
+          "feature": "estimated_two_way_balance",
+          "importance": 0.10066708326564927
+        },
+        {
+          "feature": "pace",
+          "importance": 0.05127440497373752
+        },
+        {
+          "feature": "three_point_attempt_rate",
+          "importance": 0.04941629972001169
+        },
+        {
+          "feature": "offensive_rating",
+          "importance": 0.04776354848136802
+        },
+        {
+          "feature": "three_point_percentage",
+          "importance": 0.04495249786573891
+        },
+        {
+          "feature": "defensive_rebounding_percentage",
+          "importance": 0.041741114786265555
+        },
+        {
+          "feature": "free_throw_rate",
+          "importance": 0.03896754428395494
+        },
+        {
+          "feature": "turnover_percentage",
+          "importance": 0.03759168951321061
+        },
+        {
+          "feature": "defensive_rating",
+          "importance": 0.037453223297887646
+        },
+        {
+          "feature": "efg_percentage",
+          "importance": 0.03301972410822594
+        },
+        {
+          "feature": "estimated_shooting_pressure",
+          "importance": 0.02967361689129686
+        },
+        {
+          "feature": "estimated_possession_control",
+          "importance": 0.02199415280977798
+        },
+        {
+          "feature": "offensive_rebounding_percentage",
+          "importance": 0.017804646143656736
+        }
+      ]
+    },
+    "random_forest": {
+      "accuracy": 0.5333333333333333,
+      "confusion_matrix": {
+        "labels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "matrix": [
+          [
+            24,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            6,
+            5,
+            0,
+            0,
+            4
+          ],
+          [
+            0,
+            1,
+            2,
+            3,
+            0,
+            2
+          ],
+          [
+            0,
+            1,
+            1,
+            0,
+            1,
+            1
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            1,
+            0
+          ]
+        ]
+      },
+      "expected_tier_mean_absolute_error": 0.9149158041567613,
+      "mean_absolute_tier_error": 0.85,
+      "top_feature_importances": [
+        {
+          "feature": "net_rating",
+          "importance": 0.13188599853634214
+        },
+        {
+          "feature": "estimated_two_way_balance",
+          "importance": 0.10258399479717045
+        },
+        {
+          "feature": "efg_percentage",
+          "importance": 0.08153856524198175
+        },
+        {
+          "feature": "estimated_shooting_pressure",
+          "importance": 0.07587889316275495
+        },
+        {
+          "feature": "offensive_rating",
+          "importance": 0.07309660585818646
+        },
+        {
+          "feature": "quality_tier",
+          "importance": 0.06865686942685992
+        },
+        {
+          "feature": "three_point_attempt_rate",
+          "importance": 0.06018299056793025
+        },
+        {
+          "feature": "turnover_percentage",
+          "importance": 0.057901897959490765
+        },
+        {
+          "feature": "pace",
+          "importance": 0.056447607752900385
+        },
+        {
+          "feature": "defensive_rating",
+          "importance": 0.05448798508751065
+        },
+        {
+          "feature": "estimated_possession_control",
+          "importance": 0.05260042220716145
+        },
+        {
+          "feature": "offensive_rebounding_percentage",
+          "importance": 0.050118873336028213
+        },
+        {
+          "feature": "three_point_percentage",
+          "importance": 0.045517700410984484
+        },
+        {
+          "feature": "defensive_rebounding_percentage",
+          "importance": 0.04509979068169535
+        },
+        {
+          "feature": "free_throw_rate",
+          "importance": 0.04400180497300284
+        }
+      ]
+    }
+  },
+  "selected_model": "gradient_boosting",
+  "target": "playoff_tier",
+  "test_seasons": [
+    "2023-24",
+    "2024-25"
+  ],
+  "tier_labels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "train_seasons": [
+    "2015-16",
+    "2016-17",
+    "2017-18",
+    "2018-19",
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23"
+  ]
+}

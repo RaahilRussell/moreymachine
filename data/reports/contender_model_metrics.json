@@ -1,0 +1,436 @@
+{
+  "feature_columns": [
+    "offensive_rating",
+    "defensive_rating",
+    "net_rating",
+    "pace",
+    "efg_percentage",
+    "turnover_percentage",
+    "offensive_rebounding_percentage",
+    "defensive_rebounding_percentage",
+    "free_throw_rate",
+    "three_point_attempt_rate",
+    "three_point_percentage",
+    "estimated_shooting_pressure",
+    "estimated_possession_control",
+    "estimated_two_way_balance",
+    "quality_tier"
+  ],
+  "models": {
+    "gradient_boosting": {
+      "accuracy": 0.9,
+      "calibration_table": [
+        {
+          "avg_predicted_probability": 0.011543577700253826,
+          "count": 44,
+          "observed_rate": 0.09090909090909091,
+          "probability_bin": "0.0-0.1"
+        },
+        {
+          "avg_predicted_probability": 0.13384919878126667,
+          "count": 4,
+          "observed_rate": 0.25,
+          "probability_bin": "0.1-0.2"
+        },
+        {
+          "avg_predicted_probability": 0.2573669552679627,
+          "count": 5,
+          "observed_rate": 0.0,
+          "probability_bin": "0.2-0.3"
+        },
+        {
+          "avg_predicted_probability": 0.34625570841363834,
+          "count": 3,
+          "observed_rate": 0.0,
+          "probability_bin": "0.3-0.4"
+        },
+        {
+          "avg_predicted_probability": 0.6687832748979085,
+          "count": 3,
+          "observed_rate": 1.0,
+          "probability_bin": "0.6-0.7"
+        },
+        {
+          "avg_predicted_probability": 0.7484679407333654,
+          "count": 1,
+          "observed_rate": 0.0,
+          "probability_bin": "0.7-0.8"
+        }
+      ],
+      "feature_importance": [
+        {
+          "feature": "net_rating",
+          "importance": 0.4177020268397194
+        },
+        {
+          "feature": "three_point_percentage",
+          "importance": 0.09046038338116953
+        },
+        {
+          "feature": "estimated_shooting_pressure",
+          "importance": 0.07036716508458062
+        },
+        {
+          "feature": "free_throw_rate",
+          "importance": 0.06226746786037923
+        },
+        {
+          "feature": "offensive_rating",
+          "importance": 0.055213499403550324
+        },
+        {
+          "feature": "estimated_two_way_balance",
+          "importance": 0.054147904773801644
+        },
+        {
+          "feature": "defensive_rating",
+          "importance": 0.053884492367029496
+        },
+        {
+          "feature": "pace",
+          "importance": 0.04863265965810961
+        },
+        {
+          "feature": "turnover_percentage",
+          "importance": 0.03526295281544471
+        },
+        {
+          "feature": "defensive_rebounding_percentage",
+          "importance": 0.034831434720396
+        },
+        {
+          "feature": "three_point_attempt_rate",
+          "importance": 0.021370454056456923
+        },
+        {
+          "feature": "estimated_possession_control",
+          "importance": 0.020778289066300647
+        },
+        {
+          "feature": "efg_percentage",
+          "importance": 0.018337511268316568
+        },
+        {
+          "feature": "offensive_rebounding_percentage",
+          "importance": 0.010360676087697751
+        },
+        {
+          "feature": "quality_tier",
+          "importance": 0.0063830826170477115
+        }
+      ],
+      "precision": 0.75,
+      "precision_at_top_8_per_season": {
+        "average": 0.25,
+        "by_season": [
+          {
+            "k": 8,
+            "precision": 0.25,
+            "season": "2023-24"
+          },
+          {
+            "k": 8,
+            "precision": 0.25,
+            "season": "2024-25"
+          }
+        ]
+      },
+      "recall": 0.375,
+      "roc_auc": 0.6394230769230769
+    },
+    "logistic_regression": {
+      "accuracy": 0.6333333333333333,
+      "calibration_table": [
+        {
+          "avg_predicted_probability": 0.015973883506955652,
+          "count": 18,
+          "observed_rate": 0.0,
+          "probability_bin": "0.0-0.1"
+        },
+        {
+          "avg_predicted_probability": 0.1401703233502097,
+          "count": 6,
+          "observed_rate": 0.0,
+          "probability_bin": "0.1-0.2"
+        },
+        {
+          "avg_predicted_probability": 0.26793242343578355,
+          "count": 2,
+          "observed_rate": 0.0,
+          "probability_bin": "0.2-0.3"
+        },
+        {
+          "avg_predicted_probability": 0.4780034038038461,
+          "count": 4,
+          "observed_rate": 0.0,
+          "probability_bin": "0.4-0.5"
+        },
+        {
+          "avg_predicted_probability": 0.5707312690930115,
+          "count": 8,
+          "observed_rate": 0.375,
+          "probability_bin": "0.5-0.6"
+        },
+        {
+          "avg_predicted_probability": 0.6292740613834235,
+          "count": 4,
+          "observed_rate": 0.0,
+          "probability_bin": "0.6-0.7"
+        },
+        {
+          "avg_predicted_probability": 0.7534345925548311,
+          "count": 2,
+          "observed_rate": 0.0,
+          "probability_bin": "0.7-0.8"
+        },
+        {
+          "avg_predicted_probability": 0.8530276682308365,
+          "count": 9,
+          "observed_rate": 0.2222222222222222,
+          "probability_bin": "0.8-0.9"
+        },
+        {
+          "avg_predicted_probability": 0.9578946758078438,
+          "count": 7,
+          "observed_rate": 0.42857142857142855,
+          "probability_bin": "0.9-1.0"
+        }
+      ],
+      "feature_importance": [
+        {
+          "coefficient": 1.4397673770710895,
+          "feature": "net_rating"
+        },
+        {
+          "coefficient": 1.2229377490038624,
+          "feature": "offensive_rating"
+        },
+        {
+          "coefficient": 0.6630770415102683,
+          "feature": "estimated_possession_control"
+        },
+        {
+          "coefficient": -0.6366122641976479,
+          "feature": "pace"
+        },
+        {
+          "coefficient": 0.6272748030751284,
+          "feature": "turnover_percentage"
+        },
+        {
+          "coefficient": 0.5149698007400356,
+          "feature": "efg_percentage"
+        },
+        {
+          "coefficient": -0.4842947163057114,
+          "feature": "offensive_rebounding_percentage"
+        },
+        {
+          "coefficient": -0.45312754160306984,
+          "feature": "defensive_rating"
+        },
+        {
+          "coefficient": -0.3481616416497902,
+          "feature": "quality_tier"
+        },
+        {
+          "coefficient": -0.1470741585239988,
+          "feature": "defensive_rebounding_percentage"
+        },
+        {
+          "coefficient": 0.1381352755084363,
+          "feature": "estimated_shooting_pressure"
+        },
+        {
+          "coefficient": 0.11913588008922832,
+          "feature": "estimated_two_way_balance"
+        },
+        {
+          "coefficient": -0.09936404542002233,
+          "feature": "three_point_percentage"
+        },
+        {
+          "coefficient": 0.08414876719895456,
+          "feature": "free_throw_rate"
+        },
+        {
+          "coefficient": -0.004052275351995469,
+          "feature": "three_point_attempt_rate"
+        }
+      ],
+      "precision": 0.26666666666666666,
+      "precision_at_top_8_per_season": {
+        "average": 0.3125,
+        "by_season": [
+          {
+            "k": 8,
+            "precision": 0.25,
+            "season": "2023-24"
+          },
+          {
+            "k": 8,
+            "precision": 0.375,
+            "season": "2024-25"
+          }
+        ]
+      },
+      "recall": 1.0,
+      "roc_auc": 0.8197115384615385
+    },
+    "random_forest": {
+      "accuracy": 0.7833333333333333,
+      "calibration_table": [
+        {
+          "avg_predicted_probability": 0.03367302274445132,
+          "count": 21,
+          "observed_rate": 0.0,
+          "probability_bin": "0.0-0.1"
+        },
+        {
+          "avg_predicted_probability": 0.14433931346431347,
+          "count": 6,
+          "observed_rate": 0.16666666666666666,
+          "probability_bin": "0.1-0.2"
+        },
+        {
+          "avg_predicted_probability": 0.23509347795062072,
+          "count": 7,
+          "observed_rate": 0.2857142857142857,
+          "probability_bin": "0.2-0.3"
+        },
+        {
+          "avg_predicted_probability": 0.356788924963925,
+          "count": 10,
+          "observed_rate": 0.1,
+          "probability_bin": "0.3-0.4"
+        },
+        {
+          "avg_predicted_probability": 0.4567625738459072,
+          "count": 3,
+          "observed_rate": 0.0,
+          "probability_bin": "0.4-0.5"
+        },
+        {
+          "avg_predicted_probability": 0.5510882617382619,
+          "count": 5,
+          "observed_rate": 0.2,
+          "probability_bin": "0.5-0.6"
+        },
+        {
+          "avg_predicted_probability": 0.6130780854947523,
+          "count": 3,
+          "observed_rate": 0.3333333333333333,
+          "probability_bin": "0.6-0.7"
+        },
+        {
+          "avg_predicted_probability": 0.7264798303548303,
+          "count": 4,
+          "observed_rate": 0.25,
+          "probability_bin": "0.7-0.8"
+        },
+        {
+          "avg_predicted_probability": 0.8133521386021385,
+          "count": 1,
+          "observed_rate": 1.0,
+          "probability_bin": "0.8-0.9"
+        }
+      ],
+      "feature_importance": [
+        {
+          "feature": "net_rating",
+          "importance": 0.18034305196406356
+        },
+        {
+          "feature": "estimated_two_way_balance",
+          "importance": 0.12682409079620824
+        },
+        {
+          "feature": "offensive_rating",
+          "importance": 0.12010660572922759
+        },
+        {
+          "feature": "estimated_shooting_pressure",
+          "importance": 0.09854462123661549
+        },
+        {
+          "feature": "quality_tier",
+          "importance": 0.07897332321775977
+        },
+        {
+          "feature": "efg_percentage",
+          "importance": 0.06714500787717054
+        },
+        {
+          "feature": "three_point_percentage",
+          "importance": 0.05009068659995154
+        },
+        {
+          "feature": "defensive_rating",
+          "importance": 0.04857522918046163
+        },
+        {
+          "feature": "turnover_percentage",
+          "importance": 0.04450810829413548
+        },
+        {
+          "feature": "free_throw_rate",
+          "importance": 0.03757037383200035
+        },
+        {
+          "feature": "three_point_attempt_rate",
+          "importance": 0.03299277026867882
+        },
+        {
+          "feature": "defensive_rebounding_percentage",
+          "importance": 0.032077880949236845
+        },
+        {
+          "feature": "pace",
+          "importance": 0.030119064042471957
+        },
+        {
+          "feature": "estimated_possession_control",
+          "importance": 0.027310081895694685
+        },
+        {
+          "feature": "offensive_rebounding_percentage",
+          "importance": 0.02481910411632353
+        }
+      ],
+      "precision": 0.3076923076923077,
+      "precision_at_top_8_per_season": {
+        "average": 0.25,
+        "by_season": [
+          {
+            "k": 8,
+            "precision": 0.25,
+            "season": "2023-24"
+          },
+          {
+            "k": 8,
+            "precision": 0.25,
+            "season": "2024-25"
+          }
+        ]
+      },
+      "recall": 0.5,
+      "roc_auc": 0.7283653846153846
+    }
+  },
+  "selected_model": "logistic_regression",
+  "target": "deep_playoff",
+  "test_seasons": [
+    "2023-24",
+    "2024-25"
+  ],
+  "train_seasons": [
+    "2015-16",
+    "2016-17",
+    "2017-18",
+    "2018-19",
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23"
+  ]
+}
