@@ -77,6 +77,25 @@ Join manual tiers onto team seasons:
 python scripts/build_playoff_tiers.py
 ```
 
+Build regular-season quality tiers into `team_seasons_with_tiers.parquet`:
+
+```bash
+python scripts/build_quality_tiers.py
+```
+
+Quality tiers are assigned within each season using rank/percentile logic from
+the best available regular-season strength signal: net rating, rating margin,
+point differential per game, win percentage, or wins.
+
+```text
+0 = bottom 10 team
+1 = below average
+2 = average / play-in level
+3 = playoff-level
+4 = top-10 net rating
+5 = top-5 net rating / elite
+```
+
 Format and lint:
 
 ```bash
