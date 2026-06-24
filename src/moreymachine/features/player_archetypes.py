@@ -180,7 +180,7 @@ def select_player_features(player_seasons: pd.DataFrame) -> pd.DataFrame:
     features["three_point_attempt_rate"] = _three_point_attempt_rate(player_seasons)
     features["three_point_percentage"] = _direct_feature(
         player_seasons,
-        ("three_point_percentage", "three_point_pct", "fg3_pct"),
+        ("three_point_percentage", "three_point_pct", "three_p_pct", "fg3_pct"),
     )
     features["assist_rate"] = _assist_rate(player_seasons)
     features["turnover_rate"] = _turnover_rate(player_seasons)
@@ -361,18 +361,20 @@ def _shooting_efficiency(player_seasons: pd.DataFrame) -> pd.Series:
 def _three_point_attempt_rate(player_seasons: pd.DataFrame) -> pd.Series:
     direct = _direct_feature(
         player_seasons,
-        ("three_point_attempt_rate", "three_point_rate", "fg3a_rate"),
+        ("three_point_attempt_rate", "three_pa_rate", "three_point_rate", "fg3a_rate"),
     )
     if direct.notna().any():
         return direct
-    fg3a = _direct_feature(player_seasons, ("fg3a", "three_pointers_attempted"))
+    fg3a = _direct_feature(
+        player_seasons, ("fg3a", "three_pa", "three_pointers_attempted")
+    )
     fga = _direct_feature(player_seasons, ("fga", "field_goals_attempted"))
     return _safe_divide(fg3a, fga)
 
 
 def _assist_rate(player_seasons: pd.DataFrame) -> pd.Series:
     direct = _direct_feature(
-        player_seasons, ("assist_rate", "assist_percentage", "ast_pct")
+        player_seasons, ("assist_rate", "assist_percentage", "assist_pct", "ast_pct")
     )
     if direct.notna().any():
         return direct
@@ -383,7 +385,7 @@ def _assist_rate(player_seasons: pd.DataFrame) -> pd.Series:
 def _turnover_rate(player_seasons: pd.DataFrame) -> pd.Series:
     direct = _direct_feature(
         player_seasons,
-        ("turnover_rate", "turnover_percentage", "tov_pct"),
+        ("turnover_rate", "turnover_percentage", "turnover_pct", "tov_pct"),
     )
     if direct.notna().any():
         return direct
@@ -400,7 +402,7 @@ def _turnover_rate(player_seasons: pd.DataFrame) -> pd.Series:
 def _rebound_rate(player_seasons: pd.DataFrame) -> pd.Series:
     direct = _direct_feature(
         player_seasons,
-        ("rebound_rate", "rebound_percentage", "reb_pct", "trb_pct"),
+        ("rebound_rate", "rebound_percentage", "rebound_pct", "reb_pct", "trb_pct"),
     )
     if direct.notna().any():
         return direct
