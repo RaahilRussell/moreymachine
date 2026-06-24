@@ -89,20 +89,33 @@ def validate_all_teams_have_tiers(
     team_seasons: pd.DataFrame,
     playoff_tiers: pd.DataFrame,
 ) -> None:
-    """Validate each team-season has exactly one manual playoff tier row."""
+    """Validate playoff-tier coverage for every *completed* season.
+
+    A season is "completed" once any playoff tier exists for it. For those
+    seasons every team must have exactly one tier (so nothing used in modeling
+    is missing a label). Seasons with no tiers at all (e.g. the current,
+    not-yet-resolved season) are allowed to be unlabeled and are simply carried
+    through the join with a null tier. Tier rows that do not match a real
+    team-season are always rejected (catches typos).
+    """
     teams = add_team_abbr(team_seasons)
     validate_playoff_tiers(playoff_tiers)
 
     team_keys = _season_team_keys(teams)
     tier_keys = _season_team_keys(playoff_tiers)
 
-    missing = team_keys - tier_keys
-    if missing:
-        raise ValueError(f"Missing playoff tiers: {_format_key_set(missing)}")
-
     unexpected = tier_keys - team_keys
     if unexpected:
         raise ValueError(f"Unexpected playoff tier rows: {_format_key_set(unexpected)}")
+
+    tiered_seasons = {season for season, _ in tier_keys}
+    modeling_keys = {key for key in team_keys if key[0] in tiered_seasons}
+    missing = modeling_keys - tier_keys
+    if missing:
+        raise ValueError(
+            "Missing playoff tiers for modeling seasons: "
+            f"{_format_key_set(missing)}"
+        )
 
 
 def add_team_abbr(team_seasons: pd.DataFrame) -> pd.DataFrame:
@@ -142,14 +155,17 @@ def join_playoff_tiers(
     validate_all_teams_have_tiers(teams, playoff_tiers)
 
     merged = teams.merge(
-        playoff_tiers.loc[:, REQUIRED_TIER_COLUMNS],
+        playoff_tiers.loc[:, list(REQUIRED_TIER_COLUMNS)],
         on=["season", "team_abbr"],
         how="left",
         validate="one_to_one",
     )
-    if merged["playoff_tier"].isna().any():
-        raise ValueError("Joined team seasons contain missing playoff tiers")
-    merged["playoff_tier"] = merged["playoff_tier"].astype("int64")
+    # Tiers are nullable: the current, not-yet-resolved season is carried
+    # through unlabeled rather than dropped or fabricated.
+    merged["playoff_tier"] = pd.to_numeric(
+        merged["playoff_tier"], errors="coerce"
+    ).astype("Int64")
+    merged["has_playoff_outcome"] = merged["playoff_tier"].notna()
     return merged
 
 
