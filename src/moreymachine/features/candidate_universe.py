@@ -22,8 +22,8 @@ import numpy as np
 import pandas as pd
 
 from moreymachine.utils.paths import (
-    CANDIDATES_PATH,
     CANDIDATE_UNIVERSE_PATH,
+    CANDIDATES_PATH,
     CONTRACTS_PATH,
     CURRENT_ROSTER_REFERENCE_PATH,
     PLAYER_BIO_PATH,
@@ -245,9 +245,10 @@ def classify_candidate_type(
             f"Max-tier salary (${salary:.1f}M) - not a realistic acquisition.",
         )
     if quality is not None and quality >= STAR_QUALITY_PCTL:
+        top_pct = (1 - STAR_QUALITY_PCTL) * 100
         return (
             "star_unrealistic",
-            f"Top-{(1 - STAR_QUALITY_PCTL) * 100:.0f}% quality star - effectively unavailable.",
+            f"Top-{top_pct:.0f}% quality star - effectively unavailable.",
         )
     if (
         quality is not None
@@ -387,11 +388,24 @@ def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
             pool["draft_year"] = np.nan
         return pool
     cols = [c for c in ("player_id", "draft_year") if c in bio.columns]
-    if "position" in bio.columns and "position" not in pool.columns:
+    has_bio_position = "position" in bio.columns
+    if has_bio_position:
         cols.append("position")
-    return pool.merge(
-        bio.loc[:, cols].drop_duplicates("player_id"), on="player_id", how="left"
+    merged = pool.merge(
+        bio.loc[:, cols]
+        .drop_duplicates("player_id")
+        .rename(columns={"position": "bio_position"} if has_bio_position else {}),
+        on="player_id",
+        how="left",
     )
+    if has_bio_position:
+        # player_seasons.position is empty for most rows; prefer the real bio
+        # position and fall back to whatever the season pool carried.
+        season_pos = merged.get("position", pd.Series("", index=merged.index))
+        season_pos = season_pos.fillna("").astype(str).str.strip()
+        merged["position"] = season_pos.where(season_pos != "", merged["bio_position"])
+        merged = merged.drop(columns=["bio_position"])
+    return merged
 
 
 def _attach_quality_percentile(pool: pd.DataFrame) -> pd.DataFrame:
