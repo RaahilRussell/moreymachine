@@ -1,88 +1,123 @@
 # MoreyMachine Deployment
 
-MoreyMachine runs online from **real, precomputed Parquet/CSV files**. The app
-never calls the NBA API or scrapes salaries at runtime, and in `REAL_DATA_MODE`
-(the default) it never falls back to demo data — missing files render explicit
-"missing data" guidance instead.
+MoreyMachine deploys as a Streamlit app backed by committed, cached real-data
+artifacts. It does not fetch NBA data or scrape contracts during page loads.
 
-> Unofficial project. Not affiliated with Daryl Morey, the Philadelphia 76ers,
-> or the NBA.
+Unofficial project. Not affiliated with Daryl Morey, the Philadelphia 76ers, the
+NBA, or any data provider.
 
-## 1. Build the real data locally (once, before deploying)
+## Deployment Rule
 
-Run the pipeline in order. Each step writes real artifacts under `data/`:
+Build and validate the data locally first, then deploy the app with the generated
+`data/` artifacts included. In `REAL_DATA_MODE=true`, missing real files produce
+clear app errors and demo files are never substituted.
+
+## Local Build Before Deploy
+
+```bash
+cd /Users/raahil/moreymachine
+source .venv/bin/activate
+export PYTHONPATH=src
+
+python scripts/refresh_current_data.py --season latest
+python scripts/build_playoff_tiers.py
+python scripts/build_quality_tiers.py
+python scripts/build_team_fingerprints.py
+python scripts/train_contender_model.py
+python scripts/train_outcome_tier_model.py
+python scripts/build_roster_archetypes.py
+python scripts/build_player_archetypes.py
+python scripts/build_player_roles.py
+python scripts/analyze_roster_gaps.py --team PHI
+python scripts/build_candidate_universe.py --team PHI
+python scripts/rank_candidates.py --team PHI
+python scripts/validate_data_contracts.py
+python scripts/validate_target_board.py
+python scripts/run_backtest.py
+PYTHONPATH=src streamlit run src/moreymachine/app/streamlit_app.py
+```
+
+## Final Checks
 
 ```bash
 export PYTHONPATH=src
-python scripts/refresh_current_data.py --season latest  # stats + bio + tracking + BBRef contracts
-python scripts/build_playoff_tiers.py       # join real playoff tiers
-python scripts/build_quality_tiers.py       # within-season quality tiers
-python scripts/build_team_fingerprints.py   # team fingerprints + engineered scores
-python scripts/train_contender_model.py     # deep-playoff model + metrics
-python scripts/train_outcome_tier_model.py  # playoff-tier (0-5) model + metrics
-python scripts/build_roster_archetypes.py   # team roster archetypes
-python scripts/build_player_archetypes.py   # player archetypes
-python scripts/build_player_roles.py        # role dimensions + archetypes (bio + tracking)
-python scripts/analyze_roster_gaps.py --target-team PHI  # PHI roster gap report
-python scripts/build_candidate_universe.py --team PHI    # one candidate_type per player
-python scripts/rank_candidates.py --team PHI             # explanation-first split boards
-python scripts/validate_target_board.py                  # hard quality gates (fails non-zero)
-python scripts/run_backtest.py --target-team PHI         # backtest vs baselines
-streamlit run src/moreymachine/app/streamlit_app.py
+python scripts/validate_data_contracts.py
+python scripts/validate_target_board.py
+pytest
+PYTHONPATH=src python -c "import moreymachine; print('import ok')"
 ```
 
-The fetch/salary steps need network access and run **locally only**. Run
-`validate_target_board.py` before committing: it fails non-zero if the boards
-regress (too many Priority targets, saturated scores, a current Sixer or star on
-the realistic board, or missing explanations). Commit the resulting
-`data/processed`, `data/features`, `data/models`, `data/reports`, and
-`data/manual` artifacts so the deployed app can load them without any live calls.
+## Streamlit Community Cloud
 
-## 2. Streamlit Community Cloud
-
-1. Push the repository (including the committed `data/` artifacts) to GitHub.
-2. Create a new app from the repository.
+1. Push the repository, including the validated `data/` artifacts.
+2. Create a new Streamlit app from the repository.
 3. Set the main file path to:
 
    ```text
    src/moreymachine/app/streamlit_app.py
    ```
 
-4. Use the default Python environment and root `requirements.txt`.
-5. `REAL_DATA_MODE` defaults to `true`; leave it set so the app refuses demo data.
-6. Deploy. The **Data Sources** page shows every table's source, rows, seasons,
-   last update, and real/manual status.
+4. Use the root `requirements.txt`.
+5. Keep `REAL_DATA_MODE=true`.
+6. Deploy.
 
-## 3. Hugging Face Spaces
+The Data Sources page will show rows, seasons, source, pulled-at timestamp,
+freshness age, real/manual status, missing fields, and rebuild commands for each
+registered table.
 
-1. Create a Space with the Streamlit SDK.
-2. Connect or upload this repository (with committed `data/` artifacts).
-3. Set the app file to `src/moreymachine/app/streamlit_app.py`.
-4. Ensure `requirements.txt` is at the repository root.
-5. Start the Space.
+## Hugging Face Spaces
 
-## 4. Local run
+1. Create a Streamlit Space.
+2. Upload or connect this repository with the validated `data/` artifacts.
+3. Keep `requirements.txt` at the repository root.
+4. Set the app file to `src/moreymachine/app/streamlit_app.py`.
+5. Keep `REAL_DATA_MODE=true`.
+
+## Local App Run
 
 ```bash
-python -m venv .venv
+cd /Users/raahil/moreymachine
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e .
-# build data (section 1), then:
+export PYTHONPATH=src
 streamlit run src/moreymachine/app/streamlit_app.py
 ```
 
-## Configuration
+If the default port is busy, use:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `REAL_DATA_MODE` | `true` | When on, the app/pipeline fail loudly on missing real files and never read `data/demo`. |
-| `MOREYMACHINE_NBA_START_SEASON` | `2015-16` | First season to fetch. |
-| `MOREYMACHINE_NBA_LATEST_SEASON` | current | Last season to fetch. |
+```bash
+streamlit run src/moreymachine/app/streamlit_app.py --server.port 8510
+```
 
-## Demo data
+## Updating Data After Deploy
 
-`data/demo/` contains tiny, clearly-labeled toy files used only for offline UI
-experiments. They are **never** loaded in `REAL_DATA_MODE` and are not part of
-the dataset registry, so they can never enter real rankings.
+Refresh locally, commit the changed artifacts, and redeploy:
+
+```bash
+python scripts/refresh_current_data.py --season latest
+python scripts/build_candidate_universe.py --team PHI
+python scripts/rank_candidates.py --team PHI
+python scripts/validate_data_contracts.py
+python scripts/validate_target_board.py
+python scripts/run_backtest.py
+```
+
+Do not add runtime API calls to Streamlit pages. Real-time means the cached data
+can be refreshed and redeployed, not live API calls inside page loads.
+
+## Manual Data
+
+Manual contracts live in `data/manual/contracts.csv`. Manual candidates live in
+`data/manual/candidates.csv`.
+
+Only enter sourced real values. Use `missing_data_flags` or `source_note` to
+explain blanks. Do not fabricate contract, salary, injury, transaction,
+availability, or candidate-status fields.
+
+## Known Deployment Limitations
+
+- Historical injury, transaction, and availability data are not sourced.
+- Historical free-agent/trade status is incomplete, so the backtest does not
+  show a free-agent split unless that data is sourced later.
+- Contract-value backtesting is limited when historical salary data is absent.
+- Streamlit Cloud storage is read-only at runtime for this use case; refresh data
+  locally and commit regenerated artifacts.
