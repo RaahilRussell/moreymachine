@@ -1,21 +1,22 @@
-"""Assign every real player exactly one acquisition candidate type.
+"""Assign every real player exactly one acquisition candidate type + feasibility.
 
-The previous board lumped 261 players into a single ``trade_target`` bucket and
-never separated current Sixers, untouchable stars, or genuine free-agency
-targets from realistic trade pieces. This module rebuilds the *candidate
-universe*: it joins the latest real player season pool with Basketball-Reference
-contracts and nba_api bio, then assigns each player exactly one
-``candidate_type`` from a closed taxonomy. Current Sixers are pulled out into a
-separate roster-reference table and excluded from the acquisition board.
+This rebuild keys candidate classification off the *explicit* contract schema
+(cap hit, contract_status category, free-agency year) rather than a vague salary
+number, and adds an acquisition-feasibility score, tier, and reason that weigh
+contract status, salary, and how important the player is to his current team.
 
-The classification is deterministic and transparent (first matching rule wins)
-so every label can be explained from real salary, contract status, draft year,
-and a percentile-scaled quality proxy.
+Hard rules enforced here:
+* Current Sixers are pulled off the acquisition board into a roster reference.
+* Stars and missing-contract players can never be a realistic/Priority target.
+* Long-term high-quality core players are ``unavailable_core_player`` (not a
+  realistic trade target) unless a manual override says otherwise.
+* Unknown contracts are never silently turned into free agents.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +24,7 @@ import pandas as pd
 
 from moreymachine.utils.paths import (
     CANDIDATE_UNIVERSE_PATH,
+    CANDIDATE_UNIVERSE_SUMMARY_PATH,
     CANDIDATES_PATH,
     CONTRACTS_PATH,
     CURRENT_ROSTER_REFERENCE_PATH,
@@ -30,8 +32,6 @@ from moreymachine.utils.paths import (
     PLAYER_SEASONS_PATH,
 )
 
-# Philadelphia 76ers 2025-26 roster - excluded from the acquisition board and
-# surfaced in the Current Roster reference table instead. Matched on name.
 PHI_ROSTER_2025_26 = (
     "Adem Bona",
     "Andre Drummond",
@@ -55,9 +55,10 @@ PHI_ROSTER_2025_26 = (
     "VJ Edgecombe",
 )
 
-# The closed candidate-type taxonomy. Every classified player gets exactly one.
 CANDIDATE_TYPES = (
-    "free_agent",
+    "current_sixers_player",
+    "unrestricted_free_agent",
+    "restricted_free_agent",
     "likely_free_agent",
     "minimum_candidate",
     "mle_candidate",
@@ -66,15 +67,18 @@ CANDIDATE_TYPES = (
     "rookie_scale_trade_target",
     "star_unrealistic",
     "unavailable_core_player",
-    "current_sixers_player",
     "manual_watchlist",
     "missing_contract_status",
 )
 
-# Board membership derived from candidate_type. A player can sit on the umbrella
-# realistic board and on exactly one of the free-agent / trade sub-boards.
 FREE_AGENT_TYPES = frozenset(
-    {"free_agent", "likely_free_agent", "minimum_candidate", "mle_candidate"}
+    {
+        "unrestricted_free_agent",
+        "restricted_free_agent",
+        "likely_free_agent",
+        "minimum_candidate",
+        "mle_candidate",
+    }
 )
 TRADE_TYPES = frozenset(
     {
@@ -88,16 +92,31 @@ WATCHLIST_TYPES = frozenset(
     {"star_unrealistic", "unavailable_core_player", "missing_contract_status"}
 )
 
-# Salary thresholds in millions, anchored to real CBA mechanisms.
-ROOKIE_SCALE_MAX_M = 6.0
-MIN_SALARY_MAX_M = 2.6
+# Salary buckets in millions (cap hit).
 MLE_MAX_M = 14.0
 REALISTIC_TRADE_MAX_M = 25.0
-EXPENSIVE_TRADE_MAX_M = 35.0
-STAR_SALARY_M = 35.0
+EXPENSIVE_TRADE_MAX_M = 40.0
 STAR_QUALITY_PCTL = 0.93
-UNAVAILABLE_CORE_QUALITY_PCTL = 0.90
-ROOKIE_DRAFT_YEAR = 2023
+UNAVAILABLE_CORE_QUALITY_PCTL = 0.88
+
+# Baseline acquisition feasibility (0-100) by candidate_type before adjustment.
+FEASIBILITY_BASELINE = {
+    "unrestricted_free_agent": 85.0,
+    "minimum_candidate": 88.0,
+    "mle_candidate": 78.0,
+    "restricted_free_agent": 60.0,
+    "likely_free_agent": 68.0,
+    "rookie_scale_trade_target": 60.0,
+    "realistic_trade_target": 58.0,
+    "manual_watchlist": 55.0,
+    "expensive_trade_target": 38.0,
+    "missing_contract_status": 25.0,
+    "unavailable_core_player": 18.0,
+    "star_unrealistic": 10.0,
+}
+
+# candidate_types whose feasibility drops as the player matters more to his team.
+IMPORTANCE_SENSITIVE = frozenset(TRADE_TYPES | {"unavailable_core_player"})
 
 UNIVERSE_COLUMNS = (
     "player_id",
@@ -109,19 +128,29 @@ UNIVERSE_COLUMNS = (
     "minutes",
     "usage_rate",
     "quality_percentile",
+    "cap_hit_millions",
+    "base_salary_millions",
+    "contract_aav_millions",
     "salary_millions",
-    "salary_source",
     "contract_status",
+    "free_agent_year",
+    "option_status",
+    "extension_status",
     "years_remaining",
     "draft_year",
+    "salary_source",
     "candidate_type",
     "candidate_type_reason",
+    "acquisition_feasibility",
+    "feasibility_tier",
+    "acquisition_reason",
     "on_acquisition_board",
     "realistic_board",
     "free_agent_board",
     "trade_board",
     "watchlist_board",
     "manual_override",
+    "data_mode",
     "missing_data_flags",
 )
 
@@ -133,8 +162,10 @@ class CandidateUniverseResult:
     universe_rows: int
     roster_rows: int
     type_counts: dict[str, int]
+    feasibility_tier_counts: dict[str, int]
     universe_path: Path
     roster_path: Path
+    summary_path: Path
 
 
 def build_candidate_universe(
@@ -145,10 +176,11 @@ def build_candidate_universe(
     candidates_path: str | Path = CANDIDATES_PATH,
     universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
     roster_path: str | Path = CURRENT_ROSTER_REFERENCE_PATH,
+    summary_path: str | Path = CANDIDATE_UNIVERSE_SUMMARY_PATH,
     season: str | None = None,
     team: str = "PHI",
 ) -> CandidateUniverseResult:
-    """Classify every player, split out current Sixers, and write both tables."""
+    """Classify every player, split out current Sixers, and write the tables."""
     universe = classify_candidate_universe(
         player_seasons=pd.read_parquet(player_seasons_path),
         contracts=_optional(contracts_path),
@@ -163,16 +195,29 @@ def build_candidate_universe(
     universe_path = Path(universe_path)
     roster_path = Path(roster_path)
     universe_path.parent.mkdir(parents=True, exist_ok=True)
+    roster_path.parent.mkdir(parents=True, exist_ok=True)
     acquisition.loc[:, list(UNIVERSE_COLUMNS)].to_parquet(universe_path, index=False)
     roster.loc[:, list(UNIVERSE_COLUMNS)].to_parquet(roster_path, index=False)
 
-    type_counts = universe["candidate_type"].value_counts().sort_index().to_dict()
+    type_counts = {
+        str(k): int(v) for k, v in universe["candidate_type"].value_counts().items()
+    }
+    tier_counts = {
+        str(k): int(v)
+        for k, v in acquisition["feasibility_tier"].value_counts().items()
+    }
+    summary_path = Path(summary_path)
+    summary_path.write_text(
+        _summary_markdown(acquisition, roster, team), encoding="utf-8"
+    )
     return CandidateUniverseResult(
         universe_rows=len(acquisition),
         roster_rows=len(roster),
-        type_counts={str(k): int(v) for k, v in type_counts.items()},
+        type_counts=type_counts,
+        feasibility_tier_counts=tier_counts,
         universe_path=universe_path,
         roster_path=roster_path,
+        summary_path=summary_path,
     )
 
 
@@ -198,7 +243,12 @@ def classify_candidate_universe(
     for row in pool.to_dict(orient="records"):
         override = manual.get(_player_key(row))
         candidate_type, reason = classify_candidate_type(row, manual_override=override)
-        records.append(_universe_record(row, candidate_type, reason, override))
+        feasibility, tier, acq_reason = acquisition_feasibility(row, candidate_type)
+        records.append(
+            _universe_record(
+                row, candidate_type, reason, override, feasibility, tier, acq_reason
+            )
+        )
 
     frame = pd.DataFrame(records)
     return (
@@ -213,12 +263,7 @@ def classify_candidate_type(
     *,
     manual_override: str | None = None,
 ) -> tuple[str, str]:
-    """Assign exactly one candidate_type with a short human reason.
-
-    First matching rule wins. Order encodes priority: roster status and explicit
-    manual labels beat derived salary buckets; missing contracts and stars are
-    pulled off the realistic board before the trade/free-agent buckets apply.
-    """
+    """Assign exactly one candidate_type with a short human reason."""
     name = str(row.get("player_name") or "").strip()
     if name in PHI_ROSTER_2025_26:
         return "current_sixers_player", "On the 76ers 2025-26 roster."
@@ -231,75 +276,89 @@ def classify_candidate_type(
     ):
         return manual_override, "Manual candidate_type override."
 
-    salary = _salary_millions(row)
-    if salary is None:
+    cap_hit = _cap_hit(row)
+    status = str(row.get("contract_status") or "").lower()
+    if cap_hit is None and status in ("", "unknown"):
         return (
             "missing_contract_status",
             "No contract row matched - cannot price an acquisition.",
         )
 
-    quality = _quality_percentile(row)
-    if salary >= STAR_SALARY_M:
-        return (
-            "star_unrealistic",
-            f"Max-tier salary (${salary:.1f}M) - not a realistic acquisition.",
-        )
-    if quality is not None and quality >= STAR_QUALITY_PCTL:
-        top_pct = (1 - STAR_QUALITY_PCTL) * 100
-        return (
-            "star_unrealistic",
-            f"Top-{top_pct:.0f}% quality star - effectively unavailable.",
-        )
+    if status == "unrestricted_free_agent":
+        return "unrestricted_free_agent", "Listed as an unrestricted free agent."
+    if status == "restricted_free_agent":
+        return "restricted_free_agent", "Listed as a restricted free agent."
+
+    quality = _quality(row)
+    if status == "max_or_near_max" or (
+        quality is not None and quality >= STAR_QUALITY_PCTL
+    ):
+        salary_text = f"${cap_hit:.1f}M cap hit" if cap_hit is not None else "max-tier"
+        return "star_unrealistic", f"Max/near-max star ({salary_text}) - unrealistic."
     if (
-        quality is not None
+        status == "signed_long_term"
+        and quality is not None
         and quality >= UNAVAILABLE_CORE_QUALITY_PCTL
-        and _years_remaining(row) >= 2
     ):
         return (
             "unavailable_core_player",
-            "High-quality young core piece on a multi-year deal - not for trade.",
+            "Core piece on a multi-year deal - not realistically available.",
         )
 
-    status = str(row.get("contract_status") or "").lower()
-    if status == "expiring":
-        if salary <= MIN_SALARY_MAX_M:
-            return (
-                "minimum_candidate",
-                f"Expiring minimum-range deal (${salary:.1f}M) - cheap FA target.",
-            )
-        if salary <= MLE_MAX_M:
-            return (
-                "mle_candidate",
-                f"Expiring mid-range deal (${salary:.1f}M) - MLE-range FA target.",
-            )
-        return (
-            "likely_free_agent",
-            f"Expiring ${salary:.1f}M deal - likely hits free agency.",
-        )
-
-    if (
-        _draft_year(row) is not None
-        and _draft_year(row) >= ROOKIE_DRAFT_YEAR
-        and (salary <= ROOKIE_SCALE_MAX_M)
-    ):
+    if status == "minimum_contract":
+        return "minimum_candidate", "On a minimum-range deal - cheap target."
+    if status == "rookie_scale":
         return (
             "rookie_scale_trade_target",
-            f"Recent draftee on a ${salary:.1f}M rookie-scale deal.",
+            "On a rookie-scale deal - trade cost differs.",
         )
-    if salary <= REALISTIC_TRADE_MAX_M:
+    if status == "signed_short_term":
+        if cap_hit is not None and cap_hit <= MLE_MAX_M:
+            return "mle_candidate", "Expiring mid-range deal - MLE-range target."
+        return "likely_free_agent", "Expiring deal - likely reaches free agency."
+
+    # signed_long_term / unknown-with-salary -> trade targets by cap hit.
+    if cap_hit is None:
         return (
-            "realistic_trade_target",
-            f"Under contract at ${salary:.1f}M - movable in a realistic trade.",
+            "missing_contract_status",
+            "Contract status known but no cap figure - cannot price.",
         )
-    if salary <= EXPENSIVE_TRADE_MAX_M:
+    if cap_hit <= REALISTIC_TRADE_MAX_M:
+        return "realistic_trade_target", f"Under contract at ${cap_hit:.1f}M - movable."
+    if cap_hit <= EXPENSIVE_TRADE_MAX_M:
         return (
             "expensive_trade_target",
-            f"Under contract at ${salary:.1f}M - expensive but tradeable.",
+            f"Under contract at ${cap_hit:.1f}M - expensive but tradeable.",
         )
-    return (
-        "star_unrealistic",
-        f"Large ${salary:.1f}M deal near max territory - unrealistic.",
-    )
+    return "star_unrealistic", f"Near-max ${cap_hit:.1f}M deal - unrealistic."
+
+
+def acquisition_feasibility(row: dict, candidate_type: str) -> tuple[float, str, str]:
+    """Return (0-100 feasibility, tier, reason) for acquiring this player."""
+    if candidate_type == "missing_contract_status":
+        return 25.0, "Unknown", "No contract data - feasibility cannot be assessed."
+
+    base = FEASIBILITY_BASELINE.get(candidate_type, 45.0)
+    quality = _quality(row) or 0.5
+    reasons = [_FEASIBILITY_BLURB.get(candidate_type, "Feasibility unclear")]
+
+    if candidate_type in IMPORTANCE_SENSITIVE:
+        # A more important player is harder to pry loose from his team.
+        penalty = 30.0 * max(0.0, quality - 0.5)
+        base -= penalty
+        if quality >= 0.8:
+            reasons.append("a key piece for his current team, so harder to acquire")
+        elif quality >= 0.6:
+            reasons.append("a useful rotation player his team may want to keep")
+
+    cap_hit = _cap_hit(row)
+    if candidate_type in TRADE_TYPES and cap_hit is not None and cap_hit >= 25:
+        base -= 6.0
+        reasons.append("a large salary that complicates trade matching")
+
+    score = round(max(0.0, min(100.0, base)), 1)
+    tier = _feasibility_tier(score)
+    return score, tier, "; ".join(reasons) + "."
 
 
 def board_membership(candidate_type: str) -> dict[str, bool]:
@@ -314,17 +373,48 @@ def board_membership(candidate_type: str) -> dict[str, bool]:
     }
 
 
+def _feasibility_tier(score: float) -> str:
+    if score >= 80:
+        return "Easy"
+    if score >= 60:
+        return "Possible"
+    if score >= 40:
+        return "Difficult"
+    if score >= 25:
+        return "Very Difficult"
+    return "Unrealistic"
+
+
+_FEASIBILITY_BLURB = {
+    "unrestricted_free_agent": "An unrestricted free agent - signable outright",
+    "restricted_free_agent": "A restricted free agent - his team can match an offer",
+    "minimum_candidate": "Signable for the veteran minimum",
+    "mle_candidate": "In MLE range as a free-agent target",
+    "likely_free_agent": "On an expiring deal, likely available in free agency",
+    "rookie_scale_trade_target": "On a cheap rookie-scale deal; needs a trade",
+    "realistic_trade_target": "Movable in a realistic trade package",
+    "expensive_trade_target": "Tradeable but expensive; needs salary matching",
+    "manual_watchlist": "Tracked manually for situational interest",
+    "unavailable_core_player": "A core piece; realistically not available",
+    "star_unrealistic": "A max-tier star; not realistically acquirable",
+}
+
+
 def _universe_record(
     row: dict,
     candidate_type: str,
     reason: str,
     override: str | None,
+    feasibility: float,
+    tier: str,
+    acq_reason: str,
 ) -> dict:
     boards = board_membership(candidate_type)
+    cap_hit = _cap_hit(row)
     return {
         "player_id": row.get("player_id"),
         "player_name": str(row.get("player_name") or ""),
-        "current_team": str(row.get("team_abbr") or row.get("team") or ""),
+        "current_team": str(row.get("team_abbr") or row.get("current_team") or ""),
         "season": str(row.get("season") or ""),
         "position": str(row.get("position") or "")
         if pd.notna(row.get("position"))
@@ -333,16 +423,26 @@ def _universe_record(
         "minutes": _num(row.get("minutes")),
         "usage_rate": _num(row.get("usage_rate")),
         "quality_percentile": _num(row.get("quality_percentile")),
-        "salary_millions": _salary_millions(row),
-        "salary_source": str(row.get("salary_source") or row.get("source") or ""),
+        "cap_hit_millions": cap_hit,
+        "base_salary_millions": _num(row.get("base_salary_millions")),
+        "contract_aav_millions": _num(row.get("contract_aav_millions")),
+        "salary_millions": cap_hit,
         "contract_status": str(row.get("contract_status") or ""),
+        "free_agent_year": _num(row.get("free_agent_year")),
+        "option_status": str(row.get("option_status") or ""),
+        "extension_status": str(row.get("extension_status") or ""),
         "years_remaining": _num(row.get("years_remaining")),
         "draft_year": _num(row.get("draft_year")),
+        "salary_source": str(row.get("salary_source") or ""),
         "candidate_type": candidate_type,
         "candidate_type_reason": reason,
+        "acquisition_feasibility": feasibility,
+        "feasibility_tier": tier,
+        "acquisition_reason": acq_reason,
         **boards,
         "manual_override": override or "",
-        "missing_data_flags": _missing_flags(row),
+        "data_mode": "derived",
+        "missing_data_flags": _missing_flags(row, cap_hit),
     }
 
 
@@ -361,25 +461,26 @@ def _season_pool(player_seasons: pd.DataFrame, *, season: str | None) -> pd.Data
 def _merge_contracts(
     pool: pd.DataFrame, contracts: pd.DataFrame | None
 ) -> pd.DataFrame:
+    cols = [
+        "cap_hit_millions",
+        "base_salary_millions",
+        "contract_aav_millions",
+        "contract_status",
+        "free_agent_year",
+        "option_status",
+        "extension_status",
+        "years_remaining",
+        "salary_source",
+    ]
     if contracts is None or contracts.empty:
-        for col in ("salary", "contract_status", "years_remaining", "salary_source"):
+        for col in cols:
             pool[col] = np.nan if col != "contract_status" else ""
         return pool
-    c = contracts.copy()
-    c = c.rename(columns={"source": "salary_source"})
-    keep = [
-        col
-        for col in (
-            "player_id",
-            "salary",
-            "contract_status",
-            "years_remaining",
-            "salary_source",
-        )
-        if col in c.columns
-    ]
-    c = c.loc[:, keep].drop_duplicates("player_id")
-    return pool.merge(c, on="player_id", how="left")
+    keep = ["player_id", *[c for c in cols if c in contracts.columns]]
+    merged = pool.merge(
+        contracts.loc[:, keep].drop_duplicates("player_id"), on="player_id", how="left"
+    )
+    return merged
 
 
 def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
@@ -391,16 +492,13 @@ def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
     has_bio_position = "position" in bio.columns
     if has_bio_position:
         cols.append("position")
+    rename = {"position": "bio_position"} if has_bio_position else {}
     merged = pool.merge(
-        bio.loc[:, cols]
-        .drop_duplicates("player_id")
-        .rename(columns={"position": "bio_position"} if has_bio_position else {}),
+        bio.loc[:, cols].drop_duplicates("player_id").rename(columns=rename),
         on="player_id",
         how="left",
     )
     if has_bio_position:
-        # player_seasons.position is empty for most rows; prefer the real bio
-        # position and fall back to whatever the season pool carried.
         season_pos = merged.get("position", pd.Series("", index=merged.index))
         season_pos = season_pos.fillna("").astype(str).str.strip()
         merged["position"] = season_pos.where(season_pos != "", merged["bio_position"])
@@ -409,12 +507,6 @@ def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
 
 
 def _attach_quality_percentile(pool: pd.DataFrame) -> pd.DataFrame:
-    """Percentile-scale a transparent quality proxy within the season pool.
-
-    Quality = blend of rotation load (minutes), scoring volume (pts), shot
-    creation (usage), and efficiency (true shooting). Percentile-ranking the
-    blend keeps it bounded and avoids any single raw stat saturating.
-    """
     minutes = pd.to_numeric(pool.get("minutes"), errors="coerce").fillna(0.0)
     pts = pd.to_numeric(pool.get("pts"), errors="coerce").fillna(0.0)
     usage = pd.to_numeric(pool.get("usage_rate"), errors="coerce").fillna(0.0)
@@ -438,18 +530,19 @@ def _manual_overrides(manual: pd.DataFrame | None) -> dict:
     if manual is None or manual.empty:
         return {}
     overrides: dict = {}
-    type_col = None
-    for col in ("candidate_type_override", "candidate_type"):
-        if col in manual.columns:
-            type_col = col
-            break
+    type_col = next(
+        (
+            c
+            for c in ("candidate_type_override", "candidate_type")
+            if c in manual.columns
+        ),
+        None,
+    )
     if type_col is None:
         return overrides
     for record in manual.to_dict(orient="records"):
         value = str(record.get(type_col) or "").strip()
         if not value or value == "trade_target":
-            # Generic 'trade_target' is the old pool label, not a manual intent;
-            # let the salary-based classifier decide instead.
             continue
         overrides[_player_key(record)] = value
     return overrides
@@ -465,13 +558,13 @@ def _player_key(row: dict) -> tuple:
     return ("name", str(row.get("player_name") or "").strip().lower())
 
 
-def _missing_flags(row: dict) -> str:
+def _missing_flags(row: dict, cap_hit: float | None) -> str:
     flags = []
-    if _salary_millions(row) is None:
-        flags.append("salary missing")
-    if not (str(row.get("position") or "").strip()):
+    if cap_hit is None:
+        flags.append("cap hit missing")
+    if not str(row.get("position") or "").strip():
         flags.append("position missing")
-    if _draft_year(row) is None:
+    if _num(row.get("draft_year")) is None:
         flags.append("draft year missing")
     minutes = _num(row.get("minutes"))
     if minutes is not None and minutes < 500:
@@ -479,32 +572,51 @@ def _missing_flags(row: dict) -> str:
     return "; ".join(flags) if flags else "none"
 
 
-def _salary_millions(row: dict) -> float | None:
-    for key in ("salary_millions", "salary", "expected_salary"):
+def _cap_hit(row: dict) -> float | None:
+    for key in ("cap_hit_millions", "salary_millions", "salary"):
         value = _num(row.get(key))
         if value is not None:
             return value / 1_000_000 if value > 1000 else value
     return None
 
 
-def _quality_percentile(row: dict) -> float | None:
+def _quality(row: dict) -> float | None:
     return _num(row.get("quality_percentile"))
-
-
-def _years_remaining(row: dict) -> float:
-    value = _num(row.get("years_remaining"))
-    return value if value is not None else 0.0
-
-
-def _draft_year(row: dict) -> float | None:
-    return _num(row.get("draft_year"))
 
 
 def _num(value) -> float | None:
     numeric = pd.to_numeric(pd.Series([value]), errors="coerce").iloc[0]
-    if pd.isna(numeric):
-        return None
-    return float(numeric)
+    return None if pd.isna(numeric) else float(numeric)
+
+
+def _summary_markdown(
+    acquisition: pd.DataFrame, roster: pd.DataFrame, team: str
+) -> str:
+    built = datetime.now(UTC).date().isoformat()
+    lines = [
+        f"# Candidate Universe Summary ({team})",
+        "",
+        f"_Built {built} from real player seasons + contracts + bio (derived)._",
+        "",
+        f"- Acquisition candidates: **{len(acquisition)}**",
+        f"- Current {team} roster (off board): **{len(roster)}**",
+        "",
+        "## candidate_type counts",
+    ]
+    for k, v in acquisition["candidate_type"].value_counts().items():
+        lines.append(f"- {k}: {v}")
+    lines += ["", "## Acquisition feasibility tiers"]
+    for k, v in acquisition["feasibility_tier"].value_counts().items():
+        lines.append(f"- {k}: {v}")
+    lines += ["", "## Most feasible realistic candidates"]
+    realistic = acquisition[acquisition["realistic_board"]]
+    top = realistic.sort_values("acquisition_feasibility", ascending=False).head(15)
+    for _, r in top.iterrows():
+        lines.append(
+            f"- {r['player_name']} ({r['current_team']}) - {r['candidate_type']}, "
+            f"feasibility {r['acquisition_feasibility']:.0f} ({r['feasibility_tier']})"
+        )
+    return "\n".join(lines) + "\n"
 
 
 def _optional(path: str | Path) -> pd.DataFrame | None:

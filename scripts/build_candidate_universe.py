@@ -31,8 +31,12 @@ def main() -> int:
     print("Candidate type counts:")
     for candidate_type, count in sorted(result.type_counts.items()):
         print(f"  {candidate_type}: {count}")
+    print("Feasibility tiers:")
+    for tier, count in sorted(result.feasibility_tier_counts.items()):
+        print(f"  {tier}: {count}")
     print(f"Universe: {result.universe_path}")
     print(f"Roster:   {result.roster_path}")
+    print(f"Summary:  {result.summary_path}")
     return 0
 
 

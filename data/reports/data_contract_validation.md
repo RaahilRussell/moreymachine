@@ -8,7 +8,7 @@
 | player_tracking | yes | - | - |
 | contracts | yes | - | - |
 | candidates | yes | - | - |
-| candidate_universe | yes | missing required columns: ['acquisition_feasibility', 'feasibility_tier'] | missing provenance columns: ['data_mode'] |
+| candidate_universe | yes | - | - |
 | player_roles | yes | missing required columns: ['expected_role'] | missing provenance columns: ['data_mode'] |
 | roster_gaps | yes | - | missing provenance columns: ['data_sources'] |
 | candidate_rankings | yes | - | - |

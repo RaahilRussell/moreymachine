@@ -49,7 +49,8 @@ CANDIDATE_RANKINGS_WATCHLIST_PATH = (
 )
 PLAYER_ROLE_EXPLANATIONS_PATH = REPORTS_DATA_DIR / "player_role_explanations.parquet"
 CURRENT_ROSTER_REFERENCE_PATH = REPORTS_DATA_DIR / "current_roster_reference.parquet"
-CANDIDATE_UNIVERSE_PATH = REPORTS_DATA_DIR / "candidate_universe.parquet"
+CANDIDATE_UNIVERSE_PATH = FEATURES_DATA_DIR / "candidate_universe.parquet"
+CANDIDATE_UNIVERSE_SUMMARY_PATH = REPORTS_DATA_DIR / "candidate_universe_summary.md"
 TARGET_BOARD_VALIDATION_PATH = REPORTS_DATA_DIR / "target_board_validation.md"
 DATA_FRESHNESS_REPORT_PATH = REPORTS_DATA_DIR / "data_freshness_report.md"
 
