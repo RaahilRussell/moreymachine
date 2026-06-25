@@ -9,7 +9,7 @@
 | contracts | yes | - | - |
 | candidates | yes | - | - |
 | candidate_universe | yes | - | - |
-| player_roles | yes | missing required columns: ['expected_role'] | missing provenance columns: ['data_mode'] |
+| player_roles | yes | - | - |
 | roster_gaps | yes | - | missing provenance columns: ['data_sources'] |
 | candidate_rankings | yes | - | - |
 | candidate_rankings_realistic | yes | - | - |

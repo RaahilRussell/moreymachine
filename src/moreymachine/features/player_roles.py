@@ -1,16 +1,14 @@
-"""Role-dimension and archetype engine built from real bio + tracking data.
+"""Role-dimension, archetype, and expected-role engine from real data.
 
-The previous archetype labels were assigned from box-score stats alone, with no
-position or tracking input, which produced basketball-wrong labels (e.g. 6'7"
-wings tagged "Rim Protector"). This module rebuilds roles from three real
-tables - player season stats, player bio (position/height), and player tracking
-(catch-and-shoot, pull-up, drives, passing, touches, rebounding chances, rim
-defense) - and scales every role dimension to a *percentile within the season
-pool* so no single raw stat saturates.
+Built from three real tables - player season stats, player bio (position/
+height/draft), and player tracking (catch-and-shoot, pull-up, drives, passing,
+rebound chances, rim defense). Every role dimension is percentile-scaled within
+the season pool so no raw stat saturates.
 
-Outputs, per player, eleven role dimensions on 0-100 and one of fifteen
-archetypes, plus a confidence and a missing-data flag. ``build_player_roles``
-also writes ``data/reports/player_role_explanations.parquet``.
+Two outputs per player: a *role archetype* (what kind of player he is) and an
+*expected role* (how big a role he should realistically play). The expected role
+is impact-gated - "Star" requires elite minutes AND usage AND impact, not just a
+high fit - so downstream scoring cannot inflate a bench player into a star.
 """
 
 from __future__ import annotations
@@ -24,25 +22,31 @@ import pandas as pd
 from moreymachine.utils.paths import (
     PLAYER_BIO_PATH,
     PLAYER_ROLE_EXPLANATIONS_PATH,
+    PLAYER_ROLES_PATH,
     PLAYER_SEASONS_PATH,
     PLAYER_TRACKING_PATH,
 )
 
-# Minutes below this make a season sample unreliable for role inference.
 RELIABLE_MINUTES = 600.0
 THIN_MINUTES = 250.0
 
 ROLE_DIMENSIONS = (
     "creation_score",
+    "secondary_creation_score",
     "spacing_score",
     "movement_shooting_score",
+    "catch_and_shoot_score",
+    "pull_up_shooting_score",
     "rim_pressure_score",
     "connector_score",
+    "low_usage_fit_score",
     "wing_defense_proxy",
+    "point_of_attack_defense_proxy",
     "rim_protection_proxy",
-    "rebounding_score",
+    "defensive_rebounding_score",
+    "offensive_rebounding_score",
     "usage_dependency",
-    "low_usage_fit",
+    "playoff_role_proxy",
     "sample_reliability",
 )
 
@@ -55,13 +59,25 @@ ARCHETYPES = (
     "3-and-D Wing",
     "Connector Wing",
     "Defensive Wing",
+    "Point-of-Attack Guard",
     "Stretch Big",
     "Rim Protector",
-    "Rebounding Big",
     "Backup Center",
+    "Rebounding Big",
     "Developmental Prospect",
     "Fringe Rotation",
     "Unknown / Missing Data",
+)
+
+EXPECTED_ROLES = (
+    "Star",
+    "High-Level Starter",
+    "Starter",
+    "Rotation Player",
+    "Bench Specialist",
+    "Developmental",
+    "Fringe",
+    "Unknown",
 )
 
 ROLE_OUTPUT_COLUMNS = (
@@ -72,11 +88,14 @@ ROLE_OUTPUT_COLUMNS = (
     "position",
     "height_inches",
     "role_archetype",
+    "expected_role",
     *ROLE_DIMENSIONS,
     "top_role_dimensions",
     "why_archetype",
+    "role_concerns",
     "role_confidence",
     "missing_role_data",
+    "data_mode",
 )
 
 
@@ -87,6 +106,7 @@ class PlayerRolesResult:
     rows: int
     season: str
     output_path: Path
+    features_path: Path
 
 
 def build_player_roles(
@@ -95,20 +115,27 @@ def build_player_roles(
     player_bio_path: str | Path = PLAYER_BIO_PATH,
     player_tracking_path: str | Path = PLAYER_TRACKING_PATH,
     output_path: str | Path = PLAYER_ROLE_EXPLANATIONS_PATH,
+    features_path: str | Path = PLAYER_ROLES_PATH,
     season: str | None = None,
 ) -> PlayerRolesResult:
-    """Compute role dimensions/archetypes for a season and save explanations."""
+    """Compute role dimensions/archetypes/expected roles and write both tables."""
     roles = compute_player_roles(
         player_seasons=pd.read_parquet(player_seasons_path),
         player_bio=_optional(player_bio_path),
         player_tracking=_optional(player_tracking_path),
         season=season,
     )
-    output = Path(output_path)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    roles.loc[:, list(ROLE_OUTPUT_COLUMNS)].to_parquet(output, index=False)
+    out = roles.loc[:, list(ROLE_OUTPUT_COLUMNS)]
+    for path in (Path(output_path), Path(features_path)):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        out.to_parquet(path, index=False)
     season_label = str(roles["season"].iloc[0]) if not roles.empty else (season or "")
-    return PlayerRolesResult(rows=len(roles), season=season_label, output_path=output)
+    return PlayerRolesResult(
+        rows=len(roles),
+        season=season_label,
+        output_path=Path(output_path),
+        features_path=Path(features_path),
+    )
 
 
 def compute_player_roles(
@@ -129,25 +156,31 @@ def compute_player_roles(
     eligible = pool["minutes"] >= THIN_MINUTES
     dims = _role_dimensions(pool, eligible_mask=eligible)
     pool = pd.concat([pool.reset_index(drop=True), dims.reset_index(drop=True)], axis=1)
+    impact = _impact_percentile(pool)
 
     records = []
-    for row in pool.to_dict(orient="records"):
+    for row, impact_pct in zip(pool.to_dict(orient="records"), impact, strict=False):
         archetype, why, confidence, missing = _assign_archetype(row)
-        top_dims = _top_dimensions(row)
+        expected_role = _expected_role(row, impact_pct)
         records.append(
             {
                 "player_id": row.get("player_id"),
                 "player_name": row.get("player_name"),
                 "team_abbr": row.get("team_abbr", ""),
                 "season": row.get("season", ""),
-                "position": row.get("position") if pd.notna(row.get("position")) else "",
+                "position": row.get("position")
+                if pd.notna(row.get("position"))
+                else "",
                 "height_inches": row.get("height_inches"),
                 "role_archetype": archetype,
+                "expected_role": expected_role,
                 **{dim: round(float(row.get(dim, 50.0)), 1) for dim in ROLE_DIMENSIONS},
-                "top_role_dimensions": ", ".join(top_dims),
+                "top_role_dimensions": ", ".join(_top_dimensions(row)),
                 "why_archetype": why,
+                "role_concerns": _role_concerns(row),
                 "role_confidence": confidence,
                 "missing_role_data": missing,
+                "data_mode": "derived",
             }
         )
     return pd.DataFrame(records)
@@ -159,7 +192,6 @@ def _season_pool(player_seasons: pd.DataFrame, *, season: str | None) -> pd.Data
         return frame
     target = season or sorted(frame["season"].astype(str).unique())[-1]
     pool = frame[frame["season"].astype(str).eq(str(target))].copy()
-    # One row per player (defensive against any duplicates).
     if "player_id" in pool.columns:
         pool = pool.drop_duplicates(subset=["player_id"], keep="first")
     pool["minutes"] = pd.to_numeric(pool.get("minutes"), errors="coerce").fillna(0.0)
@@ -171,8 +203,11 @@ def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
         pool["position"] = pool.get("position", pd.NA)
         pool["height_inches"] = np.nan
         return pool
-    cols = [c for c in ("player_id", "position", "height_inches", "weight",
-                        "draft_year") if c in bio.columns]
+    cols = [
+        c
+        for c in ("player_id", "position", "height_inches", "weight", "draft_year")
+        if c in bio.columns
+    ]
     merged = pool.drop(columns=[c for c in ("position",) if c in pool.columns]).merge(
         bio.loc[:, cols].drop_duplicates("player_id"), on="player_id", how="left"
     )
@@ -182,7 +217,15 @@ def _merge_bio(pool: pd.DataFrame, bio: pd.DataFrame | None) -> pd.DataFrame:
 def _merge_tracking(pool: pd.DataFrame, tracking: pd.DataFrame | None) -> pd.DataFrame:
     if tracking is None or tracking.empty:
         return pool
-    drop = {"player_name", "team_abbr", "source", "pulled_at", "missing_data_flags", "min"}
+    drop = {
+        "player_name",
+        "team_abbr",
+        "source",
+        "pulled_at",
+        "missing_data_flags",
+        "min",
+        "data_mode",
+    }
     cols = [c for c in tracking.columns if c == "player_id" or c not in pool.columns]
     cols = [c for c in cols if c not in drop or c == "player_id"]
     return pool.merge(
@@ -192,7 +235,11 @@ def _merge_tracking(pool: pd.DataFrame, tracking: pd.DataFrame | None) -> pd.Dat
 
 def _role_dimensions(pool: pd.DataFrame, *, eligible_mask: pd.Series) -> pd.DataFrame:
     """Build 0-100 role dimensions, percentile-scaled within the eligible pool."""
-    g = lambda name: pd.to_numeric(pool.get(name), errors="coerce")  # noqa: E731
+    def g(name: str) -> pd.Series:
+        if name in pool.columns:
+            return pd.to_numeric(pool[name], errors="coerce")
+        return pd.Series(np.nan, index=pool.index)
+
     minutes = g("minutes").clip(lower=1.0)
     per36 = lambda s: (s / minutes) * 36.0  # noqa: E731
 
@@ -207,17 +254,18 @@ def _role_dimensions(pool: pd.DataFrame, *, eligible_mask: pd.Series) -> pd.Data
     blk36 = per36(g("blk"))
     height = g("height_inches")
 
-    # Tracking (may be missing for some players).
     cs_fg3a = g("catch_shoot_fg3a")
     cs_fg3_pct = g("catch_shoot_fg3_pct")
     pull_up_fga = g("pull_up_fga")
+    pull_up_fg_pct = g("pull_up_fg_pct")
     drives = g("drives")
     passes_made = g("passes_made")
     potential_ast = g("potential_ast")
     touches = g("touches")
     time_of_poss = g("time_of_poss")
     avg_sec_per_touch = g("avg_sec_per_touch")
-    reb_chances = g("reb_chances")
+    oreb_chances = g("oreb_chances")
+    dreb_chances = g("dreb_chances")
     def_rim_fga = g("def_rim_fga")
     def_rim_fg_pct = g("def_rim_fg_pct")
 
@@ -228,35 +276,115 @@ def _role_dimensions(pool: pd.DataFrame, *, eligible_mask: pd.Series) -> pd.Data
     out["creation_score"] = _avg(
         pct(usage), pct(pull_up_fga), pct(drives), pct(time_of_poss), pct(potential_ast)
     )
+    out["secondary_creation_score"] = _avg(
+        pct(potential_ast), pct(passes_made), pct(drives), inv(usage)
+    )
     out["spacing_score"] = _avg(
         pct(three_pa), pct(three_pa_rate), _shooting_quality(three_p_pct, three_pa)
     )
     out["movement_shooting_score"] = _avg(
         pct(cs_fg3a), _shooting_quality(cs_fg3_pct, cs_fg3a)
     )
+    out["catch_and_shoot_score"] = _avg(
+        pct(cs_fg3a), _shooting_quality(cs_fg3_pct, cs_fg3a)
+    )
+    out["pull_up_shooting_score"] = _avg(
+        pct(pull_up_fga), _shooting_quality(pull_up_fg_pct, pull_up_fga)
+    )
     out["rim_pressure_score"] = _avg(pct(drives), pct(g("drive_pts")))
     out["connector_score"] = _avg(
         pct(passes_made), pct(potential_ast), pct(ast_pct), inv(tov_pct)
     )
+    out["low_usage_fit_score"] = _avg(
+        inv(usage), inv(time_of_poss), inv(tov_pct), pct(cs_fg3a)
+    )
     out["wing_defense_proxy"] = _avg(
         pct(stl36), pct(blk36), _guard_wing_bonus(pool.get("position"))
+    )
+    out["point_of_attack_defense_proxy"] = _avg(
+        pct(stl36), _guard_bonus(pool.get("position", None), height)
     )
     out["rim_protection_proxy"] = _avg(
         pct(blk36), pct(def_rim_fga), inv(def_rim_fg_pct), _height_score(height)
     )
-    out["rebounding_score"] = _avg(pct(reb_pct), pct(reb_chances))
+    out["defensive_rebounding_score"] = _avg(pct(dreb_chances), pct(reb_pct))
+    out["offensive_rebounding_score"] = _avg(pct(oreb_chances))
     out["usage_dependency"] = _avg(
         pct(usage), pct(time_of_poss), pct(avg_sec_per_touch), pct(touches)
     )
-    out["low_usage_fit"] = _avg(
-        inv(usage), inv(time_of_poss), inv(tov_pct), pct(cs_fg3a)
+    out["playoff_role_proxy"] = _avg(
+        out["spacing_score"],
+        out["low_usage_fit_score"],
+        (out["wing_defense_proxy"] + out["rim_protection_proxy"]) / 2,
+        _sample_reliability(minutes, g("games")),
     )
     out["sample_reliability"] = _sample_reliability(minutes, g("games"))
     return out.fillna(50.0)
 
 
+def _impact_percentile(pool: pd.DataFrame) -> pd.Series:
+    """Percentile-scaled on-court impact: minutes, scoring, usage, creation."""
+    minutes = pd.to_numeric(pool.get("minutes"), errors="coerce").fillna(0.0)
+    pts = pd.to_numeric(pool.get("pts"), errors="coerce").fillna(0.0)
+    usage = pd.to_numeric(pool.get("usage_rate"), errors="coerce").fillna(0.0)
+    creation = pd.to_numeric(pool.get("creation_score"), errors="coerce").fillna(50.0)
+
+    def pct(series: pd.Series) -> pd.Series:
+        return series.rank(pct=True)
+
+    blend = (
+        0.40 * pct(minutes)
+        + 0.25 * pct(pts)
+        + 0.20 * pct(usage)
+        + 0.15 * (creation / 100.0)
+    )
+    return blend.rank(pct=True).fillna(0.0)
+
+
+def _expected_role(row: dict, impact_pct: float) -> str:
+    """Impact-gated expected role; 'Star' needs elite minutes, usage, and impact."""
+    minutes = float(row.get("minutes") or 0.0)
+    usage = pd.to_numeric(pd.Series([row.get("usage_rate")]), errors="coerce").iloc[0]
+    usage = float(usage) if pd.notna(usage) else 0.0
+    if minutes < THIN_MINUTES:
+        return "Developmental" if _is_young(row) else "Fringe"
+    if not str(row.get("position") or "") and pd.isna(row.get("height_inches")):
+        return "Unknown"
+    if minutes >= 2000 and usage >= 0.28 and impact_pct >= 0.97:
+        return "Star"
+    if impact_pct >= 0.90 and minutes >= 1800:
+        return "High-Level Starter"
+    if impact_pct >= 0.75 and minutes >= 1400:
+        return "Starter"
+    if impact_pct >= 0.50 and minutes >= 800:
+        return "Rotation Player"
+    if minutes >= 400:
+        return "Bench Specialist"
+    return "Developmental" if _is_young(row) else "Fringe"
+
+
+def _role_concerns(row: dict) -> str:
+    d = {dim: float(row.get(dim, 50.0)) for dim in ROLE_DIMENSIONS}
+    concerns = []
+    if float(row.get("minutes") or 0) < THIN_MINUTES:
+        concerns.append("thin minutes sample")
+    if d["spacing_score"] < 35 and d["movement_shooting_score"] < 35:
+        concerns.append("limited floor spacing")
+    if (d["wing_defense_proxy"] + d["rim_protection_proxy"]) / 2 < 35:
+        concerns.append("weak defensive proxies")
+    usage = pd.to_numeric(pd.Series([row.get("usage_rate")]), errors="coerce").iloc[0]
+    ts = pd.to_numeric(pd.Series([row.get("true_shooting")]), errors="coerce").iloc[0]
+    if pd.notna(usage) and pd.notna(ts) and usage >= 0.26 and ts < 0.54:
+        concerns.append("high usage with poor efficiency")
+    strong_dims = sum(
+        1 for dim in ROLE_DIMENSIONS if dim != "sample_reliability" and d[dim] >= 60
+    )
+    if strong_dims <= 1:
+        concerns.append("one-dimensional role profile")
+    return "; ".join(concerns) if concerns else "no major role concerns"
+
+
 def _assign_archetype(row: dict) -> tuple[str, str, str, str]:
-    """Rule-based archetype from role dimensions + position/height."""
     minutes = float(row.get("minutes") or 0.0)
     position = str(row.get("position") or "").upper()
     height = row.get("height_inches")
@@ -284,15 +412,17 @@ def _assign_archetype(row: dict) -> tuple[str, str, str, str]:
     d = {dim: float(row.get(dim, 50.0)) for dim in ROLE_DIMENSIONS}
     is_big = _is_big(position, height)
     is_guard = position.startswith("G") or (height is not None and height <= 76)
-    confidence = "high" if minutes >= RELIABLE_MINUTES and not missing.startswith(
-        "position"
-    ) else "medium"
+    confidence = (
+        "high"
+        if minutes >= RELIABLE_MINUTES and not missing.startswith("position")
+        else "medium"
+    )
 
     if is_big:
         label = _big_archetype(d)
     elif is_guard:
         label = _guard_archetype(d)
-    else:  # forward / wing
+    else:
         label = _wing_archetype(d)
     return label, _why(label, d), confidence, missing
 
@@ -302,7 +432,7 @@ def _big_archetype(d: dict) -> str:
         return "Rim Protector"
     if d["spacing_score"] >= 60 or d["movement_shooting_score"] >= 60:
         return "Stretch Big"
-    if d["rebounding_score"] >= 60 and d["rim_protection_proxy"] >= 50:
+    if d["defensive_rebounding_score"] >= 60 and d["rim_protection_proxy"] >= 50:
         return "Rebounding Big"
     if d["rim_protection_proxy"] >= 55:
         return "Rim Protector"
@@ -314,6 +444,8 @@ def _guard_archetype(d: dict) -> str:
         return "Primary Creator"
     if d["creation_score"] >= 58:
         return "Secondary Creator"
+    if d["point_of_attack_defense_proxy"] >= 65 and d["creation_score"] < 50:
+        return "Point-of-Attack Guard"
     if d["movement_shooting_score"] >= 62 and d["usage_dependency"] < 55:
         return "Movement Shooter"
     if d["usage_dependency"] >= 60:
@@ -333,7 +465,11 @@ def _wing_archetype(d: dict) -> str:
     if d["wing_defense_proxy"] >= 65 and d["spacing_score"] < 50:
         return "Defensive Wing"
     if d["movement_shooting_score"] >= 60 or d["spacing_score"] >= 62:
-        return "Movement Shooter" if d["movement_shooting_score"] >= d["spacing_score"] else "Stationary Spacer"
+        return (
+            "Movement Shooter"
+            if d["movement_shooting_score"] >= d["spacing_score"]
+            else "Stationary Spacer"
+        )
     if d["connector_score"] >= 60:
         return "Connector Wing"
     if d["spacing_score"] >= 52:
@@ -386,11 +522,10 @@ def _is_young(row: dict) -> bool:
 
 
 def _shooting_quality(pct_made: pd.Series, volume: pd.Series) -> pd.Series:
-    """Reward 3P% only when volume is real; thin-volume high % is discounted."""
     made = pd.to_numeric(pct_made, errors="coerce")
     vol = pd.to_numeric(volume, errors="coerce")
     quality = ((made - 0.30) / (0.42 - 0.30) * 100).clip(0, 100)
-    vol_weight = (vol / 3.0).clip(0, 1)  # full weight at ~3 attempts
+    vol_weight = (vol / 3.0).clip(0, 1)
     return (quality * vol_weight + 50.0 * (1 - vol_weight)).where(made.notna(), np.nan)
 
 
@@ -400,6 +535,20 @@ def _guard_wing_bonus(position: pd.Series | None) -> pd.Series:
     pos = position.astype(str).str.upper()
     return pd.Series(
         np.where(pos.str.startswith("G") | pos.str.startswith("F"), 60.0, 45.0),
+        index=position.index,
+    )
+
+
+def _guard_bonus(position: pd.Series | None, height: pd.Series) -> pd.Series:
+    """Point-of-attack defenders are guards/wings, not centers."""
+    if position is None:
+        h = pd.to_numeric(height, errors="coerce")
+        return pd.Series(np.where(h <= 78, 60.0, 40.0), index=height.index)
+    pos = position.astype(str).str.upper()
+    return pd.Series(
+        np.where(
+            pos.str.startswith("G"), 65.0, np.where(pos.str.startswith("F"), 50.0, 35.0)
+        ),
         index=position.index,
     )
 
@@ -420,7 +569,6 @@ def _percentile_score(series: pd.Series, eligible_mask: pd.Series) -> pd.Series:
     values = pd.to_numeric(series, errors="coerce")
     eligible = values.where(eligible_mask)
     ranks = eligible.rank(pct=True) * 100
-    # Players outside the eligible pool are scored against the eligible distribution.
     if eligible.notna().sum() >= 5:
         thresholds = eligible.dropna()
         for idx in values.index[~eligible_mask.fillna(False)]:

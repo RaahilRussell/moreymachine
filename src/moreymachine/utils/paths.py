@@ -47,6 +47,7 @@ CANDIDATE_RANKINGS_TRADE_TARGETS_PATH = (
 CANDIDATE_RANKINGS_WATCHLIST_PATH = (
     REPORTS_DATA_DIR / "candidate_fit_rankings_unrealistic_watchlist.parquet"
 )
+PLAYER_ROLES_PATH = FEATURES_DATA_DIR / "player_roles.parquet"
 PLAYER_ROLE_EXPLANATIONS_PATH = REPORTS_DATA_DIR / "player_role_explanations.parquet"
 CURRENT_ROSTER_REFERENCE_PATH = REPORTS_DATA_DIR / "current_roster_reference.parquet"
 CANDIDATE_UNIVERSE_PATH = FEATURES_DATA_DIR / "candidate_universe.parquet"
