@@ -76,6 +76,7 @@ source .venv/bin/activate
 export PYTHONPATH=src
 
 python scripts/refresh_current_data.py --season latest
+python scripts/refresh_transactions.py
 python scripts/build_playoff_tiers.py
 python scripts/build_quality_tiers.py
 python scripts/build_team_fingerprints.py
@@ -149,10 +150,28 @@ realistic recommendation.
 After editing manual files, rerun:
 
 ```bash
+python scripts/refresh_transactions.py
 python scripts/build_candidate_universe.py --team PHI
 python scripts/rank_candidates.py --team PHI
 python scripts/validate_target_board.py
 ```
+
+## Transaction Freshness
+
+`python scripts/refresh_transactions.py` writes
+`data/processed/transactions.parquet` from Spotrac's recent NBA transaction
+feed. Candidate rows carry `candidate_status_freshness`:
+
+- `verified_current`
+- `stale_needs_review`
+- `conflict_between_sources`
+- `manual_verification_required`
+
+Top-50 realistic/free-agent candidates with a status-changing transaction newer
+than the salary pull date are forced into manual review and cannot become
+Priority Targets. Recent signings, extensions, and exercised options move stale
+free-agent candidates out of free-agent lanes rather than treating old status as
+current.
 
 ## Score Interpretation
 

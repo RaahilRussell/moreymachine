@@ -37,6 +37,7 @@ PAGES = (
     "Trade Target Board",
     "Unrealistic Watchlist",
     "Player Detail",
+    "Transaction Review",
     "Model Diagnostics",
     "Backtest Proof",
 )
@@ -51,6 +52,7 @@ BOARD_TABLE_COLUMNS = (
     "position",
     "role_archetype",
     "candidate_type",
+    "candidate_status_freshness",
     "recommendation",
     "final_fit",
     "need_match",
@@ -72,6 +74,8 @@ BOARD_TABLE_COLUMNS = (
     "salary_context",
     "acquisition_summary",
     "risk_summary",
+    "transaction_review_reason",
+    "latest_transaction_date",
     "data_sources",
     "missing_data_flags",
 )
@@ -102,6 +106,7 @@ def main() -> None:
         "Trade Target Board": render_trade_board,
         "Unrealistic Watchlist": render_watchlist,
         "Player Detail": render_player_detail,
+        "Transaction Review": render_transaction_review,
         "Model Diagnostics": render_model_diagnostics,
         "Backtest Proof": render_backtest_proof,
     }
@@ -184,7 +189,8 @@ def render_overview() -> None:
     st.markdown(
         "**Real-time means cached and refreshable.** The app reads existing "
         "Parquet, CSV, JSON, and Markdown artifacts only. To refresh data, run "
-        f"`{REFRESH_COMMAND}` and rebuild the pipeline; page loads do not call live APIs."
+        f"`{REFRESH_COMMAND}` and rebuild the pipeline; page loads do not call "
+        "live APIs."
     )
 
     missing = _missing_required()
@@ -526,6 +532,87 @@ def render_player_detail() -> None:
         st.warning(f"Missing data: {flags}")
     else:
         st.success("No missing-data flags for this candidate.")
+
+
+def render_transaction_review() -> None:
+    """Render candidates whose acquisition status may be stale."""
+    st.title("Transaction Review")
+    st.caption(
+        "Candidates matched to recent status-changing transactions, source conflicts, "
+        "or manual-review freshness flags. These rows should be checked before being "
+        "treated as current acquisition targets."
+    )
+    if missing_warning("candidate_fit_rankings_all"):
+        return
+    board = load("candidate_fit_rankings_all")
+    status_col = "candidate_status_freshness"
+    if status_col not in board.columns:
+        st.error(
+            "Candidate rankings do not include transaction freshness. Run "
+            "`python scripts/refresh_transactions.py`, then rebuild the candidate "
+            "universe and rankings."
+        )
+        return
+    review = board[
+        board[status_col].isin(
+            [
+                "stale_needs_review",
+                "conflict_between_sources",
+                "manual_verification_required",
+            ]
+        )
+    ].copy()
+    cols = [
+        c
+        for c in (
+            "player_name",
+            "current_team",
+            "candidate_type",
+            "recommendation",
+            "final_fit",
+            "candidate_status_freshness",
+            "transaction_review_reason",
+            "latest_transaction_date",
+            "latest_transaction_type",
+            "latest_transaction_description",
+            "salary_pulled_at",
+            "transaction_source",
+        )
+        if c in review.columns
+    ]
+    if review.empty:
+        st.success("No candidate currently requires transaction review.")
+    else:
+        st.dataframe(
+            review.sort_values("final_fit", ascending=False).loc[:, cols],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    if not missing_warning("transactions"):
+        transactions = load("transactions")
+        st.subheader("Recent transaction feed")
+        tx_cols = [
+            c
+            for c in (
+                "transaction_date",
+                "player_name",
+                "team_abbr",
+                "from_team_abbr",
+                "transaction_type",
+                "description",
+                "source_url",
+                "pulled_at",
+            )
+            if c in transactions.columns
+        ]
+        st.dataframe(
+            transactions.sort_values("transaction_date", ascending=False).loc[
+                :, tx_cols
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
 
 
 def render_model_diagnostics() -> None:

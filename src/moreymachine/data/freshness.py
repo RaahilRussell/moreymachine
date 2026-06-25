@@ -22,6 +22,7 @@ from moreymachine.utils.paths import (
     PLAYER_SEASONS_PATH,
     PLAYER_TRACKING_PATH,
     TEAM_SEASONS_PATH,
+    TRANSACTIONS_PATH,
 )
 
 # Tables older than this (in days) are flagged stale in the freshness report.
@@ -57,6 +58,7 @@ _TABLE_SPECS = (
     ("player_bio", PLAYER_BIO_PATH, "real_api", False),
     ("player_tracking", PLAYER_TRACKING_PATH, "real_api", False),
     ("contracts", CONTRACTS_PATH, "real_scraped", False),
+    ("transactions", TRANSACTIONS_PATH, "real_scraped", False),
     ("lineup_on_off", LINEUP_ON_OFF_PATH, "real_api", True),
 )
 

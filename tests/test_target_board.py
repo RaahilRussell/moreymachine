@@ -12,6 +12,7 @@ from moreymachine.models.target_board import (
     MAX_PRIORITY_TARGETS,
     _assign_recommendations,
     _attach_explanations,
+    _force_top50_transaction_review,
 )
 
 REQUIRED_EXPLANATION_COLUMNS = (
@@ -46,6 +47,13 @@ def _scored() -> pd.DataFrame:
             "candidate_type": ["realistic_trade_target"] * 60
             + ["star_unrealistic"] * 18
             + ["missing_contract_status"] * 12,
+            "candidate_status_freshness": "verified_current",
+            "transaction_review_reason": "none",
+            "latest_transaction_date": "",
+            "latest_transaction_type": "",
+            "latest_transaction_description": "",
+            "transaction_source": "",
+            "salary_pulled_at": "2026-06-20",
             "feasibility_tier": "Possible",
             "acquisition_feasibility": rng.uniform(20, 80, n),
             "acquisition_reason": "Movable in a trade.",
@@ -93,6 +101,26 @@ def test_stars_and_missing_contracts_never_recommended() -> None:
     missing = board[board["candidate_type"] == "missing_contract_status"]
     assert stars["recommendation"].eq("Unrealistic / Unavailable").all()
     assert missing["recommendation"].eq("Missing Data / Cannot Evaluate").all()
+
+
+def test_top50_post_salary_transaction_forces_manual_review() -> None:
+    board = _attach_explanations(_scored())
+    top_idx = board.sort_values("final_fit", ascending=False).index[0]
+    board.loc[top_idx, "latest_transaction_date"] = "2026-06-24"
+    board.loc[top_idx, "latest_transaction_type"] = "signing"
+    reviewed = _force_top50_transaction_review(board)
+    assert reviewed.loc[top_idx, "candidate_status_freshness"] == (
+        "manual_verification_required"
+    )
+    assert reviewed.loc[top_idx, "candidate_type"] == "manual_review_needed"
+
+
+def test_stale_manual_review_candidate_is_not_priority() -> None:
+    board = _force_top50_transaction_review(_attach_explanations(_scored()))
+    top_idx = board.sort_values("final_fit", ascending=False).index[0]
+    board.loc[top_idx, "candidate_status_freshness"] = "manual_verification_required"
+    assigned = _assign_recommendations(board)
+    assert assigned.loc[top_idx, "recommendation"] != "Priority Target"
 
 
 def test_board_columns_are_a_superset_of_required() -> None:

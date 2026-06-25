@@ -31,6 +31,10 @@ MAX_IDENTICAL_RISK_SHARE = 0.50
 PRIORITY_LABEL = "Priority Target"
 UNREALISTIC_PRIORITY_TYPES = {
     "star_unrealistic",
+    "core_unavailable",
+    "expensive_but_possible",
+    "contract_blocked",
+    "manual_review_needed",
     "unavailable_core_player",
     "manual_watchlist",
 }
@@ -131,6 +135,7 @@ def validate_board_frames(
         _gate_no_missing_contract_priority(board_all),
         _gate_no_unknown_role_priority(board_all),
         _gate_no_severe_risk_priority(board_all),
+        _gate_no_stale_priority(board_all),
         _gate_salary_unambiguous(board_all),
         _gate_watchlist_separation(watchlist),
         _gate_csv_explanations(csv_path),
@@ -275,6 +280,18 @@ def _gate_no_severe_risk_priority(board: pd.DataFrame) -> GateResult:
     bad = _priority_with(board, severe)
     return GateResult(
         "no_severe_risk_priority", bad == 0, f"{bad} Severe/Unknown-risk Priority."
+    )
+
+
+def _gate_no_stale_priority(board: pd.DataFrame) -> GateResult:
+    stale = _text_column(board, "candidate_status_freshness").isin(
+        ("stale_needs_review", "manual_verification_required")
+    )
+    bad = _priority_with(board, stale)
+    return GateResult(
+        "no_stale_priority",
+        bad == 0,
+        f"{bad} stale/manual-review players marked Priority.",
     )
 
 

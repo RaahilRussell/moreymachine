@@ -35,6 +35,7 @@ from moreymachine.utils.paths import (
     PLAYER_TRACKING_PATH,
     REPORTS_DATA_DIR,
     TEAM_SEASONS_PATH,
+    TRANSACTIONS_PATH,
 )
 
 # Legal data_mode values. "demo" is intentionally absent: real mode never
@@ -154,6 +155,23 @@ CONTRACTS: tuple[TableContract, ...] = (
         season_or_date_columns=("effective_date",),
     ),
     TableContract(
+        key="transactions",
+        path=TRANSACTIONS_PATH,
+        required_columns=(
+            "transaction_date",
+            "player_name",
+            "transaction_type",
+            "description",
+            "source",
+            "source_url",
+            "pulled_at",
+            "data_mode",
+        ),
+        provenance_columns=("source", "source_url", "pulled_at", "data_mode"),
+        non_null_columns=("transaction_date", "player_name", "transaction_type"),
+        season_or_date_columns=("transaction_date",),
+    ),
+    TableContract(
         key="candidates",
         path=CANDIDATES_PATH,
         required_columns=("player_name", "candidate_type"),
@@ -168,6 +186,7 @@ CONTRACTS: tuple[TableContract, ...] = (
             "player_id",
             "player_name",
             "candidate_type",
+            "candidate_status_freshness",
             "candidate_type_reason",
             "acquisition_feasibility",
             "feasibility_tier",
@@ -213,6 +232,7 @@ CONTRACTS: tuple[TableContract, ...] = (
             "final_fit",
             "why_fit",
             "concerns",
+            "candidate_status_freshness",
             "data_sources",
             "missing_data_flags",
         ),

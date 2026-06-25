@@ -62,6 +62,13 @@ BOARD_COLUMNS = (
     "expected_role",
     "role_confidence",
     "candidate_type",
+    "candidate_status_freshness",
+    "transaction_review_reason",
+    "latest_transaction_date",
+    "latest_transaction_type",
+    "latest_transaction_description",
+    "transaction_source",
+    "salary_pulled_at",
     "board_type",
     "recommendation",
     "final_fit",
@@ -139,6 +146,7 @@ def build_target_boards(
     merged = _merge_inputs(universe, roles, seasons, tracking, contracts)
     scored = score_candidates(merged, roster_gaps=roster_gaps)
     scored = _attach_explanations(scored)
+    scored = _force_top50_transaction_review(scored)
     scored = _assign_recommendations(scored)
 
     board = scored.loc[:, [c for c in BOARD_COLUMNS if c in scored.columns]].copy()
@@ -316,6 +324,9 @@ def _data_sources(row: pd.Series) -> str:
     salary_source = str(row.get("salary_source") or "")
     if salary_source:
         sources.append(f"Salary: {salary_source.split('(')[0].strip()}")
+    transaction_source = str(row.get("transaction_source") or "")
+    if transaction_source:
+        sources.append(f"Transactions: {transaction_source}")
     return "; ".join(sources)
 
 
@@ -356,6 +367,12 @@ def _concerns(row: pd.Series) -> str:
     missing = str(row.get("missing_data_flags") or "none")
     if missing not in ("none", ""):
         concerns.append(f"missing data ({missing})")
+    freshness = str(row.get("candidate_status_freshness") or "verified_current")
+    if freshness != "verified_current":
+        reason = row.get("transaction_review_reason", "")
+        concerns.append(
+            f"transaction freshness {freshness}: {reason}"
+        )
     return "; ".join(concerns) if concerns else "No major rule-based concerns."
 
 
@@ -375,11 +392,19 @@ def _assign_recommendations(scored: pd.DataFrame) -> pd.DataFrame:
     frame["recommendation"] = "Avoid"
 
     is_realistic = frame["candidate_type"].isin(REALISTIC_TYPES)
-    watch = frame["candidate_type"].isin(
-        ("star_unrealistic", "unavailable_core_player")
+    watch = frame["candidate_type"].isin(WATCHLIST_TYPES) & (
+        frame["candidate_type"] != "missing_contract_status"
     )
     missing = frame["candidate_type"] == "missing_contract_status"
     frame.loc[watch, "recommendation"] = "Unrealistic / Unavailable"
+    frame.loc[
+        frame["candidate_type"].eq("manual_review_needed"),
+        "recommendation",
+    ] = "Manual Review Required"
+    frame.loc[
+        frame["candidate_type"].eq("contract_blocked"),
+        "recommendation",
+    ] = "Contract Blocked"
     frame.loc[missing, "recommendation"] = "Missing Data / Cannot Evaluate"
 
     realistic = frame[is_realistic].sort_values("final_fit", ascending=False)
@@ -387,6 +412,11 @@ def _assign_recommendations(scored: pd.DataFrame) -> pd.DataFrame:
         (realistic["final_fit"] >= PRIORITY_MIN_FIT)
         & (~realistic["risk_tier"].isin(("Severe", "Unknown")))
         & (realistic["expected_role"] != "Unknown")
+        & (
+            ~realistic.get(
+                "candidate_status_freshness", pd.Series("", index=realistic.index)
+            ).isin(("stale_needs_review", "manual_verification_required"))
+        )
     ]
     priority_idx = priority_eligible.head(MAX_PRIORITY_TARGETS).index
     frame.loc[priority_idx, "recommendation"] = "Priority Target"
@@ -405,6 +435,54 @@ def _assign_recommendations(scored: pd.DataFrame) -> pd.DataFrame:
         else:
             frame.loc[idx, "recommendation"] = "Avoid"
     return frame
+
+
+def _force_top50_transaction_review(scored: pd.DataFrame) -> pd.DataFrame:
+    frame = scored.copy()
+    if "candidate_status_freshness" not in frame.columns:
+        frame["candidate_status_freshness"] = "verified_current"
+    if "transaction_review_reason" not in frame.columns:
+        frame["transaction_review_reason"] = "No transaction review data."
+
+    top_indexes: set = set()
+    realistic = frame[frame["candidate_type"].isin(REALISTIC_TYPES)].sort_values(
+        "final_fit",
+        ascending=False,
+    )
+    top_indexes.update(realistic.head(50).index)
+    free_agents = frame[frame["candidate_type"].isin(FREE_AGENT_TYPES)].sort_values(
+        "final_fit",
+        ascending=False,
+    )
+    top_indexes.update(free_agents.head(50).index)
+    if not top_indexes:
+        return frame
+
+    for idx in top_indexes:
+        if _transaction_after_salary(frame.loc[idx]):
+            prior_type = str(frame.at[idx, "candidate_type"])
+            frame.at[idx, "candidate_status_freshness"] = "manual_verification_required"
+            frame.at[idx, "transaction_review_reason"] = (
+                "Top-50 realistic/free-agent target has a transaction newer than "
+                "the salary pull date; manual verification required before ranking."
+            )
+            frame.at[idx, "candidate_type"] = "manual_review_needed"
+            frame.at[idx, "candidate_type_reason"] = (
+                str(frame.loc[idx].get("candidate_type_reason") or "")
+                + f" Moved from {prior_type} by transaction freshness review."
+            ).strip()
+    frame["board_type"] = frame["candidate_type"].map(_board_type)
+    return frame
+
+
+def _transaction_after_salary(row: pd.Series) -> bool:
+    tx_date = pd.to_datetime(
+        row.get("latest_transaction_date"), errors="coerce", utc=True
+    )
+    salary_date = pd.to_datetime(row.get("salary_pulled_at"), errors="coerce", utc=True)
+    if pd.isna(tx_date) or pd.isna(salary_date):
+        return False
+    return tx_date.date() > salary_date.date()
 
 
 def _write_roster_reference(roster_reference_path: str | Path) -> None:

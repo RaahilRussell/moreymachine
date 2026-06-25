@@ -30,6 +30,7 @@ def _good_board(n: int = 30) -> pd.DataFrame:
             "risk_score": [10 + i for i in range(n)],
             "risk_tier": "Low",
             "data_sources": "Stats: nba_api",
+            "candidate_status_freshness": "verified_current",
         }
     )
     for column in REQUIRED_EXPLANATION_COLUMNS:
@@ -120,6 +121,14 @@ def test_severe_risk_priority_fails() -> None:
     board.loc[0, "recommendation"] = "Priority Target"
     report = validate_board_frames(board, board, pd.DataFrame())
     assert any(g.name == "no_severe_risk_priority" for g in report.failures)
+
+
+def test_stale_status_priority_fails() -> None:
+    board = _good_board()
+    board.loc[0, "candidate_status_freshness"] = "manual_verification_required"
+    board.loc[0, "recommendation"] = "Priority Target"
+    report = validate_board_frames(board, board, pd.DataFrame())
+    assert any(g.name == "no_stale_priority" for g in report.failures)
 
 
 def test_ambiguous_salary_fails() -> None:

@@ -30,6 +30,7 @@ from moreymachine.utils.paths import (
     CURRENT_ROSTER_REFERENCE_PATH,
     PLAYER_BIO_PATH,
     PLAYER_SEASONS_PATH,
+    TRANSACTIONS_PATH,
 )
 
 PHI_ROSTER_2025_26 = (
@@ -66,6 +67,10 @@ CANDIDATE_TYPES = (
     "expensive_trade_target",
     "rookie_scale_trade_target",
     "star_unrealistic",
+    "core_unavailable",
+    "expensive_but_possible",
+    "contract_blocked",
+    "manual_review_needed",
     "unavailable_core_player",
     "manual_watchlist",
     "missing_contract_status",
@@ -89,7 +94,15 @@ TRADE_TYPES = frozenset(
 )
 REALISTIC_TYPES = FREE_AGENT_TYPES | TRADE_TYPES
 WATCHLIST_TYPES = frozenset(
-    {"star_unrealistic", "unavailable_core_player", "missing_contract_status"}
+    {
+        "star_unrealistic",
+        "core_unavailable",
+        "expensive_but_possible",
+        "contract_blocked",
+        "manual_review_needed",
+        "unavailable_core_player",
+        "missing_contract_status",
+    }
 )
 
 # Salary buckets in millions (cap hit).
@@ -110,7 +123,11 @@ FEASIBILITY_BASELINE = {
     "realistic_trade_target": 58.0,
     "manual_watchlist": 55.0,
     "expensive_trade_target": 38.0,
+    "expensive_but_possible": 34.0,
+    "contract_blocked": 22.0,
+    "manual_review_needed": 20.0,
     "missing_contract_status": 25.0,
+    "core_unavailable": 18.0,
     "unavailable_core_player": 18.0,
     "star_unrealistic": 10.0,
 }
@@ -141,6 +158,13 @@ UNIVERSE_COLUMNS = (
     "salary_source",
     "candidate_type",
     "candidate_type_reason",
+    "candidate_status_freshness",
+    "transaction_review_reason",
+    "latest_transaction_date",
+    "latest_transaction_type",
+    "latest_transaction_description",
+    "transaction_source",
+    "salary_pulled_at",
     "acquisition_feasibility",
     "feasibility_tier",
     "acquisition_reason",
@@ -172,6 +196,7 @@ def build_candidate_universe(
     *,
     player_seasons_path: str | Path = PLAYER_SEASONS_PATH,
     contracts_path: str | Path = CONTRACTS_PATH,
+    transactions_path: str | Path = TRANSACTIONS_PATH,
     player_bio_path: str | Path = PLAYER_BIO_PATH,
     candidates_path: str | Path = CANDIDATES_PATH,
     universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
@@ -184,6 +209,7 @@ def build_candidate_universe(
     universe = classify_candidate_universe(
         player_seasons=pd.read_parquet(player_seasons_path),
         contracts=_optional(contracts_path),
+        transactions=_optional(transactions_path),
         player_bio=_optional(player_bio_path),
         manual_candidates=_optional_csv(candidates_path),
         season=season,
@@ -225,6 +251,7 @@ def classify_candidate_universe(
     *,
     player_seasons: pd.DataFrame,
     contracts: pd.DataFrame | None = None,
+    transactions: pd.DataFrame | None = None,
     player_bio: pd.DataFrame | None = None,
     manual_candidates: pd.DataFrame | None = None,
     season: str | None = None,
@@ -238,15 +265,35 @@ def classify_candidate_universe(
     pool = _merge_bio(pool, player_bio)
     pool = _attach_quality_percentile(pool)
     manual = _manual_overrides(manual_candidates)
+    transaction_lookup = _transaction_lookup(transactions)
 
     records = []
     for row in pool.to_dict(orient="records"):
         override = manual.get(_player_key(row))
         candidate_type, reason = classify_candidate_type(row, manual_override=override)
+        transaction = transaction_lookup.get(_player_key(row))
+        status = _candidate_status(
+            row,
+            candidate_type=candidate_type,
+            transaction=transaction,
+        )
+        candidate_type, reason = _apply_transaction_candidate_type(
+            row,
+            candidate_type=candidate_type,
+            reason=reason,
+            status=status,
+        )
         feasibility, tier, acq_reason = acquisition_feasibility(row, candidate_type)
         records.append(
             _universe_record(
-                row, candidate_type, reason, override, feasibility, tier, acq_reason
+                row,
+                candidate_type,
+                reason,
+                override,
+                feasibility,
+                tier,
+                acq_reason,
+                status,
             )
         )
 
@@ -301,7 +348,7 @@ def classify_candidate_type(
         and quality >= UNAVAILABLE_CORE_QUALITY_PCTL
     ):
         return (
-            "unavailable_core_player",
+            "core_unavailable",
             "Core piece on a multi-year deal - not realistically available.",
         )
 
@@ -327,8 +374,8 @@ def classify_candidate_type(
         return "realistic_trade_target", f"Under contract at ${cap_hit:.1f}M - movable."
     if cap_hit <= EXPENSIVE_TRADE_MAX_M:
         return (
-            "expensive_trade_target",
-            f"Under contract at ${cap_hit:.1f}M - expensive but tradeable.",
+            "expensive_but_possible",
+            f"Under contract at ${cap_hit:.1f}M - expensive but possible.",
         )
     return "star_unrealistic", f"Near-max ${cap_hit:.1f}M deal - unrealistic."
 
@@ -373,6 +420,113 @@ def board_membership(candidate_type: str) -> dict[str, bool]:
     }
 
 
+def _candidate_status(
+    row: dict,
+    *,
+    candidate_type: str,
+    transaction: dict | None,
+) -> dict:
+    salary_date = _date_value(row.get("pulled_at"))
+    base = {
+        "candidate_status_freshness": "verified_current",
+        "transaction_review_reason": "No newer status-changing transaction matched.",
+        "latest_transaction_date": "",
+        "latest_transaction_type": "",
+        "latest_transaction_description": "",
+        "transaction_source": "",
+    }
+    if transaction is None:
+        return base
+
+    transaction_date = _date_value(transaction.get("transaction_date"))
+    transaction_type = str(transaction.get("transaction_type") or "")
+    description = str(transaction.get("description") or "")
+    base.update(
+        {
+            "latest_transaction_date": str(transaction.get("transaction_date") or ""),
+            "latest_transaction_type": transaction_type,
+            "latest_transaction_description": description,
+            "transaction_source": str(transaction.get("source") or ""),
+        }
+    )
+    status_changing = transaction_type in {
+        "signing",
+        "extension",
+        "trade",
+        "option_exercised",
+        "option_declined",
+        "free_agent_status_change",
+        "waived",
+        "released",
+    }
+    if not status_changing:
+        base["transaction_review_reason"] = (
+            "Matched transaction is not status-changing."
+        )
+        return base
+
+    team = str(row.get("current_team") or row.get("team_abbr") or "").upper()
+    transaction_team = str(transaction.get("team_abbr") or "").upper()
+    if transaction_team and team and transaction_team != team:
+        base["candidate_status_freshness"] = "conflict_between_sources"
+        base["transaction_review_reason"] = (
+            f"Latest transaction team {transaction_team} conflicts with "
+            f"candidate team {team}."
+        )
+        return base
+
+    if (
+        salary_date is not None
+        and transaction_date is not None
+        and transaction_date > salary_date
+    ):
+        base["candidate_status_freshness"] = "stale_needs_review"
+        base["transaction_review_reason"] = (
+            f"Status-changing transaction on {transaction_date} is newer than "
+            f"salary pull {salary_date}."
+        )
+        return base
+
+    if candidate_type in FREE_AGENT_TYPES and transaction_type in {
+        "signing",
+        "extension",
+        "option_exercised",
+    }:
+        base["candidate_status_freshness"] = "conflict_between_sources"
+        base["transaction_review_reason"] = (
+            "Free-agent candidate has a recent signing, extension, or exercised option."
+        )
+        return base
+
+    base["transaction_review_reason"] = (
+        "Recent status transaction is not newer than salary source."
+    )
+    return base
+
+
+def _apply_transaction_candidate_type(
+    row: dict,
+    *,
+    candidate_type: str,
+    reason: str,
+    status: dict,
+) -> tuple[str, str]:
+    tx_type = status["latest_transaction_type"]
+    freshness = status["candidate_status_freshness"]
+    if candidate_type in FREE_AGENT_TYPES and tx_type in {
+        "signing",
+        "extension",
+        "option_exercised",
+    }:
+        return (
+            "contract_blocked",
+            reason + " Recent transaction indicates he is now under contract.",
+        )
+    if freshness == "conflict_between_sources":
+        return "manual_review_needed", reason + " Transaction source conflicts."
+    return candidate_type, reason
+
+
 def _feasibility_tier(score: float) -> str:
     if score >= 80:
         return "Easy"
@@ -395,7 +549,11 @@ _FEASIBILITY_BLURB = {
     "realistic_trade_target": "Movable in a realistic trade package",
     "expensive_trade_target": "Tradeable but expensive; needs salary matching",
     "manual_watchlist": "Tracked manually for situational interest",
+    "core_unavailable": "A core piece; realistically not available",
     "unavailable_core_player": "A core piece; realistically not available",
+    "expensive_but_possible": "Expensive enough to treat as a watchlist case",
+    "contract_blocked": "Recent transaction indicates a fresh contract barrier",
+    "manual_review_needed": "Recent transaction conflict requires manual review",
     "star_unrealistic": "A max-tier star; not realistically acquirable",
 }
 
@@ -408,6 +566,7 @@ def _universe_record(
     feasibility: float,
     tier: str,
     acq_reason: str,
+    status: dict,
 ) -> dict:
     boards = board_membership(candidate_type)
     cap_hit = _cap_hit(row)
@@ -436,6 +595,13 @@ def _universe_record(
         "salary_source": str(row.get("salary_source") or ""),
         "candidate_type": candidate_type,
         "candidate_type_reason": reason,
+        "candidate_status_freshness": status["candidate_status_freshness"],
+        "transaction_review_reason": status["transaction_review_reason"],
+        "latest_transaction_date": status["latest_transaction_date"],
+        "latest_transaction_type": status["latest_transaction_type"],
+        "latest_transaction_description": status["latest_transaction_description"],
+        "transaction_source": status["transaction_source"],
+        "salary_pulled_at": str(row.get("pulled_at") or ""),
         "acquisition_feasibility": feasibility,
         "feasibility_tier": tier,
         "acquisition_reason": acq_reason,
@@ -471,6 +637,7 @@ def _merge_contracts(
         "extension_status",
         "years_remaining",
         "salary_source",
+        "pulled_at",
     ]
     if contracts is None or contracts.empty:
         for col in cols:
@@ -548,6 +715,32 @@ def _manual_overrides(manual: pd.DataFrame | None) -> dict:
     return overrides
 
 
+def _transaction_lookup(transactions: pd.DataFrame | None) -> dict:
+    if transactions is None or transactions.empty:
+        return {}
+    frame = transactions.copy()
+    frame["_transaction_date"] = pd.to_datetime(
+        frame.get("transaction_date"),
+        errors="coerce",
+    )
+    frame = frame.sort_values("_transaction_date", ascending=False)
+    lookup = {}
+    for record in frame.to_dict(orient="records"):
+        keys = []
+        pid = record.get("player_id")
+        if pd.notna(pid):
+            try:
+                keys.append(("id", int(pid)))
+            except (TypeError, ValueError):
+                keys.append(("id", str(pid)))
+        name = str(record.get("player_name") or "").strip().lower()
+        if name:
+            keys.append(("name", name))
+        for key in keys:
+            lookup.setdefault(key, record)
+    return lookup
+
+
 def _player_key(row: dict) -> tuple:
     pid = row.get("player_id")
     if pd.notna(pid):
@@ -556,6 +749,13 @@ def _player_key(row: dict) -> tuple:
         except (TypeError, ValueError):
             return ("id", str(pid))
     return ("name", str(row.get("player_name") or "").strip().lower())
+
+
+def _date_value(value) -> pd.Timestamp | None:
+    stamp = pd.to_datetime(value, errors="coerce", utc=True)
+    if pd.isna(stamp):
+        return None
+    return stamp.date()
 
 
 def _missing_flags(row: dict, cap_hit: float | None) -> str:

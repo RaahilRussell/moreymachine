@@ -36,6 +36,7 @@ from moreymachine.utils.paths import (
     REPORTS_DATA_DIR,
     TEAM_SEASONS_PATH,
     TEAM_SEASONS_WITH_TIERS_PATH,
+    TRANSACTIONS_PATH,
 )
 from moreymachine.utils.real_data import fix_hint
 
@@ -156,6 +157,15 @@ REGISTRY: tuple[Dataset, ...] = (
         "Basketball-Reference contracts (scraped, id-matched to nba_api)",
         "contracts",
         season_column=None,
+    ),
+    Dataset(
+        "transactions",
+        "Recent transactions",
+        TRANSACTIONS_PATH,
+        "real",
+        "Spotrac NBA Transactions recent transaction list",
+        "transactions",
+        season_column="transaction_date",
     ),
     Dataset(
         "player_roles",
@@ -353,6 +363,8 @@ def _refresh_command(fix_table: str) -> str:
         "contracts",
     }:
         return REFRESH_COMMAND
+    if fix_table == "transactions":
+        return "python scripts/refresh_transactions.py"
     return fix_hint(fix_table)
 
 

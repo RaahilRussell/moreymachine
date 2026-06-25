@@ -20,6 +20,7 @@ source .venv/bin/activate
 export PYTHONPATH=src
 
 python scripts/refresh_current_data.py --season latest
+python scripts/refresh_transactions.py
 python scripts/build_playoff_tiers.py
 python scripts/build_quality_tiers.py
 python scripts/build_team_fingerprints.py
@@ -94,6 +95,7 @@ Refresh locally, commit the changed artifacts, and redeploy:
 
 ```bash
 python scripts/refresh_current_data.py --season latest
+python scripts/refresh_transactions.py
 python scripts/build_candidate_universe.py --team PHI
 python scripts/rank_candidates.py --team PHI
 python scripts/validate_data_contracts.py

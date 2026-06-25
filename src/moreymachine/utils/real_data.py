@@ -99,6 +99,7 @@ FIX_HINTS: Mapping[str, str] = {
     ),
     "candidate_rankings": "run `python scripts/rank_candidates.py --team PHI`",
     "backtest": "run `python scripts/run_backtest.py`",
+    "transactions": "run `python scripts/refresh_transactions.py`",
 }
 
 

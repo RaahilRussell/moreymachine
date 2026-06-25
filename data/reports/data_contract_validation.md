@@ -7,6 +7,7 @@
 | player_bio | yes | - | - |
 | player_tracking | yes | - | - |
 | contracts | yes | - | - |
+| transactions | yes | - | - |
 | candidates | yes | - | - |
 | candidate_universe | yes | - | - |
 | player_roles | yes | - | - |

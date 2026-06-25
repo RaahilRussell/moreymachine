@@ -345,7 +345,8 @@ def render_backtest_summary(metrics: dict[str, Any]) -> str:
     lines.extend(["", "## What The Model Appears To Do Well", ""])
     lines.append(
         "- It identifies candidates with durable basketball value when its Spearman "
-        f"correlation is positive ({_format_metric(morey.get('spearman_correlation'))}) "
+        "correlation is positive "
+        f"({_format_metric(morey.get('spearman_correlation'))}) "
         "and top-target value clears the random baseline."
     )
     lines.append(
