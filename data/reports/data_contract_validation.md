@@ -10,7 +10,7 @@
 | candidates | yes | - | - |
 | candidate_universe | yes | - | - |
 | player_roles | yes | - | - |
-| roster_gaps | yes | - | missing provenance columns: ['data_sources'] |
+| roster_gaps | yes | - | - |
 | candidate_rankings | yes | - | - |
 | candidate_rankings_realistic | yes | - | - |
 | team_fingerprints | yes | - | - |
