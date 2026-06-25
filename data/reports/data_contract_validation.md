@@ -14,4 +14,4 @@
 | candidate_rankings | yes | - | - |
 | candidate_rankings_realistic | yes | - | - |
 | team_fingerprints | yes | - | - |
-| backtest_results | yes | - | missing JSON keys: ['metrics'] |
+| backtest_results | yes | - | - |

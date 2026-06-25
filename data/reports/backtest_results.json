@@ -1,342 +1,1000 @@
 {
   "average_value_of_top_targets_vs_baselines": {
     "previous_impact": {
-      "average_value_top_targets": null,
-      "delta_vs_moreymachine": null
+      "average_value_top_targets": 70.51439999999998,
+      "delta_vs_moreymachine": -3.2099999999999795
+    },
+    "previous_minutes": {
+      "average_value_top_targets": 77.1063,
+      "delta_vs_moreymachine": -9.801900000000003
     },
     "previous_points": {
-      "average_value_top_targets": 72.23320000000001,
-      "delta_vs_moreymachine": -21.590800000000023
+      "average_value_top_targets": 77.5038,
+      "delta_vs_moreymachine": -10.199399999999997
+    },
+    "previous_true_shooting": {
+      "average_value_top_targets": 58.07,
+      "delta_vs_moreymachine": 9.2344
+    },
+    "previous_usage": {
+      "average_value_top_targets": 71.34209999999999,
+      "delta_vs_moreymachine": -4.037699999999987
     },
     "random": {
-      "average_value_top_targets": 35.459900000000005,
-      "delta_vs_moreymachine": 15.182499999999983
-    },
-    "salary": {
-      "average_value_top_targets": null,
-      "delta_vs_moreymachine": null
+      "average_value_top_targets": 57.0448,
+      "delta_vs_moreymachine": 10.259599999999999
     }
   },
   "by_offseason": {
     "after_2015-16": {
       "moreymachine_fit": {
-        "average_value_top_targets": 57.0,
-        "hit_rate_top_targets": 0.5,
-        "spearman_correlation": 0.47289781298635203,
-        "top_quartile_bottom_quartile_gap": 32.22787234042552
+        "average_value_top_targets": 74.485,
+        "hit_rate_top_targets": 0.4,
+        "spearman_correlation": 0.4974422880824593,
+        "top_quartile_bottom_quartile_gap": 23.18117021276594
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 76.28099999999999,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.3675204373563805,
+        "top_quartile_bottom_quartile_gap": 16.292340425531933
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 79.58900000000001,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.66317085413073,
+        "top_quartile_bottom_quartile_gap": 29.56170212765958
       },
       "previous_points": {
-        "average_value_top_targets": 76.436,
+        "average_value_top_targets": 83.87,
         "hit_rate_top_targets": 1.0,
-        "spearman_correlation": 0.6076276886844498,
-        "top_quartile_bottom_quartile_gap": 41.06191489361702
+        "spearman_correlation": 0.5872683855791895,
+        "top_quartile_bottom_quartile_gap": 26.735638297872356
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 54.763,
+        "hit_rate_top_targets": 0.1,
+        "spearman_correlation": 0.34744072334077064,
+        "top_quartile_bottom_quartile_gap": 13.992858370943488
+      },
+      "previous_usage": {
+        "average_value_top_targets": 81.595,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.2708834177533217,
+        "top_quartile_bottom_quartile_gap": 13.21806030701756
       },
       "random": {
-        "average_value_top_targets": 37.094,
+        "average_value_top_targets": 59.342999999999996,
         "hit_rate_top_targets": 0.1,
-        "spearman_correlation": -0.13675879984590708,
-        "top_quartile_bottom_quartile_gap": -7.157765957446799
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": -0.10792683096808589,
+        "top_quartile_bottom_quartile_gap": -4.031914893617028
       }
     },
     "after_2016-17": {
       "moreymachine_fit": {
-        "average_value_top_targets": 45.243,
+        "average_value_top_targets": 66.39899999999999,
         "hit_rate_top_targets": 0.3,
-        "spearman_correlation": 0.43270450609883465,
-        "top_quartile_bottom_quartile_gap": 27.11604166666666
+        "spearman_correlation": 0.453533010091648,
+        "top_quartile_bottom_quartile_gap": 20.044166666666662
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 72.22200000000001,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.29991721862843806,
+        "top_quartile_bottom_quartile_gap": 13.757812500000007
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 79.87,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.5860937384987777,
+        "top_quartile_bottom_quartile_gap": 28.228854166666665
       },
       "previous_points": {
-        "average_value_top_targets": 61.971000000000004,
+        "average_value_top_targets": 72.19900000000001,
         "hit_rate_top_targets": 0.6,
-        "spearman_correlation": 0.563415302083575,
-        "top_quartile_bottom_quartile_gap": 35.51354166666667
+        "spearman_correlation": 0.5368874427741951,
+        "top_quartile_bottom_quartile_gap": 23.752395833333324
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 63.499,
+        "hit_rate_top_targets": 0.3,
+        "spearman_correlation": 0.32030098571261567,
+        "top_quartile_bottom_quartile_gap": 14.785112670068038
+      },
+      "previous_usage": {
+        "average_value_top_targets": 64.127,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.23058618879643375,
+        "top_quartile_bottom_quartile_gap": 9.239489795918338
       },
       "random": {
-        "average_value_top_targets": 32.004999999999995,
-        "hit_rate_top_targets": 0.1,
-        "spearman_correlation": 0.10759521139219416,
-        "top_quartile_bottom_quartile_gap": 6.535833333333336
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 57.419000000000004,
+        "hit_rate_top_targets": 0.0,
+        "spearman_correlation": 0.11358216057918213,
+        "top_quartile_bottom_quartile_gap": 5.094479166666659
       }
     },
     "after_2017-18": {
       "moreymachine_fit": {
-        "average_value_top_targets": 44.501,
+        "average_value_top_targets": 66.503,
         "hit_rate_top_targets": 0.2,
-        "spearman_correlation": 0.35772126665664683,
-        "top_quartile_bottom_quartile_gap": 22.367793939393938
+        "spearman_correlation": 0.43526497836442174,
+        "top_quartile_bottom_quartile_gap": 19.88035151515151
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 67.09700000000001,
+        "hit_rate_top_targets": 0.4,
+        "spearman_correlation": 0.3351527915945476,
+        "top_quartile_bottom_quartile_gap": 16.68757575757578
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 80.213,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.5766909037276812,
+        "top_quartile_bottom_quartile_gap": 25.192727272727268
       },
       "previous_points": {
-        "average_value_top_targets": 71.308,
-        "hit_rate_top_targets": 0.8,
-        "spearman_correlation": 0.5095225648285882,
-        "top_quartile_bottom_quartile_gap": 33.21434343434345
+        "average_value_top_targets": 77.955,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.5178476792066203,
+        "top_quartile_bottom_quartile_gap": 23.431111111111086
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 54.209,
+        "hit_rate_top_targets": 0.2,
+        "spearman_correlation": 0.33247412290615747,
+        "top_quartile_bottom_quartile_gap": 16.41759191919192
+      },
+      "previous_usage": {
+        "average_value_top_targets": 59.836,
+        "hit_rate_top_targets": 0.3,
+        "spearman_correlation": 0.2283156797867825,
+        "top_quartile_bottom_quartile_gap": 12.016099227569796
       },
       "random": {
-        "average_value_top_targets": 38.4,
-        "hit_rate_top_targets": 0.3,
-        "spearman_correlation": -0.03740428744900986,
-        "top_quartile_bottom_quartile_gap": -1.4835353535353377
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 60.82000000000001,
+        "hit_rate_top_targets": 0.4,
+        "spearman_correlation": -0.036371870176233945,
+        "top_quartile_bottom_quartile_gap": -1.8844444444444406
       }
     },
     "after_2018-19": {
       "moreymachine_fit": {
-        "average_value_top_targets": 39.533,
+        "average_value_top_targets": 59.20300000000001,
         "hit_rate_top_targets": 0.2,
-        "spearman_correlation": 0.33924165118327304,
-        "top_quartile_bottom_quartile_gap": 18.63701030927835
+        "spearman_correlation": 0.39992889049116853,
+        "top_quartile_bottom_quartile_gap": 14.765670103092802
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 69.72900000000001,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.3380960925747486,
+        "top_quartile_bottom_quartile_gap": 12.854329896907224
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 74.425,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.5989018647226683,
+        "top_quartile_bottom_quartile_gap": 23.268247422680425
       },
       "previous_points": {
-        "average_value_top_targets": 66.922,
-        "hit_rate_top_targets": 0.8,
-        "spearman_correlation": 0.5474673164299052,
-        "top_quartile_bottom_quartile_gap": 33.27886597938146
+        "average_value_top_targets": 72.796,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.535440556466928,
+        "top_quartile_bottom_quartile_gap": 21.214432989690728
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 60.43299999999999,
+        "hit_rate_top_targets": 0.2,
+        "spearman_correlation": 0.35087908114392025,
+        "top_quartile_bottom_quartile_gap": 15.52267319587628
+      },
+      "previous_usage": {
+        "average_value_top_targets": 74.538,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.20604650202443875,
+        "top_quartile_bottom_quartile_gap": 9.748957946815082
       },
       "random": {
-        "average_value_top_targets": 33.849,
+        "average_value_top_targets": 56.164,
         "hit_rate_top_targets": 0.4,
-        "spearman_correlation": 0.022249441155145537,
-        "top_quartile_bottom_quartile_gap": 0.5317525773195868
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": 0.028305412223253106,
+        "top_quartile_bottom_quartile_gap": 1.2263917525773067
       }
     },
     "after_2019-20": {
       "moreymachine_fit": {
-        "average_value_top_targets": 41.843,
+        "average_value_top_targets": 57.99399999999999,
         "hit_rate_top_targets": 0.4,
-        "spearman_correlation": 0.46086949385287135,
-        "top_quartile_bottom_quartile_gap": 27.415849056603772
+        "spearman_correlation": 0.501307458716315,
+        "top_quartile_bottom_quartile_gap": 19.64424528301886
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 60.346000000000004,
+        "hit_rate_top_targets": 0.4,
+        "spearman_correlation": 0.3594408312291759,
+        "top_quartile_bottom_quartile_gap": 16.37735849056603
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 72.709,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.6438472696923502,
+        "top_quartile_bottom_quartile_gap": 26.615566037735853
       },
       "previous_points": {
-        "average_value_top_targets": 73.176,
-        "hit_rate_top_targets": 1.0,
-        "spearman_correlation": 0.6178167088887095,
-        "top_quartile_bottom_quartile_gap": 40.391603773584905
+        "average_value_top_targets": 75.95600000000002,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.601709234251711,
+        "top_quartile_bottom_quartile_gap": 25.71179245283018
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 52.854,
+        "hit_rate_top_targets": 0.1,
+        "spearman_correlation": 0.36352531870985244,
+        "top_quartile_bottom_quartile_gap": 15.666822429906524
+      },
+      "previous_usage": {
+        "average_value_top_targets": 74.01599999999999,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.2576636374366263,
+        "top_quartile_bottom_quartile_gap": 9.595324506749733
       },
       "random": {
-        "average_value_top_targets": 33.127,
+        "average_value_top_targets": 51.43000000000001,
         "hit_rate_top_targets": 0.2,
-        "spearman_correlation": 0.016766367730996504,
-        "top_quartile_bottom_quartile_gap": 2.5789622641509453
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": 0.007308567561158181,
+        "top_quartile_bottom_quartile_gap": 1.2153773584905707
       }
     },
     "after_2020-21": {
       "moreymachine_fit": {
-        "average_value_top_targets": 47.87,
+        "average_value_top_targets": 67.274,
         "hit_rate_top_targets": 0.4,
-        "spearman_correlation": 0.4804643743452881,
-        "top_quartile_bottom_quartile_gap": 31.934770642201833
+        "spearman_correlation": 0.5161785433140772,
+        "top_quartile_bottom_quartile_gap": 23.044587155963306
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 73.482,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.35381966955753863,
+        "top_quartile_bottom_quartile_gap": 15.851559633027499
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 77.444,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.6344409667617014,
+        "top_quartile_bottom_quartile_gap": 29.5405504587156
       },
       "previous_points": {
-        "average_value_top_targets": 66.159,
+        "average_value_top_targets": 71.928,
         "hit_rate_top_targets": 0.7,
-        "spearman_correlation": 0.5832702164733133,
-        "top_quartile_bottom_quartile_gap": 37.03669724770642
+        "spearman_correlation": 0.5789840752116815,
+        "top_quartile_bottom_quartile_gap": 24.650183486238532
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 58.605000000000004,
+        "hit_rate_top_targets": 0.2,
+        "spearman_correlation": 0.39071643058926714,
+        "top_quartile_bottom_quartile_gap": 16.949460003219052
+      },
+      "previous_usage": {
+        "average_value_top_targets": 74.05199999999999,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.23224161620719447,
+        "top_quartile_bottom_quartile_gap": 10.498165137614691
       },
       "random": {
-        "average_value_top_targets": 37.116,
-        "hit_rate_top_targets": 0.3,
-        "spearman_correlation": -0.03731518769045825,
-        "top_quartile_bottom_quartile_gap": -2.400091743119276
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 60.55499999999999,
+        "hit_rate_top_targets": 0.2,
+        "spearman_correlation": -0.024810755873343016,
+        "top_quartile_bottom_quartile_gap": -1.490275229357806
       }
     },
     "after_2021-22": {
       "moreymachine_fit": {
-        "average_value_top_targets": 57.675,
+        "average_value_top_targets": 69.936,
         "hit_rate_top_targets": 0.4,
-        "spearman_correlation": 0.4546373456942991,
-        "top_quartile_bottom_quartile_gap": 32.17579365079365
+        "spearman_correlation": 0.4933065922173698,
+        "top_quartile_bottom_quartile_gap": 22.926526455026455
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 76.041,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.37415269724563327,
+        "top_quartile_bottom_quartile_gap": 17.063714285714298
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 80.85499999999999,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.655877238480937,
+        "top_quartile_bottom_quartile_gap": 26.872857142857143
       },
       "previous_points": {
-        "average_value_top_targets": 75.586,
-        "hit_rate_top_targets": 0.9,
-        "spearman_correlation": 0.623132187641285,
-        "top_quartile_bottom_quartile_gap": 44.33371428571431
+        "average_value_top_targets": 79.42200000000001,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.6157692206989447,
+        "top_quartile_bottom_quartile_gap": 29.168571428571433
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 69.928,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.3632521049379151,
+        "top_quartile_bottom_quartile_gap": 16.9061426556163
+      },
+      "previous_usage": {
+        "average_value_top_targets": 73.753,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.264337090291521,
+        "top_quartile_bottom_quartile_gap": 11.97328573901003
       },
       "random": {
-        "average_value_top_targets": 35.245,
+        "average_value_top_targets": 56.361000000000004,
         "hit_rate_top_targets": 0.2,
-        "spearman_correlation": -0.024623140121796745,
-        "top_quartile_bottom_quartile_gap": 1.668857142857135
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": -0.005708514067736864,
+        "top_quartile_bottom_quartile_gap": 1.600190476190484
       }
     },
     "after_2022-23": {
       "moreymachine_fit": {
-        "average_value_top_targets": 61.748000000000005,
+        "average_value_top_targets": 73.407,
         "hit_rate_top_targets": 0.5,
-        "spearman_correlation": 0.48188385929540467,
-        "top_quartile_bottom_quartile_gap": 32.830362101161
+        "spearman_correlation": 0.5003588375529147,
+        "top_quartile_bottom_quartile_gap": 23.902055695380355
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 76.758,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.3548172230765483,
+        "top_quartile_bottom_quartile_gap": 16.14532110091743
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 76.345,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.7223727989021378,
+        "top_quartile_bottom_quartile_gap": 35.36825688073393
       },
       "previous_points": {
-        "average_value_top_targets": 81.952,
-        "hit_rate_top_targets": 1.0,
-        "spearman_correlation": 0.6687267991175032,
-        "top_quartile_bottom_quartile_gap": 45.417431192660544
+        "average_value_top_targets": 84.02099999999999,
+        "hit_rate_top_targets": 0.9,
+        "spearman_correlation": 0.652709362637195,
+        "top_quartile_bottom_quartile_gap": 29.846146788990822
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 52.105999999999995,
+        "hit_rate_top_targets": 0.1,
+        "spearman_correlation": 0.3335952816456003,
+        "top_quartile_bottom_quartile_gap": 16.247614678899076
+      },
+      "previous_usage": {
+        "average_value_top_targets": 74.067,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.3215475023775098,
+        "top_quartile_bottom_quartile_gap": 16.137876106194696
       },
       "random": {
-        "average_value_top_targets": 46.827000000000005,
-        "hit_rate_top_targets": 0.3,
-        "spearman_correlation": -0.014850966960989932,
-        "top_quartile_bottom_quartile_gap": -1.8850458715596403
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 64.67699999999999,
+        "hit_rate_top_targets": 0.2,
+        "spearman_correlation": -0.01778831814536328,
+        "top_quartile_bottom_quartile_gap": -1.5058715596330217
       }
     },
     "after_2023-24": {
       "moreymachine_fit": {
-        "average_value_top_targets": 41.662,
+        "average_value_top_targets": 59.798000000000016,
         "hit_rate_top_targets": 0.1,
-        "spearman_correlation": 0.5179317687107571,
-        "top_quartile_bottom_quartile_gap": 34.77309090909091
+        "spearman_correlation": 0.5205750662113903,
+        "top_quartile_bottom_quartile_gap": 23.60754545454546
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 72.278,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.3366911972707728,
+        "top_quartile_bottom_quartile_gap": 15.82064220183485
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 78.27099999999999,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.679121184904195,
+        "top_quartile_bottom_quartile_gap": 29.45431192660549
       },
       "previous_points": {
-        "average_value_top_targets": 77.91999999999999,
-        "hit_rate_top_targets": 0.9,
-        "spearman_correlation": 0.6621615401981444,
-        "top_quartile_bottom_quartile_gap": 44.66559633027522
+        "average_value_top_targets": 81.499,
+        "hit_rate_top_targets": 0.8,
+        "spearman_correlation": 0.6140495840282812,
+        "top_quartile_bottom_quartile_gap": 27.659082568807335
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 62.74300000000001,
+        "hit_rate_top_targets": 0.1,
+        "spearman_correlation": 0.3590853178330887,
+        "top_quartile_bottom_quartile_gap": 16.90613636363637
+      },
+      "previous_usage": {
+        "average_value_top_targets": 72.65599999999999,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.25496352124022026,
+        "top_quartile_bottom_quartile_gap": 11.921909090909075
       },
       "random": {
-        "average_value_top_targets": 36.057,
+        "average_value_top_targets": 57.338,
         "hit_rate_top_targets": 0.2,
-        "spearman_correlation": 0.07101052329125573,
-        "top_quartile_bottom_quartile_gap": 5.845321100917438
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": 0.07231106449174186,
+        "top_quartile_bottom_quartile_gap": 4.2817431192660464
       }
     },
     "after_2024-25": {
       "moreymachine_fit": {
-        "average_value_top_targets": 69.349,
+        "average_value_top_targets": 78.045,
         "hit_rate_top_targets": 0.7,
-        "spearman_correlation": 0.41558910537024174,
-        "top_quartile_bottom_quartile_gap": 27.626106194690276
+        "spearman_correlation": 0.44696874748029786,
+        "top_quartile_bottom_quartile_gap": 19.738318584070775
       },
       "previous_impact": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "average_value_top_targets": 60.90999999999999,
+        "hit_rate_top_targets": 0.5,
+        "spearman_correlation": 0.2473610403709116,
+        "top_quartile_bottom_quartile_gap": 11.134513274336278
+      },
+      "previous_minutes": {
+        "average_value_top_targets": 71.34200000000001,
+        "hit_rate_top_targets": 0.7,
+        "spearman_correlation": 0.5891644882576383,
+        "top_quartile_bottom_quartile_gap": 27.04247787610619
       },
       "previous_points": {
-        "average_value_top_targets": 70.902,
+        "average_value_top_targets": 75.392,
         "hit_rate_top_targets": 0.8,
-        "spearman_correlation": 0.495470817319448,
-        "top_quartile_bottom_quartile_gap": 34.43858407079645
+        "spearman_correlation": 0.4875248248857513,
+        "top_quartile_bottom_quartile_gap": 22.61955752212389
+      },
+      "previous_true_shooting": {
+        "average_value_top_targets": 51.56,
+        "hit_rate_top_targets": 0.1,
+        "spearman_correlation": 0.26045813195217926,
+        "top_quartile_bottom_quartile_gap": 10.864247787610608
+      },
+      "previous_usage": {
+        "average_value_top_targets": 64.781,
+        "hit_rate_top_targets": 0.6,
+        "spearman_correlation": 0.18832456247661664,
+        "top_quartile_bottom_quartile_gap": 8.859484775761189
       },
       "random": {
-        "average_value_top_targets": 24.878999999999998,
+        "average_value_top_targets": 46.340999999999994,
         "hit_rate_top_targets": 0.0,
-        "spearman_correlation": -0.06773104314464902,
-        "top_quartile_bottom_quartile_gap": -2.923628318584065
-      },
-      "salary": {
-        "average_value_top_targets": null,
-        "hit_rate_top_targets": null,
-        "spearman_correlation": null,
-        "top_quartile_bottom_quartile_gap": null
+        "spearman_correlation": -0.04355447231236163,
+        "top_quartile_bottom_quartile_gap": -1.0223893805309814
       }
+    }
+  },
+  "limitations": {
+    "contract_value": "missing_salary_data",
+    "transaction_context": "Historical transaction, injury, availability, and candidate-status data are not inferred. Missing inputs remain missing."
+  },
+  "methodology": {
+    "basketball_fit_outcome": "next_season_value excludes contract surplus so basketball-fit accuracy is evaluated separately from price accuracy.",
+    "candidate_universe": "Historical universe is every non-target-team player with a previous-season stat row; contract status is used only if a historical salary table is supplied.",
+    "chronological_split": "Each offseason uses player and team data through the previous season only, then joins to next-season outcomes."
+  },
+  "metrics": {
+    "basketball_fit": {
+      "baseline_comparison": {
+        "previous_impact": {
+          "average_value_top_targets": 70.51439999999998,
+          "delta_vs_moreymachine": -3.2099999999999795
+        },
+        "previous_minutes": {
+          "average_value_top_targets": 77.1063,
+          "delta_vs_moreymachine": -9.801900000000003
+        },
+        "previous_points": {
+          "average_value_top_targets": 77.5038,
+          "delta_vs_moreymachine": -10.199399999999997
+        },
+        "previous_true_shooting": {
+          "average_value_top_targets": 58.07,
+          "delta_vs_moreymachine": 9.2344
+        },
+        "previous_usage": {
+          "average_value_top_targets": 71.34209999999999,
+          "delta_vs_moreymachine": -4.037699999999987
+        },
+        "random": {
+          "average_value_top_targets": 57.0448,
+          "delta_vs_moreymachine": 10.259599999999999
+        }
+      },
+      "by_offseason": {
+        "after_2015-16": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 74.485,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.4974422880824593,
+            "top_quartile_bottom_quartile_gap": 23.18117021276594
+          },
+          "previous_impact": {
+            "average_value_top_targets": 76.28099999999999,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.3675204373563805,
+            "top_quartile_bottom_quartile_gap": 16.292340425531933
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 79.58900000000001,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.66317085413073,
+            "top_quartile_bottom_quartile_gap": 29.56170212765958
+          },
+          "previous_points": {
+            "average_value_top_targets": 83.87,
+            "hit_rate_top_targets": 1.0,
+            "spearman_correlation": 0.5872683855791895,
+            "top_quartile_bottom_quartile_gap": 26.735638297872356
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 54.763,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.34744072334077064,
+            "top_quartile_bottom_quartile_gap": 13.992858370943488
+          },
+          "previous_usage": {
+            "average_value_top_targets": 81.595,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.2708834177533217,
+            "top_quartile_bottom_quartile_gap": 13.21806030701756
+          },
+          "random": {
+            "average_value_top_targets": 59.342999999999996,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": -0.10792683096808589,
+            "top_quartile_bottom_quartile_gap": -4.031914893617028
+          }
+        },
+        "after_2016-17": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 66.39899999999999,
+            "hit_rate_top_targets": 0.3,
+            "spearman_correlation": 0.453533010091648,
+            "top_quartile_bottom_quartile_gap": 20.044166666666662
+          },
+          "previous_impact": {
+            "average_value_top_targets": 72.22200000000001,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.29991721862843806,
+            "top_quartile_bottom_quartile_gap": 13.757812500000007
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 79.87,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.5860937384987777,
+            "top_quartile_bottom_quartile_gap": 28.228854166666665
+          },
+          "previous_points": {
+            "average_value_top_targets": 72.19900000000001,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.5368874427741951,
+            "top_quartile_bottom_quartile_gap": 23.752395833333324
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 63.499,
+            "hit_rate_top_targets": 0.3,
+            "spearman_correlation": 0.32030098571261567,
+            "top_quartile_bottom_quartile_gap": 14.785112670068038
+          },
+          "previous_usage": {
+            "average_value_top_targets": 64.127,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.23058618879643375,
+            "top_quartile_bottom_quartile_gap": 9.239489795918338
+          },
+          "random": {
+            "average_value_top_targets": 57.419000000000004,
+            "hit_rate_top_targets": 0.0,
+            "spearman_correlation": 0.11358216057918213,
+            "top_quartile_bottom_quartile_gap": 5.094479166666659
+          }
+        },
+        "after_2017-18": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 66.503,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.43526497836442174,
+            "top_quartile_bottom_quartile_gap": 19.88035151515151
+          },
+          "previous_impact": {
+            "average_value_top_targets": 67.09700000000001,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.3351527915945476,
+            "top_quartile_bottom_quartile_gap": 16.68757575757578
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 80.213,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.5766909037276812,
+            "top_quartile_bottom_quartile_gap": 25.192727272727268
+          },
+          "previous_points": {
+            "average_value_top_targets": 77.955,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.5178476792066203,
+            "top_quartile_bottom_quartile_gap": 23.431111111111086
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 54.209,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.33247412290615747,
+            "top_quartile_bottom_quartile_gap": 16.41759191919192
+          },
+          "previous_usage": {
+            "average_value_top_targets": 59.836,
+            "hit_rate_top_targets": 0.3,
+            "spearman_correlation": 0.2283156797867825,
+            "top_quartile_bottom_quartile_gap": 12.016099227569796
+          },
+          "random": {
+            "average_value_top_targets": 60.82000000000001,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": -0.036371870176233945,
+            "top_quartile_bottom_quartile_gap": -1.8844444444444406
+          }
+        },
+        "after_2018-19": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 59.20300000000001,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.39992889049116853,
+            "top_quartile_bottom_quartile_gap": 14.765670103092802
+          },
+          "previous_impact": {
+            "average_value_top_targets": 69.72900000000001,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.3380960925747486,
+            "top_quartile_bottom_quartile_gap": 12.854329896907224
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 74.425,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.5989018647226683,
+            "top_quartile_bottom_quartile_gap": 23.268247422680425
+          },
+          "previous_points": {
+            "average_value_top_targets": 72.796,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.535440556466928,
+            "top_quartile_bottom_quartile_gap": 21.214432989690728
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 60.43299999999999,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.35087908114392025,
+            "top_quartile_bottom_quartile_gap": 15.52267319587628
+          },
+          "previous_usage": {
+            "average_value_top_targets": 74.538,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.20604650202443875,
+            "top_quartile_bottom_quartile_gap": 9.748957946815082
+          },
+          "random": {
+            "average_value_top_targets": 56.164,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.028305412223253106,
+            "top_quartile_bottom_quartile_gap": 1.2263917525773067
+          }
+        },
+        "after_2019-20": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 57.99399999999999,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.501307458716315,
+            "top_quartile_bottom_quartile_gap": 19.64424528301886
+          },
+          "previous_impact": {
+            "average_value_top_targets": 60.346000000000004,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.3594408312291759,
+            "top_quartile_bottom_quartile_gap": 16.37735849056603
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 72.709,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.6438472696923502,
+            "top_quartile_bottom_quartile_gap": 26.615566037735853
+          },
+          "previous_points": {
+            "average_value_top_targets": 75.95600000000002,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.601709234251711,
+            "top_quartile_bottom_quartile_gap": 25.71179245283018
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 52.854,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.36352531870985244,
+            "top_quartile_bottom_quartile_gap": 15.666822429906524
+          },
+          "previous_usage": {
+            "average_value_top_targets": 74.01599999999999,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.2576636374366263,
+            "top_quartile_bottom_quartile_gap": 9.595324506749733
+          },
+          "random": {
+            "average_value_top_targets": 51.43000000000001,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.007308567561158181,
+            "top_quartile_bottom_quartile_gap": 1.2153773584905707
+          }
+        },
+        "after_2020-21": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 67.274,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.5161785433140772,
+            "top_quartile_bottom_quartile_gap": 23.044587155963306
+          },
+          "previous_impact": {
+            "average_value_top_targets": 73.482,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.35381966955753863,
+            "top_quartile_bottom_quartile_gap": 15.851559633027499
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 77.444,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.6344409667617014,
+            "top_quartile_bottom_quartile_gap": 29.5405504587156
+          },
+          "previous_points": {
+            "average_value_top_targets": 71.928,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.5789840752116815,
+            "top_quartile_bottom_quartile_gap": 24.650183486238532
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 58.605000000000004,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.39071643058926714,
+            "top_quartile_bottom_quartile_gap": 16.949460003219052
+          },
+          "previous_usage": {
+            "average_value_top_targets": 74.05199999999999,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.23224161620719447,
+            "top_quartile_bottom_quartile_gap": 10.498165137614691
+          },
+          "random": {
+            "average_value_top_targets": 60.55499999999999,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": -0.024810755873343016,
+            "top_quartile_bottom_quartile_gap": -1.490275229357806
+          }
+        },
+        "after_2021-22": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 69.936,
+            "hit_rate_top_targets": 0.4,
+            "spearman_correlation": 0.4933065922173698,
+            "top_quartile_bottom_quartile_gap": 22.926526455026455
+          },
+          "previous_impact": {
+            "average_value_top_targets": 76.041,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.37415269724563327,
+            "top_quartile_bottom_quartile_gap": 17.063714285714298
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 80.85499999999999,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.655877238480937,
+            "top_quartile_bottom_quartile_gap": 26.872857142857143
+          },
+          "previous_points": {
+            "average_value_top_targets": 79.42200000000001,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.6157692206989447,
+            "top_quartile_bottom_quartile_gap": 29.168571428571433
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 69.928,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.3632521049379151,
+            "top_quartile_bottom_quartile_gap": 16.9061426556163
+          },
+          "previous_usage": {
+            "average_value_top_targets": 73.753,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.264337090291521,
+            "top_quartile_bottom_quartile_gap": 11.97328573901003
+          },
+          "random": {
+            "average_value_top_targets": 56.361000000000004,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": -0.005708514067736864,
+            "top_quartile_bottom_quartile_gap": 1.600190476190484
+          }
+        },
+        "after_2022-23": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 73.407,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.5003588375529147,
+            "top_quartile_bottom_quartile_gap": 23.902055695380355
+          },
+          "previous_impact": {
+            "average_value_top_targets": 76.758,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.3548172230765483,
+            "top_quartile_bottom_quartile_gap": 16.14532110091743
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 76.345,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.7223727989021378,
+            "top_quartile_bottom_quartile_gap": 35.36825688073393
+          },
+          "previous_points": {
+            "average_value_top_targets": 84.02099999999999,
+            "hit_rate_top_targets": 0.9,
+            "spearman_correlation": 0.652709362637195,
+            "top_quartile_bottom_quartile_gap": 29.846146788990822
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 52.105999999999995,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.3335952816456003,
+            "top_quartile_bottom_quartile_gap": 16.247614678899076
+          },
+          "previous_usage": {
+            "average_value_top_targets": 74.067,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.3215475023775098,
+            "top_quartile_bottom_quartile_gap": 16.137876106194696
+          },
+          "random": {
+            "average_value_top_targets": 64.67699999999999,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": -0.01778831814536328,
+            "top_quartile_bottom_quartile_gap": -1.5058715596330217
+          }
+        },
+        "after_2023-24": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 59.798000000000016,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.5205750662113903,
+            "top_quartile_bottom_quartile_gap": 23.60754545454546
+          },
+          "previous_impact": {
+            "average_value_top_targets": 72.278,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.3366911972707728,
+            "top_quartile_bottom_quartile_gap": 15.82064220183485
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 78.27099999999999,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.679121184904195,
+            "top_quartile_bottom_quartile_gap": 29.45431192660549
+          },
+          "previous_points": {
+            "average_value_top_targets": 81.499,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.6140495840282812,
+            "top_quartile_bottom_quartile_gap": 27.659082568807335
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 62.74300000000001,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.3590853178330887,
+            "top_quartile_bottom_quartile_gap": 16.90613636363637
+          },
+          "previous_usage": {
+            "average_value_top_targets": 72.65599999999999,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.25496352124022026,
+            "top_quartile_bottom_quartile_gap": 11.921909090909075
+          },
+          "random": {
+            "average_value_top_targets": 57.338,
+            "hit_rate_top_targets": 0.2,
+            "spearman_correlation": 0.07231106449174186,
+            "top_quartile_bottom_quartile_gap": 4.2817431192660464
+          }
+        },
+        "after_2024-25": {
+          "moreymachine_fit": {
+            "average_value_top_targets": 78.045,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.44696874748029786,
+            "top_quartile_bottom_quartile_gap": 19.738318584070775
+          },
+          "previous_impact": {
+            "average_value_top_targets": 60.90999999999999,
+            "hit_rate_top_targets": 0.5,
+            "spearman_correlation": 0.2473610403709116,
+            "top_quartile_bottom_quartile_gap": 11.134513274336278
+          },
+          "previous_minutes": {
+            "average_value_top_targets": 71.34200000000001,
+            "hit_rate_top_targets": 0.7,
+            "spearman_correlation": 0.5891644882576383,
+            "top_quartile_bottom_quartile_gap": 27.04247787610619
+          },
+          "previous_points": {
+            "average_value_top_targets": 75.392,
+            "hit_rate_top_targets": 0.8,
+            "spearman_correlation": 0.4875248248857513,
+            "top_quartile_bottom_quartile_gap": 22.61955752212389
+          },
+          "previous_true_shooting": {
+            "average_value_top_targets": 51.56,
+            "hit_rate_top_targets": 0.1,
+            "spearman_correlation": 0.26045813195217926,
+            "top_quartile_bottom_quartile_gap": 10.864247787610608
+          },
+          "previous_usage": {
+            "average_value_top_targets": 64.781,
+            "hit_rate_top_targets": 0.6,
+            "spearman_correlation": 0.18832456247661664,
+            "top_quartile_bottom_quartile_gap": 8.859484775761189
+          },
+          "random": {
+            "average_value_top_targets": 46.340999999999994,
+            "hit_rate_top_targets": 0.0,
+            "spearman_correlation": -0.04355447231236163,
+            "top_quartile_bottom_quartile_gap": -1.0223893805309814
+          }
+        }
+      },
+      "overall": {
+        "moreymachine_fit": {
+          "average_value_top_targets": 67.3044,
+          "hit_rate_top_targets": 0.36,
+          "spearman_correlation": 0.4651828390171473,
+          "top_quartile_bottom_quartile_gap": 21.361789764405565
+        },
+        "previous_impact": {
+          "average_value_top_targets": 70.51439999999998,
+          "hit_rate_top_targets": 0.58,
+          "spearman_correlation": 0.33251311639194153,
+          "top_quartile_bottom_quartile_gap": 15.387446808510639
+        },
+        "previous_minutes": {
+          "average_value_top_targets": 77.1063,
+          "hit_rate_top_targets": 0.71,
+          "spearman_correlation": 0.6310735883686858,
+          "top_quartile_bottom_quartile_gap": 28.158665377176007
+        },
+        "previous_points": {
+          "average_value_top_targets": 77.5038,
+          "hit_rate_top_targets": 0.75,
+          "spearman_correlation": 0.5690520550436198,
+          "top_quartile_bottom_quartile_gap": 25.51931334622825
+        },
+        "previous_true_shooting": {
+          "average_value_top_targets": 58.07,
+          "hit_rate_top_targets": 0.19,
+          "spearman_correlation": 0.33761512439787,
+          "top_quartile_bottom_quartile_gap": 15.558531903691481
+        },
+        "previous_usage": {
+          "average_value_top_targets": 71.34209999999999,
+          "hit_rate_top_targets": 0.61,
+          "spearman_correlation": 0.24509891747922666,
+          "top_quartile_bottom_quartile_gap": 11.418645969407308
+        },
+        "random": {
+          "average_value_top_targets": 57.0448,
+          "hit_rate_top_targets": 0.19,
+          "spearman_correlation": -0.004530612403055897,
+          "top_quartile_bottom_quartile_gap": 0.03393617021277606
+        }
+      }
+    },
+    "contract_value": {
+      "metrics": {},
+      "rows_with_salary": 0,
+      "status": "missing_salary_data"
     }
   },
   "offseasons": [
@@ -353,37 +1011,50 @@
   ],
   "overall": {
     "moreymachine_fit": {
-      "average_value_top_targets": 50.64239999999999,
-      "hit_rate_top_targets": 0.37,
-      "spearman_correlation": 0.43643436535138774,
-      "top_quartile_bottom_quartile_gap": 29.40165842295407
+      "average_value_top_targets": 67.3044,
+      "hit_rate_top_targets": 0.36,
+      "spearman_correlation": 0.4651828390171473,
+      "top_quartile_bottom_quartile_gap": 21.361789764405565
     },
     "previous_impact": {
-      "average_value_top_targets": null,
-      "hit_rate_top_targets": null,
-      "spearman_correlation": null,
-      "top_quartile_bottom_quartile_gap": null
+      "average_value_top_targets": 70.51439999999998,
+      "hit_rate_top_targets": 0.58,
+      "spearman_correlation": 0.33251311639194153,
+      "top_quartile_bottom_quartile_gap": 15.387446808510639
+    },
+    "previous_minutes": {
+      "average_value_top_targets": 77.1063,
+      "hit_rate_top_targets": 0.71,
+      "spearman_correlation": 0.6310735883686858,
+      "top_quartile_bottom_quartile_gap": 28.158665377176007
     },
     "previous_points": {
-      "average_value_top_targets": 72.23320000000001,
-      "hit_rate_top_targets": 0.85,
-      "spearman_correlation": 0.5881427302096279,
-      "top_quartile_bottom_quartile_gap": 39.00294970986461
+      "average_value_top_targets": 77.5038,
+      "hit_rate_top_targets": 0.75,
+      "spearman_correlation": 0.5690520550436198,
+      "top_quartile_bottom_quartile_gap": 25.51931334622825
+    },
+    "previous_true_shooting": {
+      "average_value_top_targets": 58.07,
+      "hit_rate_top_targets": 0.19,
+      "spearman_correlation": 0.33761512439787,
+      "top_quartile_bottom_quartile_gap": 15.558531903691481
+    },
+    "previous_usage": {
+      "average_value_top_targets": 71.34209999999999,
+      "hit_rate_top_targets": 0.61,
+      "spearman_correlation": 0.24509891747922666,
+      "top_quartile_bottom_quartile_gap": 11.418645969407308
     },
     "random": {
-      "average_value_top_targets": 35.459900000000005,
-      "hit_rate_top_targets": 0.21,
-      "spearman_correlation": -0.011557998158800403,
-      "top_quartile_bottom_quartile_gap": -0.17258220502900912
-    },
-    "salary": {
-      "average_value_top_targets": null,
-      "hit_rate_top_targets": null,
-      "spearman_correlation": null,
-      "top_quartile_bottom_quartile_gap": null
+      "average_value_top_targets": 57.0448,
+      "hit_rate_top_targets": 0.19,
+      "spearman_correlation": -0.004530612403055897,
+      "top_quartile_bottom_quartile_gap": 0.03393617021277606
     }
   },
   "row_count": 5198,
+  "schema_version": "offseason_backtest_v2",
   "target_team": "PHI",
   "top_k": 10
 }

@@ -28,8 +28,10 @@ BACKTEST_SUMMARY_PATH = REPORTS_DATA_DIR / "backtest_summary.md"
 BASELINE_SCORE_COLUMNS = {
     "moreymachine_fit": "fit_score",
     "previous_points": "baseline_points_score",
+    "previous_minutes": "baseline_minutes_score",
+    "previous_true_shooting": "baseline_true_shooting_score",
+    "previous_usage": "baseline_usage_score",
     "previous_impact": "baseline_impact_score",
-    "salary": "baseline_salary_score",
     "random": "baseline_random_score",
 }
 
@@ -217,7 +219,17 @@ def evaluate_backtest_rankings(
             ),
         }
 
+    contract_metrics = _contract_value_metrics(rankings, top_k=top_k)
+    metrics = {
+        "basketball_fit": {
+            "overall": overall,
+            "by_offseason": by_offseason,
+            "baseline_comparison": baseline_comparison,
+        },
+        "contract_value": contract_metrics,
+    }
     return {
+        "schema_version": "offseason_backtest_v2",
         "target_team": target_team,
         "top_k": top_k,
         "offseasons": (
@@ -226,20 +238,90 @@ def evaluate_backtest_rankings(
             else []
         ),
         "row_count": int(len(rankings)),
+        "metrics": metrics,
         "overall": overall,
         "by_offseason": by_offseason,
         "average_value_of_top_targets_vs_baselines": baseline_comparison,
+        "methodology": {
+            "chronological_split": (
+                "Each offseason uses player and team data through the previous "
+                "season only, then joins to next-season outcomes."
+            ),
+            "candidate_universe": (
+                "Historical universe is every non-target-team player with a "
+                "previous-season stat row; contract status is used only if a "
+                "historical salary table is supplied."
+            ),
+            "basketball_fit_outcome": (
+                "next_season_value excludes contract surplus so basketball-fit "
+                "accuracy is evaluated separately from price accuracy."
+            ),
+        },
+        "limitations": {
+            "contract_value": contract_metrics["status"],
+            "transaction_context": (
+                "Historical transaction, injury, availability, and candidate-status "
+                "data are not inferred. Missing inputs remain missing."
+            ),
+        },
+    }
+
+
+def _contract_value_metrics(rankings: pd.DataFrame, *, top_k: int) -> dict[str, Any]:
+    if rankings.empty or "next_contract_surplus" not in rankings.columns:
+        return {
+            "status": "missing_salary_data",
+            "rows_with_salary": 0,
+            "metrics": {},
+        }
+    salary = pd.to_numeric(rankings.get("salary_millions"), errors="coerce")
+    usable = rankings.loc[salary.notna()].copy()
+    rows_with_salary = int(len(usable))
+    if usable.empty:
+        return {
+            "status": "missing_salary_data",
+            "rows_with_salary": 0,
+            "metrics": {},
+        }
+    return {
+        "status": "evaluated_separately",
+        "rows_with_salary": rows_with_salary,
+        "metrics": _method_metrics(
+            usable,
+            score_column="contract_value",
+            outcome_column="next_contract_surplus",
+            top_k=top_k,
+        ),
     }
 
 
 def render_backtest_summary(metrics: dict[str, Any]) -> str:
     """Render a Markdown summary from backtest metrics."""
+    overall = metrics.get("overall", {})
+    morey = overall.get("moreymachine_fit", {})
+    contract = metrics.get("metrics", {}).get("contract_value", {})
     lines = [
         "# Offseason Backtest Summary",
         "",
         f"Target team: {metrics.get('target_team', '')}",
         f"Offseasons tested: {', '.join(metrics.get('offseasons', [])) or 'none'}",
         f"Rows evaluated: {metrics.get('row_count', 0)}",
+        "",
+        "## Method",
+        "",
+        (
+            "For each historical offseason, MoreyMachine builds PHI roster gaps using "
+            "only data through the previous season, creates that offseason's "
+            "non-PHI candidate universe from previous-season player rows, ranks the "
+            "candidates, then joins the same players to next-season outcomes."
+        ),
+        "",
+        (
+            "The primary `next_season_value` is basketball-only: minutes, games, "
+            "true shooting, role stability, available impact proxy, availability, "
+            "win-share signal when present, and playoff-rotation usefulness. "
+            "Contract surplus is reported separately and only when salary data exists."
+        ),
         "",
         "## Overall Metrics",
         "",
@@ -258,6 +340,51 @@ def render_backtest_summary(metrics: dict[str, Any]) -> str:
             f"{_format_metric(values.get('top_quartile_bottom_quartile_gap'))} | "
             f"{_format_metric(values.get('hit_rate_top_targets'))} | "
             f"{_format_metric(values.get('average_value_top_targets'))} |"
+        )
+
+    lines.extend(["", "## What The Model Appears To Do Well", ""])
+    lines.append(
+        "- It identifies candidates with durable basketball value when its Spearman "
+        f"correlation is positive ({_format_metric(morey.get('spearman_correlation'))}) "
+        "and top-target value clears the random baseline."
+    )
+    lines.append(
+        "- Its strongest evidence is on basketball-fit outcomes that are present in "
+        "the cached stat tables: minutes, games, true shooting, role stability, and "
+        "box-score impact proxy."
+    )
+
+    lines.extend(["", "## Where It Fails Or Is Limited", ""])
+    lines.append(
+        "- Simple star-power baselines, especially previous-season scoring or "
+        "minutes, can beat a fit model when the outcome rewards raw next-season "
+        "volume more than acquisition realism."
+    )
+    lines.append(
+        "- Historical injury context, transaction intent, trade availability, and "
+        "candidate status are not invented; if those sources are absent, they remain "
+        "missing rather than inferred."
+    )
+
+    lines.extend(["", "## Metric Reliability", ""])
+    lines.append(
+        "- More reliable: next-season minutes, games, true shooting, availability, "
+        "and role stability because they come directly from season stat rows."
+    )
+    lines.append(
+        "- More limited: impact proxy where advanced impact columns are absent; it "
+        "falls back to an explicit box-score production proxy from available stats."
+    )
+    if contract.get("status") == "evaluated_separately":
+        lines.append(
+            "- Contract-value backtesting is separated from basketball fit and was "
+            f"available for {contract.get('rows_with_salary', 0)} salary-backed rows."
+        )
+    else:
+        lines.append(
+            "- Contract-value backtesting is separated from basketball fit, but no "
+            "historical salary table was available for this run, so contract surplus "
+            "metrics are not reliable yet."
         )
 
     lines.extend(["", "## Baseline Comparison", ""])
@@ -316,6 +443,11 @@ def _backtest_offseason(
 
     previous_archetypes = _season_frame(player_archetypes, previous_season)
     previous_contracts = _season_frame(contracts, previous_season)
+    candidate_pool = _historical_candidate_universe(
+        candidate_pool,
+        previous_contracts,
+        previous_season=previous_season,
+    )
     rankings = rank_candidates(
         candidate_pool,
         roster_gaps=roster_gaps,
@@ -351,6 +483,39 @@ def _backtest_offseason(
     enriched["previous_season"] = previous_season
     enriched["next_season"] = next_season
     return enriched.loc[:, _ranking_columns(enriched)]
+
+
+def _historical_candidate_universe(
+    player_stats: pd.DataFrame,
+    contracts: pd.DataFrame | None,
+    *,
+    previous_season: str,
+) -> pd.DataFrame:
+    """Build the historical offseason universe without inventing availability."""
+    universe = player_stats.copy()
+    universe["candidate_type"] = "historical_offseason_candidate"
+    universe["candidate_status_note"] = (
+        "Included because a previous-season stat row existed before the offseason; "
+        "historical availability, transaction intent, and injury status are not "
+        "inferred."
+    )
+    universe["data_sources"] = (
+        "Previous-season player stats; historical PHI roster gaps; next-season "
+        "outcomes joined after ranking"
+    )
+    has_salary = False
+    if contracts is not None and not contracts.empty:
+        salary = contracts.copy()
+        salary["salary_millions"] = salary.apply(_salary_from_row, axis=1)
+        has_salary = bool(salary["salary_millions"].notna().any())
+    if has_salary:
+        universe["missing_data_flags"] = "historical candidate availability missing"
+    else:
+        universe["missing_data_flags"] = (
+            "historical salary missing; historical candidate availability missing"
+        )
+    universe["backtest_data_cutoff"] = previous_season
+    return universe
 
 
 def _attach_candidate_identity(
@@ -393,6 +558,7 @@ def _attach_contracts(
 ) -> pd.DataFrame:
     if contracts is None or contracts.empty:
         rankings["salary_millions"] = np.nan
+        rankings["has_salary_data"] = False
         return rankings
     salary = contracts.copy()
     salary["salary_millions"] = salary.apply(_salary_from_row, axis=1)
@@ -403,8 +569,13 @@ def _attach_contracts(
     ]
     if len(columns) < 2:
         rankings["salary_millions"] = np.nan
+        rankings["has_salary_data"] = False
         return rankings
-    return _merge_on_player(rankings, salary.loc[:, columns])
+    merged = _merge_on_player(rankings, salary.loc[:, columns])
+    merged["has_salary_data"] = pd.to_numeric(
+        merged["salary_millions"], errors="coerce"
+    ).notna()
+    return merged
 
 
 def _attach_baseline_scores(
@@ -415,8 +586,12 @@ def _attach_baseline_scores(
 ) -> pd.DataFrame:
     result = rankings.copy()
     result["baseline_points_score"] = _percentile_score(result["previous_ppg"])
+    result["baseline_minutes_score"] = _percentile_score(result["previous_minutes"])
+    result["baseline_true_shooting_score"] = _percentile_score(
+        result["previous_true_shooting"]
+    )
+    result["baseline_usage_score"] = _percentile_score(result["previous_usage"])
     result["baseline_impact_score"] = _percentile_score(result["previous_impact"])
-    result["baseline_salary_score"] = _percentile_score(result["salary_millions"])
     result["baseline_random_score"] = _random_scores(
         len(result),
         seed=random_state + _season_sort_key(previous_season),
@@ -435,7 +610,10 @@ def _attach_next_outcomes(
 
     outcomes = _next_outcome_frame(next_players)
     result = _merge_on_player(rankings, outcomes)
-    result["next_contract_surplus"] = _contract_surplus(result, salary_frame)
+    result["next_contract_surplus"] = _contract_surplus(result)
+    result["contract_backtest_available"] = result["next_contract_surplus"].notna()
+    result["next_role_stability"] = _role_stability(result)
+    result["next_season_availability"] = _availability(result)
     result["playoff_rotation_usefulness"] = _playoff_rotation_usefulness(result)
     return result
 
@@ -447,8 +625,10 @@ def _candidate_signal_frame(frame: pd.DataFrame) -> pd.DataFrame:
     result["player_name"] = frame.apply(_player_name_from_row, axis=1)
     result["previous_ppg"] = frame.apply(_points_per_game, axis=1)
     result["previous_impact"] = frame.apply(_impact_proxy, axis=1)
-    result["previous_efficiency"] = frame.apply(_efficiency, axis=1)
+    result["previous_true_shooting"] = frame.apply(_efficiency, axis=1)
+    result["previous_efficiency"] = result["previous_true_shooting"]
     result["previous_minutes"] = frame.apply(_minutes, axis=1)
+    result["previous_usage"] = frame.apply(_usage, axis=1)
     return result
 
 
@@ -458,9 +638,13 @@ def _next_outcome_frame(frame: pd.DataFrame) -> pd.DataFrame:
         result["player_id"] = frame["player_id"]
     result["player_name"] = frame.apply(_player_name_from_row, axis=1)
     result["next_season_minutes"] = frame.apply(_minutes, axis=1)
+    result["next_season_games"] = frame.apply(_games, axis=1)
     result["next_season_ppg"] = frame.apply(_points_per_game, axis=1)
-    result["next_season_efficiency"] = frame.apply(_efficiency, axis=1)
-    result["next_season_bpm"] = frame.apply(_impact_proxy, axis=1)
+    result["next_season_true_shooting"] = frame.apply(_efficiency, axis=1)
+    result["next_season_efficiency"] = result["next_season_true_shooting"]
+    result["next_impact_proxy"] = frame.apply(_impact_proxy, axis=1)
+    result["next_season_bpm"] = result["next_impact_proxy"]
+    result["next_usage_rate"] = frame.apply(_usage, axis=1)
     result["next_season_vorp"] = frame.apply(_number_from_row(("vorp",)), axis=1)
     result["next_season_win_shares"] = frame.apply(
         _number_from_row(("win_shares", "ws")),
@@ -480,25 +664,33 @@ def _next_value_score(frame: pd.DataFrame) -> pd.Series:
         low=400,
         high=2200,
     )
+    components["games_value"] = _scale_series(
+        frame.get("next_season_games"),
+        low=20,
+        high=82,
+    )
     components["impact_value"] = _scale_series(
-        frame.get("next_season_bpm"),
+        frame.get("next_impact_proxy"),
         low=-3,
         high=4,
     )
-    components["efficiency_value"] = _scale_series(
-        frame.get("next_season_efficiency"),
+    components["true_shooting_value"] = _scale_series(
+        frame.get("next_season_true_shooting"),
         low=0.50,
         high=0.64,
+    )
+    components["role_stability_value"] = _numeric_series(
+        frame.get("next_role_stability"),
+        frame.index,
+    )
+    components["availability_value"] = _numeric_series(
+        frame.get("next_season_availability"),
+        frame.index,
     )
     components["win_share_value"] = _scale_series(
         frame.get("next_season_win_shares"),
         low=0,
         high=8,
-    )
-    components["contract_surplus_value"] = _scale_series(
-        frame.get("next_contract_surplus"),
-        low=-25,
-        high=25,
     )
     components["playoff_rotation_value"] = _scale_series(
         frame.get("playoff_rotation_usefulness"),
@@ -512,9 +704,10 @@ def _method_metrics(
     rankings: pd.DataFrame,
     *,
     score_column: str,
+    outcome_column: str = "next_season_value",
     top_k: int,
 ) -> dict[str, Any]:
-    usable = rankings.dropna(subset=[score_column, "next_season_value"]).copy()
+    usable = rankings.dropna(subset=[score_column, outcome_column]).copy()
     if usable.empty:
         return {
             "spearman_correlation": None,
@@ -526,21 +719,26 @@ def _method_metrics(
     spearman = None
     if len(usable) >= 2 and usable[score_column].nunique() > 1:
         spearman_value = usable[score_column].corr(
-            usable["next_season_value"],
+            usable[outcome_column],
             method="spearman",
         )
         spearman = None if pd.isna(spearman_value) else float(spearman_value)
 
-    top_gap = _top_bottom_quartile_gap(usable, score_column=score_column)
+    top_gap = _top_bottom_quartile_gap(
+        usable,
+        score_column=score_column,
+        outcome_column=outcome_column,
+    )
     top_targets = _top_targets_by_offseason(
         usable,
         score_column=score_column,
+        outcome_column=outcome_column,
         top_k=top_k,
     )
     average_top_value = None
     hit_rate = None
     if not top_targets.empty:
-        average_top_value = float(top_targets["next_season_value"].mean())
+        average_top_value = float(top_targets[outcome_column].mean())
         hit_rate = float(top_targets["outcome_hit"].mean())
 
     return {
@@ -555,13 +753,14 @@ def _top_bottom_quartile_gap(
     frame: pd.DataFrame,
     *,
     score_column: str,
+    outcome_column: str,
 ) -> float | None:
     if len(frame) < 4:
         return None
     top_threshold = frame[score_column].quantile(0.75)
     bottom_threshold = frame[score_column].quantile(0.25)
-    top = frame.loc[frame[score_column] >= top_threshold, "next_season_value"]
-    bottom = frame.loc[frame[score_column] <= bottom_threshold, "next_season_value"]
+    top = frame.loc[frame[score_column] >= top_threshold, outcome_column]
+    bottom = frame.loc[frame[score_column] <= bottom_threshold, outcome_column]
     if top.empty or bottom.empty:
         return None
     return float(top.mean() - bottom.mean())
@@ -571,14 +770,15 @@ def _top_targets_by_offseason(
     frame: pd.DataFrame,
     *,
     score_column: str,
+    outcome_column: str,
     top_k: int,
 ) -> pd.DataFrame:
     rows = []
     for _, offseason_frame in frame.groupby("offseason"):
-        threshold = offseason_frame["next_season_value"].quantile(0.75)
+        threshold = offseason_frame[outcome_column].quantile(0.75)
         top = offseason_frame.nlargest(min(top_k, len(offseason_frame)), score_column)
         top = top.copy()
-        top["outcome_hit"] = top["next_season_value"] >= threshold
+        top["outcome_hit"] = top[outcome_column] >= threshold
         rows.append(top)
     return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
 
@@ -621,6 +821,25 @@ def _team_weakness_improvement(
     if higher_is_better:
         return float(next_value - previous_value)
     return float(previous_value - next_value)
+
+
+def _role_stability(frame: pd.DataFrame) -> pd.Series:
+    previous_minutes = _numeric_series(frame.get("previous_minutes"), frame.index)
+    next_minutes = _numeric_series(frame.get("next_season_minutes"), frame.index)
+    previous_usage = _numeric_series(frame.get("previous_usage"), frame.index)
+    next_usage = _numeric_series(frame.get("next_usage_rate"), frame.index)
+
+    minutes_denominator = previous_minutes.clip(lower=400)
+    minutes_score = 100 - (
+        (next_minutes - previous_minutes).abs() / minutes_denominator * 60
+    )
+    usage_score = 100 - ((next_usage - previous_usage).abs() * 350)
+    return pd.concat([minutes_score, usage_score], axis=1).mean(axis=1).clip(0, 100)
+
+
+def _availability(frame: pd.DataFrame) -> pd.Series:
+    games = _numeric_series(frame.get("next_season_games"), frame.index)
+    return ((games / 82.0) * 100).clip(0, 100)
 
 
 def _through_season(
@@ -679,24 +898,28 @@ def _add_empty_next_outcomes(rankings: pd.DataFrame) -> pd.DataFrame:
     result = rankings.copy()
     for column in (
         "next_season_minutes",
+        "next_season_games",
         "next_season_ppg",
+        "next_season_true_shooting",
         "next_season_efficiency",
+        "next_impact_proxy",
         "next_season_bpm",
+        "next_usage_rate",
         "next_season_vorp",
         "next_season_win_shares",
         "next_playoff_minutes",
         "next_contract_surplus",
+        "contract_backtest_available",
+        "next_role_stability",
+        "next_season_availability",
         "playoff_rotation_usefulness",
     ):
         result[column] = np.nan
     return result
 
 
-def _contract_surplus(
-    frame: pd.DataFrame,
-    salary_frame: pd.DataFrame | None,
-) -> pd.Series:
-    if salary_frame is None or salary_frame.empty or "salary_millions" not in frame:
+def _contract_surplus(frame: pd.DataFrame) -> pd.Series:
+    if "salary_millions" not in frame:
         return pd.Series(np.nan, index=frame.index, dtype="float64")
     value = _next_value_without_contract(frame)
     salary = pd.to_numeric(frame["salary_millions"], errors="coerce")
@@ -712,14 +935,18 @@ def _next_value_without_contract(frame: pd.DataFrame) -> pd.Series:
         high=2200,
     )
     components["impact_value"] = _scale_series(
-        frame.get("next_season_bpm"),
+        frame.get("next_impact_proxy"),
         low=-3,
         high=4,
     )
-    components["efficiency_value"] = _scale_series(
-        frame.get("next_season_efficiency"),
+    components["true_shooting_value"] = _scale_series(
+        frame.get("next_season_true_shooting"),
         low=0.50,
         high=0.64,
+    )
+    components["availability_value"] = _numeric_series(
+        frame.get("next_season_availability"),
+        frame.index,
     )
     components["win_share_value"] = _scale_series(
         frame.get("next_season_win_shares"),
@@ -799,7 +1026,36 @@ def _impact_proxy(row: pd.Series) -> float:
             "plus_minus",
         ),
     )
-    return direct
+    if pd.notna(direct):
+        return direct
+
+    minutes = _minutes(row)
+    if pd.isna(minutes) or minutes <= 0:
+        return np.nan
+    points = _number(row, ("pts", "points"))
+    rebounds = _number(row, ("reb", "rebounds"))
+    assists = _number(row, ("ast", "assists"))
+    steals = _number(row, ("stl", "steals"))
+    blocks = _number(row, ("blk", "blocks"))
+    turnovers = _number(row, ("tov", "turnovers"))
+    if all(
+        pd.isna(value)
+        for value in (points, rebounds, assists, steals, blocks, turnovers)
+    ):
+        return np.nan
+
+    production = (
+        _zero(points)
+        + 1.2 * _zero(rebounds)
+        + 1.5 * _zero(assists)
+        + 3.0 * _zero(steals)
+        + 3.0 * _zero(blocks)
+        - 1.2 * _zero(turnovers)
+    )
+    per36 = production / minutes * 36.0
+    efficiency = _efficiency(row)
+    efficiency_bonus = 0.0 if pd.isna(efficiency) else (efficiency - 0.56) * 20.0
+    return float(per36 + efficiency_bonus)
 
 
 def _efficiency(row: pd.Series) -> float:
@@ -829,6 +1085,14 @@ def _efficiency(row: pd.Series) -> float:
 
 def _minutes(row: pd.Series) -> float:
     return _number(row, ("minutes", "min", "mp"))
+
+
+def _games(row: pd.Series) -> float:
+    return _number(row, ("games", "games_played", "gp", "g"))
+
+
+def _usage(row: pd.Series) -> float:
+    return _ratio(row, ("usage_rate", "usage_percentage", "usg_pct", "usg"))
 
 
 def _salary_from_row(row: pd.Series) -> float:
@@ -907,6 +1171,12 @@ def _scale_series(
     return result.clip(lower=0, upper=100)
 
 
+def _numeric_series(values: pd.Series | None, index: pd.Index) -> pd.Series:
+    if values is None:
+        return pd.Series(np.nan, index=index, dtype="float64")
+    return pd.to_numeric(values, errors="coerce").reindex(index)
+
+
 def _read_table(path: str | Path) -> pd.DataFrame:
     table_path = Path(path)
     if table_path.suffix.lower() == ".csv":
@@ -951,6 +1221,10 @@ def _ratio(row: pd.Series, aliases: tuple[str, ...]) -> float:
     return value
 
 
+def _zero(value: Any) -> float:
+    return 0.0 if value is None or pd.isna(value) else float(value)
+
+
 def _text(row: pd.Series, aliases: tuple[str, ...], *, default: str) -> str:
     value = _raw_value(row, aliases)
     if value is None or pd.isna(value):
@@ -983,6 +1257,7 @@ def _ranking_columns(frame: pd.DataFrame | None = None) -> list[str]:
         "current_team",
         "position",
         "archetype",
+        "candidate_type",
         "fit_score",
         "need_match",
         "contender_gain",
@@ -992,25 +1267,39 @@ def _ranking_columns(frame: pd.DataFrame | None = None) -> list[str]:
         "recommendation",
         "previous_ppg",
         "previous_impact",
+        "previous_true_shooting",
         "previous_efficiency",
         "previous_minutes",
+        "previous_usage",
         "salary_millions",
+        "has_salary_data",
         "baseline_points_score",
+        "baseline_minutes_score",
+        "baseline_true_shooting_score",
+        "baseline_usage_score",
         "baseline_impact_score",
-        "baseline_salary_score",
         "baseline_random_score",
         "next_season_minutes",
+        "next_season_games",
         "next_season_ppg",
+        "next_season_true_shooting",
         "next_season_efficiency",
+        "next_impact_proxy",
         "next_season_bpm",
+        "next_usage_rate",
         "next_season_vorp",
         "next_season_win_shares",
+        "next_role_stability",
+        "next_season_availability",
         "next_contract_surplus",
+        "contract_backtest_available",
         "team_weakness_improvement",
         "playoff_rotation_usefulness",
         "next_season_value",
         "why_fit",
         "concerns",
+        "data_sources",
+        "missing_data_flags",
     ]
     if frame is None:
         return columns

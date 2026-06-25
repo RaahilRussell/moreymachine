@@ -35,6 +35,17 @@ def test_run_backtest_outputs_rankings_and_metrics() -> None:
 
     assert set(rankings["previous_season"]) == {"2020-21", "2021-22"}
     assert set(BASELINE_SCORE_COLUMNS).issubset(metrics["overall"])
+    for column in BASELINE_SCORE_COLUMNS.values():
+        assert column in rankings.columns
+    assert {
+        "next_season_minutes",
+        "next_season_games",
+        "next_season_true_shooting",
+        "next_role_stability",
+        "next_impact_proxy",
+        "next_season_availability",
+        "next_contract_surplus",
+    }.issubset(rankings.columns)
     assert rankings.groupby("previous_season").head(1)["player_name"].tolist() == [
         "Portable Spacer",
         "Portable Spacer",
@@ -48,6 +59,7 @@ def test_run_backtest_outputs_rankings_and_metrics() -> None:
         >= metrics["overall"]["previous_points"]["hit_rate_top_targets"]
     )
     assert "previous_points" in metrics["average_value_of_top_targets_vs_baselines"]
+    assert metrics["metrics"]["contract_value"]["status"] == "evaluated_separately"
 
 
 def test_render_backtest_summary_includes_baselines() -> None:
@@ -65,6 +77,79 @@ def test_render_backtest_summary_includes_baselines() -> None:
     assert "# Offseason Backtest Summary" in summary
     assert "moreymachine_fit" in summary
     assert "previous_points" in summary
+    assert "Contract-value backtesting is separated" in summary
+
+
+def test_chronological_split_prevents_future_leakage() -> None:
+    future_only = pd.DataFrame(
+        [
+            _player_row(
+                "2021-22",
+                99,
+                "Future Only",
+                "NYK",
+                40,
+                2600,
+                0.35,
+                0.68,
+                0.60,
+                0.44,
+                0.05,
+                5.0,
+                12.0,
+                7.0,
+                games=82,
+            ),
+            _player_row(
+                "2022-23",
+                99,
+                "Future Only",
+                "NYK",
+                42,
+                2700,
+                0.36,
+                0.69,
+                0.62,
+                0.45,
+                0.05,
+                5.2,
+                13.0,
+                7.4,
+                games=82,
+            ),
+        ]
+    )
+
+    rankings, _ = run_backtest(
+        player_stats=pd.concat([_toy_player_stats(), future_only], ignore_index=True),
+        team_fingerprints=_toy_team_fingerprints(),
+        player_archetypes=_toy_player_archetypes(),
+        contracts=_toy_contracts(),
+        target_team="PHI",
+        top_k=1,
+    )
+
+    first_offseason = rankings[rankings["previous_season"] == "2020-21"]
+    second_offseason = rankings[rankings["previous_season"] == "2021-22"]
+    assert "Future Only" not in set(first_offseason["player_name"])
+    assert "Future Only" in set(second_offseason["player_name"])
+
+
+def test_missing_salary_data_does_not_crash_basketball_fit_backtest() -> None:
+    rankings, metrics = run_backtest(
+        player_stats=_toy_player_stats(),
+        team_fingerprints=_toy_team_fingerprints(),
+        player_archetypes=_toy_player_archetypes(),
+        contracts=None,
+        target_team="PHI",
+        top_k=1,
+    )
+
+    assert rankings["next_contract_surplus"].isna().all()
+    assert (
+        metrics["overall"]["moreymachine_fit"]["average_value_top_targets"] is not None
+    )
+    assert metrics["metrics"]["contract_value"]["status"] == "missing_salary_data"
 
 
 def test_build_backtest_writes_outputs(tmp_path: Path) -> None:
@@ -95,8 +180,18 @@ def test_build_backtest_writes_outputs(tmp_path: Path) -> None:
 
     assert result.rows > 0
     assert result.offseasons == ("after_2020-21", "after_2021-22")
-    assert len(pd.read_parquet(rankings_path)) == result.rows
+    rankings = pd.read_parquet(rankings_path)
+    assert len(rankings) == result.rows
+    assert {
+        "previous_true_shooting",
+        "previous_usage",
+        "next_season_games",
+        "next_season_true_shooting",
+        "next_role_stability",
+        "next_season_availability",
+    }.issubset(rankings.columns)
     payload = json.loads(results_path.read_text(encoding="utf-8"))
+    assert "metrics" in payload
     assert (
         payload["overall"]["moreymachine_fit"]["average_value_top_targets"] is not None
     )
@@ -271,6 +366,7 @@ def _player_row(
     dbpm: float,
     win_shares: float,
     bpm: float,
+    games: int = 72,
 ) -> dict[str, object]:
     return {
         "season": season,
@@ -279,6 +375,7 @@ def _player_row(
         "team_abbreviation": team,
         "position": "SG" if player_id == 1 else "PG" if player_id == 2 else "SF",
         "age": 28,
+        "games": games,
         "points_per_game": ppg,
         "minutes": minutes,
         "usage_rate": usage,
