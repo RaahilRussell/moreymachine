@@ -16,6 +16,7 @@ from typing import Literal
 
 import pandas as pd
 
+from moreymachine.data.freshness import REFRESH_COMMAND
 from moreymachine.utils.paths import (
     CANDIDATE_RANKINGS_ALL_PATH,
     CANDIDATE_RANKINGS_FREE_AGENTS_PATH,
@@ -264,15 +265,23 @@ def dataset_status_row(dataset: Dataset) -> dict[str, object]:
         "rows": 0,
         "seasons": "",
         "last_updated": "",
+        "pulled_at": "",
+        "freshness_age": "",
+        "missing_fields": "",
+        "refresh_command": _refresh_command(dataset.fix_table),
     }
     if not exists:
         row["last_updated"] = "MISSING"
         row["seasons"] = f"missing - {fix_hint(dataset.fix_table)}"
+        row["missing_fields"] = "table missing"
         return row
 
     frame = _safe_read(dataset.path)
     row["rows"] = 0 if frame is None else len(frame)
     row["last_updated"] = _last_updated(dataset, frame)
+    row["pulled_at"] = _pulled_at(frame)
+    row["freshness_age"] = _freshness_age(dataset, frame)
+    row["missing_fields"] = _missing_fields(frame)
     row["seasons"] = _season_span(dataset, frame)
     return row
 
@@ -296,12 +305,55 @@ def _safe_read(path: Path) -> pd.DataFrame | None:
 
 
 def _last_updated(dataset: Dataset, frame: pd.DataFrame | None) -> str:
+    pulled_at = _pulled_at(frame)
+    if pulled_at:
+        return f"{pulled_at} (pulled_at)"
+    mtime = datetime.fromtimestamp(dataset.path.stat().st_mtime, tz=UTC)
+    return f"{mtime.date().isoformat()} (file)"
+
+
+def _pulled_at(frame: pd.DataFrame | None) -> str:
     if frame is not None and "pulled_at" in frame.columns and not frame.empty:
         values = frame["pulled_at"].dropna().astype(str)
         if not values.empty:
-            return f"{values.max()} (pulled_at)"
-    mtime = datetime.fromtimestamp(dataset.path.stat().st_mtime, tz=UTC)
-    return f"{mtime.date().isoformat()} (file)"
+            return str(values.max())
+    return ""
+
+
+def _freshness_age(dataset: Dataset, frame: pd.DataFrame | None) -> str:
+    pulled_at = _pulled_at(frame)
+    stamp = pd.to_datetime(pulled_at, errors="coerce", utc=True)
+    if pd.isna(stamp):
+        stamp = pd.Timestamp(
+            datetime.fromtimestamp(dataset.path.stat().st_mtime, tz=UTC)
+        )
+    return f"{(pd.Timestamp.now(tz='UTC') - stamp).days}d"
+
+
+def _missing_fields(frame: pd.DataFrame | None) -> str:
+    if frame is None:
+        return "unreadable"
+    if "missing_data_flags" in frame.columns and not frame.empty:
+        flags = frame["missing_data_flags"].fillna("none").astype(str)
+        flagged = flags.str.lower().ne("none") & flags.str.strip().ne("")
+        if flagged.any():
+            return f"{int(flagged.sum())} rows carry missing_data_flags"
+    fully_null = [column for column in frame.columns if frame[column].isna().all()]
+    if fully_null:
+        return "all-null columns: " + ", ".join(fully_null[:8])
+    return "none"
+
+
+def _refresh_command(fix_table: str) -> str:
+    if fix_table in {
+        "team_seasons",
+        "player_seasons",
+        "player_bio",
+        "player_tracking",
+        "contracts",
+    }:
+        return REFRESH_COMMAND
+    return fix_hint(fix_table)
 
 
 def _season_span(dataset: Dataset, frame: pd.DataFrame | None) -> str:

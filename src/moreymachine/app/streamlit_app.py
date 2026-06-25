@@ -42,6 +42,7 @@ PAGES = (
 )
 
 PHI_CORE = ("Joel Embiid", "Tyrese Maxey", "Paul George")
+PRIORITY_LABEL = "Priority Target"
 
 # Numeric score columns rendered as the at-a-glance board table.
 BOARD_TABLE_COLUMNS = (
@@ -58,14 +59,27 @@ BOARD_TABLE_COLUMNS = (
     "contract_value",
     "risk_score",
     "risk_tier",
-    "expected_rotation_role",
-    "salary_millions",
+    "expected_role",
+    "salary_bucket",
+    "cap_hit_millions",
+    "salary_source",
+    "acquisition_feasibility",
+    "feasibility_tier",
+    "why_fit",
+    "concerns",
+    "gaps_addressed",
+    "role_on_sixers",
+    "salary_context",
+    "acquisition_summary",
+    "risk_summary",
+    "data_sources",
+    "missing_data_flags",
 )
 
 
 def main() -> None:
     """Run the MoreyMachine Streamlit dashboard."""
-    st.set_page_config(page_title="MoreyMachine", page_icon="🏀", layout="wide")
+    st.set_page_config(page_title="MoreyMachine", page_icon="MM", layout="wide")
     settings = load_settings()
 
     st.sidebar.title("MoreyMachine")
@@ -149,7 +163,7 @@ def render_overview() -> None:
 
     realistic = load("candidate_fit_rankings_realistic")
     if not realistic.empty:
-        priority = int((realistic["recommendation"] == "Priority target").sum())
+        priority = int((realistic["recommendation"] == PRIORITY_LABEL).sum())
         cols = st.columns(3)
         cols[0].metric("Realistic candidates", len(realistic))
         cols[1].metric("Priority targets", f"{priority} / 10")
@@ -166,6 +180,11 @@ def render_overview() -> None:
         "core, and missing-contract players. **Not recommendations.**\n"
         "- **final_fit** = 0.30 need + 0.25 contender gain + 0.20 portability + 0.15 "
         "contract value + 0.10 feasibility - 0.20 x risk."
+    )
+    st.markdown(
+        "**Real-time means cached and refreshable.** The app reads existing "
+        "Parquet, CSV, JSON, and Markdown artifacts only. To refresh data, run "
+        f"`{REFRESH_COMMAND}` and rebuild the pipeline; page loads do not call live APIs."
     )
 
     missing = _missing_required()
@@ -204,7 +223,19 @@ def render_data_sources() -> None:
     table = data_source_table()
     st.dataframe(
         table.loc[
-            :, ["table", "status", "rows", "seasons", "last_updated", "source", "path"]
+            :,
+            [
+                "table",
+                "status",
+                "rows",
+                "seasons",
+                "source",
+                "pulled_at",
+                "freshness_age",
+                "missing_fields",
+                "refresh_command",
+                "path",
+            ],
         ],
         use_container_width=True,
         hide_index=True,
@@ -305,6 +336,59 @@ def render_contender_blueprint() -> None:
         summary.columns = ["feature", "contender_average"]
         st.dataframe(summary, use_container_width=True, hide_index=True)
 
+        phi = fingerprints[fingerprints["team_abbr"].astype(str).eq("PHI")]
+        if not phi.empty:
+            latest_phi = phi.sort_values("season").iloc[-1]
+            benchmark = summary.copy()
+            benchmark["PHI_latest"] = benchmark["feature"].map(
+                lambda col: latest_phi.get(col)
+            )
+            benchmark["gap_vs_contender_average"] = pd.to_numeric(
+                benchmark["PHI_latest"], errors="coerce"
+            ) - pd.to_numeric(benchmark["contender_average"], errors="coerce")
+            st.subheader("PHI vs contender benchmarks")
+            st.dataframe(benchmark, use_container_width=True, hide_index=True)
+
+    st.subheader("Tier definitions")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "tier": 0,
+                    "playoff_tier": "missed playoffs",
+                    "quality_tier": "bottom 10 team",
+                },
+                {
+                    "tier": 1,
+                    "playoff_tier": "lost first round",
+                    "quality_tier": "below average",
+                },
+                {
+                    "tier": 2,
+                    "playoff_tier": "lost second round",
+                    "quality_tier": "average / play-in",
+                },
+                {
+                    "tier": 3,
+                    "playoff_tier": "lost conference finals",
+                    "quality_tier": "playoff-level",
+                },
+                {
+                    "tier": 4,
+                    "playoff_tier": "lost finals",
+                    "quality_tier": "top-10 net rating",
+                },
+                {
+                    "tier": 5,
+                    "playoff_tier": "champion",
+                    "quality_tier": "top-5 / elite",
+                },
+            ]
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
     archetypes = load("team_roster_archetypes")
     if not archetypes.empty and "cluster_name" in archetypes.columns:
         st.subheader("Roster archetypes among contenders")
@@ -316,6 +400,14 @@ def render_contender_blueprint() -> None:
         counts = merged["cluster_name"].value_counts()
         if not counts.empty:
             st.bar_chart(counts)
+        definitions = (
+            archetypes[["cluster_name"]]
+            .dropna()
+            .drop_duplicates()
+            .rename(columns={"cluster_name": "roster_archetype"})
+        )
+        definitions["definition"] = "Clustered from team fingerprint features."
+        st.dataframe(definitions, use_container_width=True, hide_index=True)
 
     st.subheader("Score glossary")
     for explanation in all_explanations():
@@ -389,7 +481,7 @@ def render_player_detail() -> None:
                 "contender_gain",
                 "portability",
                 "contract_value",
-                "acquisition_feasibility_score",
+                "acquisition_feasibility",
                 "risk_score",
             ],
             "score": [
@@ -399,7 +491,7 @@ def render_player_detail() -> None:
                     "contender_gain",
                     "portability",
                     "contract_value",
-                    "acquisition_feasibility_score",
+                    "acquisition_feasibility",
                     "risk_score",
                 )
             ],
@@ -450,17 +542,19 @@ def render_model_diagnostics() -> None:
 
     cols = st.columns(4)
     cols[0].metric(
-        "contract_value = 100",
-        _share(board, "contract_value", 99.95),
+        "contract_value >= 95",
+        _share(board, "contract_value", 95),
         help="Target < 10%",
     )
     cols[1].metric(
-        "portability = 100", _share(board, "portability", 99.95), help="Target < 10%"
+        "portability >= 95",
+        _share(board, "portability", 95),
+        help="Target < 5%",
     )
     cols[2].metric(
         "Most common risk", _mode_share(board, "risk_score"), help="Target < 50%"
     )
-    priority_n = int((realistic["recommendation"] == "Priority target").sum())
+    priority_n = int((realistic["recommendation"] == PRIORITY_LABEL).sum())
     cols[3].metric("Priority targets", f"{priority_n}/10")
 
     edges = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -516,6 +610,23 @@ def render_model_diagnostics() -> None:
             hide_index=True,
         )
 
+    st.subheader("Validation warnings")
+    validation_path = REGISTRY_BY_KEY["candidate_fit_rankings_all"].path.parent / (
+        "target_board_validation.md"
+    )
+    if validation_path.exists():
+        text = validation_path.read_text(encoding="utf-8")
+        if "**FAIL**" in text:
+            st.error("Target-board validation has failures.")
+        else:
+            st.success("Target-board validation report is passing.")
+        st.markdown(text)
+    else:
+        st.warning(
+            "No cached target-board validation report found. Run "
+            "`python scripts/validate_target_board.py`."
+        )
+
 
 def render_backtest_proof() -> None:
     """Render the backtest proof page."""
@@ -532,6 +643,38 @@ def render_backtest_proof() -> None:
     )
     if summary_path.exists():
         st.markdown(summary_path.read_text(encoding="utf-8"))
+    results_path = summary_path.with_name("backtest_results.json")
+    if results_path.exists():
+        payload = json.loads(results_path.read_text(encoding="utf-8"))
+        overall = payload.get("overall", {})
+        if overall:
+            rows = [
+                {"method": method, **values}
+                for method, values in overall.items()
+                if isinstance(values, dict)
+            ]
+            st.subheader("Fit model vs baselines")
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        contract = payload.get("metrics", {}).get("contract_value", {})
+        if contract.get("status") == "evaluated_separately":
+            st.subheader("Contract-value backtest")
+            st.json(contract)
+        else:
+            st.warning(
+                "Historical salary coverage is missing for this run, so contract "
+                "surplus and free-agent-specific backtests are not shown."
+            )
+
+    if "candidate_type" in rankings.columns:
+        counts = rankings["candidate_type"].value_counts()
+        st.subheader("Historical candidate scope")
+        st.bar_chart(counts)
+        if set(counts.index) == {"historical_offseason_candidate"}:
+            st.info(
+                "Historical realistic-board and free-agent splits require sourced "
+                "offseason candidate status. This run uses the non-PHI historical "
+                "candidate universe and does not infer free-agent or trade status."
+            )
     if {"fit_score", "next_season_value"}.issubset(rankings.columns):
         st.subheader("Fit score vs next-season value")
         st.scatter_chart(rankings, x="fit_score", y="next_season_value")
@@ -569,6 +712,13 @@ def _render_board(key: str, *, with_filters: bool) -> None:
             st.markdown(f"**Why he fits:** {getattr(row, 'why_fit', '')}")
             st.markdown(f"**Role on the Sixers:** {getattr(row, 'role_on_sixers', '')}")
             st.markdown(f"**Concerns:** {getattr(row, 'concerns', '')}")
+            st.markdown(f"**Gaps addressed:** {getattr(row, 'gaps_addressed', '')}")
+            st.markdown(f"**Salary context:** {getattr(row, 'salary_context', '')}")
+            st.markdown(f"**Acquisition:** {getattr(row, 'acquisition_summary', '')}")
+            st.markdown(f"**Risk:** {getattr(row, 'risk_summary', '')}")
+            st.markdown(f"**Sources:** {getattr(row, 'data_sources', '')}")
+            flags = getattr(row, "missing_data_flags", "none")
+            st.markdown(f"**Missing data:** {flags}")
             st.caption(
                 f"{getattr(row, 'acquisition_feasibility', '')} "
                 f"{getattr(row, 'salary_context', '')}"
@@ -586,13 +736,21 @@ def _board_filters(board: pd.DataFrame) -> pd.DataFrame:
         filtered = _multiselect_filter(filtered, "risk_tier", "Risk tier")
     with columns[2]:
         filtered = _multiselect_filter(filtered, "recommendation", "Recommendation")
-        if "salary_millions" in filtered.columns:
+        filtered = _multiselect_filter(filtered, "salary_bucket", "Salary bucket")
+        salary_column = (
+            "cap_hit_millions"
+            if "cap_hit_millions" in filtered.columns
+            else "salary_millions"
+            if "salary_millions" in filtered.columns
+            else None
+        )
+        if salary_column is not None:
             bucket = st.select_slider(
                 "Max salary ($M)",
                 options=[2, 5, 10, 15, 20, 25, 35, 65],
                 value=65,
             )
-            salary = pd.to_numeric(filtered["salary_millions"], errors="coerce")
+            salary = pd.to_numeric(filtered[salary_column], errors="coerce")
             filtered = filtered[salary.isna() | (salary <= bucket)]
     return filtered
 
@@ -621,13 +779,25 @@ def _render_roster_reference() -> None:
             "position",
             "role_archetype",
             "salary_millions",
+            "cap_hit_millions",
             "contract_status",
             "quality_percentile",
         )
         if c in reference.columns
     ]
+    sort_col = next(
+        (
+            column
+            for column in ("salary_millions", "cap_hit_millions")
+            if column in cols
+        ),
+        None,
+    )
+    view = reference.loc[:, cols]
+    if sort_col is not None:
+        view = view.sort_values(sort_col, ascending=False)
     st.dataframe(
-        reference.loc[:, cols].sort_values("salary_millions", ascending=False),
+        view,
         use_container_width=True,
         hide_index=True,
     )
@@ -729,8 +899,10 @@ def _share(frame: pd.DataFrame, column: str, threshold: float) -> str:
 def _mode_share(frame: pd.DataFrame, column: str) -> str:
     if column not in frame.columns or frame.empty:
         return "n/a"
-    counts = pd.to_numeric(frame[column], errors="coerce").round(0).value_counts(
-        normalize=True
+    counts = (
+        pd.to_numeric(frame[column], errors="coerce")
+        .round(0)
+        .value_counts(normalize=True)
     )
     return "n/a" if counts.empty else f"{counts.iloc[0] * 100:.1f}%"
 
