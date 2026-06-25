@@ -16,11 +16,11 @@ from pathlib import Path
 import pandas as pd
 
 from moreymachine.data.cache import JsonFileCache
+from moreymachine.data.contracts_loader import build_rich_contracts
 from moreymachine.data.fetch_bio_tracking import (
     fetch_player_bio,
     fetch_player_tracking,
 )
-from moreymachine.data.contracts_loader import build_rich_contracts
 from moreymachine.data.fetch_nba import fetch_nba_data, infer_latest_season
 from moreymachine.data.freshness import render_freshness_markdown, summarize_freshness
 from moreymachine.utils.paths import (

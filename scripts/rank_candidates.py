@@ -27,6 +27,7 @@ def main() -> int:
     print(f"  Priority targets:      {result.priority_targets} (cap 10)")
     for key, path in result.outputs.items():
         print(f"  {key:>22}: {path}")
+    print(f"  {'csv export':>22}: {result.csv_path}")
     return 0
 
 
