@@ -6,7 +6,7 @@
 | player_seasons | yes | - | - |
 | player_bio | yes | - | - |
 | player_tracking | yes | - | - |
-| contracts | yes | missing required columns: ['base_salary_millions', 'cap_hit_millions', 'contract_aav_millions'] | missing provenance columns: ['salary_source']; no season/effective_date column (('effective_date',)) |
+| contracts | yes | - | - |
 | candidates | yes | - | - |
 | candidate_universe | yes | missing required columns: ['acquisition_feasibility', 'feasibility_tier'] | missing provenance columns: ['data_mode'] |
 | player_roles | yes | missing required columns: ['expected_role'] | missing provenance columns: ['data_mode'] |

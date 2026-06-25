@@ -20,7 +20,7 @@ from moreymachine.data.fetch_bio_tracking import (
     fetch_player_bio,
     fetch_player_tracking,
 )
-from moreymachine.data.fetch_contracts import build_contracts
+from moreymachine.data.contracts_loader import build_rich_contracts
 from moreymachine.data.fetch_nba import fetch_nba_data, infer_latest_season
 from moreymachine.data.freshness import render_freshness_markdown, summarize_freshness
 from moreymachine.utils.paths import (
@@ -78,7 +78,7 @@ def refresh_current_data(
         "player tracking", lambda: fetch_player_tracking(season=resolved), log
     )
     result.statuses["contracts"] = _step(
-        "contracts", lambda: build_contracts(refresh=True), log
+        "contracts", lambda: build_rich_contracts(refresh=True), log
     )
 
     _stamp_data_modes(log=log)
