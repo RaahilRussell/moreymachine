@@ -193,7 +193,9 @@ def _attach_player_ids(
     players = players[players["season"].astype(str).eq(latest)]
     id_by_name = {
         _normalize_name(str(name)): int(pid)
-        for name, pid in zip(players["player_name"], players["player_id"])
+        for name, pid in zip(
+            players["player_name"], players["player_id"], strict=False
+        )
     }
     frame["player_id"] = frame.apply(
         lambda row: row["player_id"]

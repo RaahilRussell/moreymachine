@@ -10,6 +10,7 @@ files this module reads.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -22,6 +23,9 @@ from moreymachine.utils.paths import (
     PLAYER_TRACKING_PATH,
     TEAM_SEASONS_PATH,
 )
+
+# Tables older than this (in days) are flagged stale in the freshness report.
+STALE_AFTER_DAYS = 7
 
 REFRESH_COMMAND = "python scripts/refresh_current_data.py --season latest"
 
@@ -39,6 +43,8 @@ class TableFreshness:
     pulled_at: str = ""
     data_mode: str = "real"
     missing_fields: str = ""
+    data_age_days: str = ""
+    refresh_status: str = ""
     refresh_command: str = REFRESH_COMMAND
     note: str = ""
     extra: dict = field(default_factory=dict)
@@ -89,6 +95,7 @@ def _summarize_table(
     pulled_at = _first_str(frame, "pulled_at")
     data_mode = _first_str(frame, "data_mode") or default_mode
     missing_fields = _missing_field_summary(frame)
+    age_days, status = _age_and_status(pulled_at, path)
     return TableFreshness(
         name=name,
         path=path,
@@ -99,7 +106,20 @@ def _summarize_table(
         pulled_at=pulled_at,
         data_mode=data_mode,
         missing_fields=missing_fields,
+        data_age_days=age_days,
+        refresh_status=status,
     )
+
+
+def _age_and_status(pulled_at: str, path: Path) -> tuple[str, str]:
+    """Return (age-in-days, status) from pulled_at, falling back to file mtime."""
+    stamp = pd.to_datetime(pulled_at, errors="coerce", utc=True)
+    if pd.isna(stamp):
+        mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+        stamp = pd.Timestamp(mtime)
+    age = (pd.Timestamp.now(tz="UTC") - stamp).days
+    status = "fresh" if age <= STALE_AFTER_DAYS else "stale"
+    return f"{age}d", status
 
 
 def _first_str(frame: pd.DataFrame, column: str) -> str:
@@ -128,18 +148,21 @@ def render_freshness_markdown(summaries: list[TableFreshness]) -> str:
         "",
         f"_Refresh locally with:_ `{REFRESH_COMMAND}`",
         "",
-        "| Table | Rows | Seasons | Source | Pulled at | Data mode | Missing |",
-        "|---|---|---|---|---|---|---|",
+        "| Table | Rows | Seasons | Source | Pulled at | Age | Status | "
+        "Data mode | Missing |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for item in summaries:
         lines.append(
-            "| {name} | {rows} | {seasons} | {source} | {pulled_at} | "
-            "{data_mode} | {missing} |".format(
+            "| {name} | {rows} | {seasons} | {source} | {pulled_at} | {age} | "
+            "{status} | {data_mode} | {missing} |".format(
                 name=item.name,
                 rows=item.rows if item.exists else "—",
                 seasons=item.seasons or "—",
                 source=(item.source or item.note or "—")[:60],
                 pulled_at=item.pulled_at or "—",
+                age=item.data_age_days or "—",
+                status=item.refresh_status or ("missing" if not item.exists else "—"),
                 data_mode=item.data_mode,
                 missing=item.missing_fields or item.note or "—",
             )

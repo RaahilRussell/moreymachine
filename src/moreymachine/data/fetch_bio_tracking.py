@@ -138,7 +138,9 @@ def fetch_player_bio(
     out["height"] = raw["HEIGHT"].replace("", pd.NA)
     out["height_inches"] = out["height"].map(_height_to_inches)
     out["weight"] = pd.to_numeric(raw["WEIGHT"], errors="coerce")
-    out["draft_year"] = pd.to_numeric(raw["DRAFT_YEAR"], errors="coerce").astype("Int64")
+    out["draft_year"] = (
+        pd.to_numeric(raw["DRAFT_YEAR"], errors="coerce").astype("Int64")
+    )
     out["draft_number"] = pd.to_numeric(
         raw["DRAFT_NUMBER"], errors="coerce"
     ).astype("Int64")
@@ -200,7 +202,11 @@ def fetch_player_tracking(
         keep = {"PLAYER_ID": "player_id"}
         if base is None:
             keep.update(
-                {"PLAYER_NAME": "player_name", "TEAM_ABBREVIATION": "team_abbr", "MIN": "min"}
+                {
+                    "PLAYER_NAME": "player_name",
+                    "TEAM_ABBREVIATION": "team_abbr",
+                    "MIN": "min",
+                }
             )
         keep.update(column_map)
         present = {src: dst for src, dst in keep.items() if src in raw.columns}
