@@ -13,7 +13,8 @@ never calls the NBA API or scrapes salaries at runtime, and in `REAL_DATA_MODE`
 Run the pipeline in order. Each step writes real artifacts under `data/`:
 
 ```bash
-python scripts/fetch_nba_data.py            # nba_api -> team_seasons / player_seasons (+ provenance)
+export PYTHONPATH=src
+python scripts/refresh_current_data.py --season latest  # stats + bio + tracking + BBRef contracts
 python scripts/build_playoff_tiers.py       # join real playoff tiers
 python scripts/build_quality_tiers.py       # within-season quality tiers
 python scripts/build_team_fingerprints.py   # team fingerprints + engineered scores
@@ -21,15 +22,20 @@ python scripts/train_contender_model.py     # deep-playoff model + metrics
 python scripts/train_outcome_tier_model.py  # playoff-tier (0-5) model + metrics
 python scripts/build_roster_archetypes.py   # team roster archetypes
 python scripts/build_player_archetypes.py   # player archetypes
-python scripts/fetch_candidates.py --team PHI    # real candidates + BBRef salaries
-python scripts/analyze_roster_gaps.py --team PHI # PHI roster gap report
-python scripts/rank_candidates.py --team PHI     # GM Fit Score rankings
-python scripts/run_backtest.py              # backtest vs baselines
+python scripts/build_player_roles.py        # role dimensions + archetypes (bio + tracking)
+python scripts/analyze_roster_gaps.py --target-team PHI  # PHI roster gap report
+python scripts/build_candidate_universe.py --team PHI    # one candidate_type per player
+python scripts/rank_candidates.py --team PHI             # explanation-first split boards
+python scripts/validate_target_board.py                  # hard quality gates (fails non-zero)
+python scripts/run_backtest.py --target-team PHI         # backtest vs baselines
 streamlit run src/moreymachine/app/streamlit_app.py
 ```
 
-The fetch/salary steps need network access and run **locally only**. Commit the
-resulting `data/processed`, `data/features`, `data/models`, `data/reports`, and
+The fetch/salary steps need network access and run **locally only**. Run
+`validate_target_board.py` before committing: it fails non-zero if the boards
+regress (too many Priority targets, saturated scores, a current Sixer or star on
+the realistic board, or missing explanations). Commit the resulting
+`data/processed`, `data/features`, `data/models`, `data/reports`, and
 `data/manual` artifacts so the deployed app can load them without any live calls.
 
 ## 2. Streamlit Community Cloud

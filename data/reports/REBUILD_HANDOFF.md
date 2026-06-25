@@ -1,5 +1,13 @@
 # MoreyMachine Target-Board Rebuild — Handoff
 
+> **STATUS: COMPLETE (2026-06-25).** All remaining steps (4, 6, 7, 8, 9) are done
+> and committed. New modules: `features/candidate_universe.py`,
+> `models/candidate_scoring.py`, `models/target_board.py`,
+> `models/board_validation.py`; new scripts: `build_candidate_universe.py`,
+> rewritten `rank_candidates.py`, `validate_target_board.py`; the Streamlit app is
+> rebuilt to 11 pages; 20 new tests added (96 total pass) and all validation gates
+> are green. README + DEPLOYMENT updated. Original resume notes preserved below.
+
 Resume point for continuing the recommendation-system rebuild in a fresh
 Claude Code session (e.g. launched with `--dangerously-skip-permissions`).
 

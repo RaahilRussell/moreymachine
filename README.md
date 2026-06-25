@@ -66,6 +66,18 @@ python scripts/fetch_nba_data.py --latest-season 2025-26
 Raw NBA API responses are cached under `data/raw/nba_api`, so repeated runs reuse
 the cache instead of calling the same endpoints again.
 
+Refresh all real current-season data (team/player stats, player bio, tracking,
+and Basketball-Reference contracts) in one command:
+
+```bash
+python scripts/refresh_current_data.py --season latest
+```
+
+This writes `player_bio.parquet`, `player_tracking.parquet`, and
+`contracts.parquet` alongside the season stats, and a freshness report to
+`data/reports/data_freshness_report.md`. Cached real responses are reused; demo
+data is never substituted.
+
 Real playoff outcomes ship in `data/manual/playoff_tiers.csv` (one row per
 team-season, 2015-16 to 2024-25), generated from the auditable brackets in
 `moreymachine/data/playoff_results.py`:
@@ -196,18 +208,59 @@ current salaries from Basketball-Reference's contracts page into
 `data/manual/candidates.csv`. Salaries that cannot be matched online are left
 blank and flagged `missing` (contracts are never invented) for manual entry.
 
-Rank acquisition candidates:
+Build player roles and archetypes from real bio + tracking data:
 
 ```bash
-python scripts/rank_candidates.py --team PHI --top-n 50
+python scripts/build_player_roles.py
 ```
 
-The candidate fit model ranks free agent or trade targets from player stats,
-target roster gaps, player archetypes, optional contract estimates, optional
-precomputed playoff portability scores, and the contender model artifact when
-available. It writes `data/reports/candidate_fit_rankings.parquet` with need
-match, contender similarity gain, playoff portability, contract value, risk,
-final GM Fit Score, recommendation labels, fit explanations, and concerns.
+The role engine percentile-scales eleven role dimensions (creation, spacing,
+movement shooting, rim pressure, connector, wing defense, rim protection,
+rebounding, usage dependency, low-usage fit, sample reliability) from real
+player bio (position/height/draft) and tracking (catch-and-shoot, drives,
+passing, rebound chances, rim defense), then assigns one of fifteen archetypes.
+It writes `data/reports/player_role_explanations.parquet`.
+
+Classify the candidate universe:
+
+```bash
+python scripts/build_candidate_universe.py --team PHI
+```
+
+This assigns every real player exactly one `candidate_type` from a closed
+twelve-type taxonomy (free agent, likely free agent, minimum/MLE/rookie-scale,
+realistic/expensive trade target, star-unrealistic, unavailable core, current
+Sixer, manual watchlist, missing contract) using real contracts, bio, and a
+percentile-scaled quality proxy. Current Sixers are split into
+`current_roster_reference.parquet`; the rest land in `candidate_universe.parquet`.
+
+Build the explanation-first target boards:
+
+```bash
+python scripts/rank_candidates.py --team PHI
+```
+
+The target board engine scores the universe with the saturation-free
+`candidate_scoring` engine (surplus-based contract value, percentile-scaled
+portability, an eight-factor risk model with tiers, minutes-aware contender
+gain) and attaches an explanation to every row: why_fit, concerns, the specific
+Sixers gaps addressed, projected role next to the core, salary context,
+portability/risk summaries, data sources, missing-data flags, and explanation
+confidence. Recommendation tiers are capped at ten Priority targets drawn only
+from the realistic board. It writes five split boards
+(`candidate_fit_rankings_{all,realistic,free_agents,trade_targets,unrealistic_watchlist}.parquet`).
+
+Validate the boards against hard quality gates:
+
+```bash
+python scripts/validate_target_board.py
+```
+
+Validation fails non-zero (and writes `data/reports/target_board_validation.md`)
+if the realistic board has more than ten Priority targets, contract value or
+portability saturates above 10% at 100, a single risk value covers more than half
+the pool, any recommendation lacks provenance, a current Sixer or unrealistic
+star reaches the realistic board, or explanation columns are missing.
 
 Run offseason backtests:
 
@@ -243,8 +296,31 @@ entry point on Streamlit Community Cloud or Hugging Face Spaces. See
 Format and lint:
 
 ```bash
-python -m black .
+python -m ruff format .
 python -m ruff check .
+```
+
+## Full pipeline
+
+To rebuild every artifact from real data in order:
+
+```bash
+export PYTHONPATH=src
+python scripts/refresh_current_data.py --season latest
+python scripts/build_playoff_tiers.py
+python scripts/build_quality_tiers.py
+python scripts/build_team_fingerprints.py
+python scripts/train_contender_model.py
+python scripts/train_outcome_tier_model.py
+python scripts/build_roster_archetypes.py
+python scripts/build_player_archetypes.py
+python scripts/build_player_roles.py
+python scripts/analyze_roster_gaps.py --target-team PHI
+python scripts/build_candidate_universe.py --team PHI
+python scripts/rank_candidates.py --team PHI
+python scripts/validate_target_board.py
+python scripts/run_backtest.py --target-team PHI
+python scripts/run_app.py
 ```
 
 ## Layout
