@@ -2,126 +2,122 @@
 
 MoreyMachine is an unofficial NBA roster-construction project that ranks potential 76ers acquisition targets by fit, role, contract context, risk, and how much they address specific roster gaps.
 
+It is not affiliated with Daryl Morey, the Philadelphia 76ers, the NBA, or any team or league data provider.
+
 ## Product Summary
 
-MoreyMachine is an unofficial NBA front-office analytics app built around a
-simple question:
+MoreyMachine is an unofficial NBA front-office analytics app built around a simple question:
 
-> If I were trying to improve the Philadelphia 76ers like an analytics-heavy GM,
-> which players would actually make sense — and why?
+> If I were trying to improve the Philadelphia 76ers like an analytics-heavy GM, which players would actually make sense, and why?
 
-The app does not just rank players by talent or box-score stats. It builds a
-target board by combining:
+The app does not just rank players by talent or box-score stats. It builds a target board by combining:
 
 - Philadelphia's current roster gaps
 - historical contender team patterns
-- player role/archetype modeling
+- player role and archetype modeling
 - playoff portability
 - contract and salary context
 - acquisition feasibility
 - risk and missing-data flags
 
-The output is split into separate boards so the app does not pretend every
-player is equally available:
+The output is split into separate views so the app does not pretend every player is equally available:
 
-- Realistic Target Board
-- Free Agent Board
-- Trade Target Board
+- Target Board v2
+- Free Agent and Trade Target segments
 - Unrealistic Watchlist
 - Player Detail scouting pages
-- Model Diagnostics
-- Backtest Proof
+- Player Compare
+- Best By Need
+- Model and reasoning diagnostics
+- Backtest proof
 
-The main goal is not to perfectly predict what the Sixers should do. It is to
-build a more honest version of a GM-style decision tool: one that explains why a
-player fits, what assumptions the model is making, what data may be stale, and
-where the recommendation could be wrong.
+The main goal is not to perfectly predict what the Sixers should do. It is to build a more honest version of a GM-style decision tool: one that explains why a player fits, what assumptions the model is making, what data may be stale, and where the recommendation could be wrong.
 
 At its best, MoreyMachine helps answer:
 
 - What type of player does this roster actually need?
 - Which players fit that role statistically?
-- Which players are cheap or expensive relative to their role?
+- Which players are cheap or expensive relative to that role?
 - Which players look good in the model but are unrealistic to acquire?
 - Which recommendations are weakened by missing or stale data?
 
-This project is intentionally built around data integrity. Earlier versions were
-too easy to fool with fake/demo rankings or overly confident scores, so the
-current version includes validation gates, provenance columns, candidate-type
-separation, and explanation fields for every recommendation.
-
-It is not affiliated with Daryl Morey, the Philadelphia 76ers, the NBA, or any
-team or league data provider.
+This project is intentionally built around data integrity. Earlier versions were too easy to fool with fake/demo rankings or overly confident scores, so the current version includes validation gates, provenance columns, candidate-type separation, scenario-aware role logic, evidence objects, and player profiles for every recommendation.
 
 ## Why I Built This
 
-I wanted to understand what an analytics-heavy GM model would actually have to
-consider. At first, the project was basically a fit board: pull some player
-stats, score the obvious names, and sort the table.
+I wanted to understand what an analytics-heavy GM model would actually have to consider. I did not want to rank players by points per game, sort by a fit score, and call it a front-office tool.
 
-That was not enough. A real roster question is not just "who is good?" It is
-closer to:
+The real question was more specific:
 
-> Who fits this roster, at this price, in this role, given what serious playoff
-> teams usually need?
+> Who fits this roster, at this price, with this role, given what serious playoff teams usually need?
 
-That question forced the project into different territory. I had to separate raw
-talent from roster fit, role fit, acquisition feasibility, contract context, and
-data reliability. A player can look great statistically and still be the wrong
-answer if the contract is impossible, the role overlaps with the current roster,
-the status is stale, or the data source is missing something important.
+That question forced the project to separate raw talent, roster fit, acquisition feasibility, role conflict, contract context, and data reliability. A player can be good and still be a bad answer for Philadelphia. A center can be useful and still not be a starter next to Joel Embiid. A cheap player can be interesting and still not solve a real playoff gap. A star can look perfect statistically and still belong on a watchlist instead of the realistic board.
 
-The biggest lesson from building this was that the table is the easy part. The
-harder part is stopping the table from showing confident nonsense. MoreyMachine
-started as a naive board, then went through a rebuild: fake/demo data was removed
-from real mode, NBA data was cached locally, score saturation had to be fixed,
-candidate types were split more carefully, and the target board became
-explanation-first instead of just score-first.
+I started with a simple fit board, realized it was too naive, then rebuilt the project around cached real data, provenance, validation, roster-slot logic, and explanations. The table is not the hard part. The hard part is stopping the table from saying confident basketball things it cannot support.
 
-## What The App Does
+## Industry-Level Reasoning Architecture
 
-The Streamlit app is a local dashboard for reading the generated artifacts. It
-does not call live APIs during page loads.
+MoreyMachine does not rank players directly from stats. The current pipeline is sequenced so the product understands the roster context before it recommends anyone:
 
-| Page | What it is useful for |
-| --- | --- |
-| Overview | Shows what the system is trying to do, what data is real, what is missing, and how to read the outputs. |
-| Data Sources | Audits each table: rows, seasons, source, pull time, freshness, real/manual status, missing fields, and rebuild command. |
-| Sixers Roster Diagnosis | Summarizes Philadelphia's biggest roster gaps and why each gap matters in a playoff setting. |
-| Contender Blueprint | Compares PHI to deep-playoff team patterns, quality tiers, roster archetypes, and contender benchmarks. |
-| Realistic Target Board | Shows only candidates the model currently considers realistic/acquirable, with strict recommendation tiers and explanation columns. |
-| Free Agent Board | Separates UFA/RFA/likely free-agent/minimum/MLE candidates and shows salary/source context where available. |
-| Trade Target Board | Shows realistic and expensive trade candidates while excluding current Sixers and core/unavailable players. |
-| Unrealistic Watchlist | Keeps theoretical fits visible without pretending they are recommendations. |
-| Player Detail | Expands one player into a scouting-report-style view: score breakdown, role, gaps addressed, concerns, salary context, and sources. |
-| Transaction Review | Flags players whose candidate status may be stale because recent transactions conflict with salary/candidate data. |
-| Model Diagnostics | Checks score distributions, recommendation counts, saturation, risk distribution, and validation warnings. |
-| Backtest Proof | Compares historical fit rankings to next-season outcomes and simple baselines. |
+```text
+raw/cached data
+-> entity resolution
+-> data lineage
+-> current Sixers roster world
+-> contract/status state
+-> contender blueprint
+-> Sixers gap model
+-> player skill profiles
+-> player-to-player compatibility
+-> roster slot + minutes simulation
+-> acquisition feasibility
+-> scenario engine
+-> recommendation engine v2
+-> evidence-based explanation engine
+-> player profile builder
+-> reasoning/profile validation
+-> Streamlit product UI
+```
 
-## The Actual Modeling Idea
+The important rule is that general player quality cannot override roster-slot logic. A candidate is not called a starter unless the simulated Sixers role supports it. A player does not get credit for spacing, defense, rim protection, rebounding, or creation unless the skill-profile gates allow that claim. A recommendation is not allowed to outrun scenario robustness, acquisition feasibility, stale status, or missing contract context.
 
-MoreyMachine does not ask "Who is the best player?"
+## Interactive Player Profiles
 
-It asks:
+The app is now built around the player profile, not just the board row. Clicking or searching a player should answer:
 
-- What does Philadelphia need?
-- What kind of players usually survive deep playoff runs?
-- What role would this player realistically play?
-- Is the player's value portable to the playoffs?
-- Is the contract or acquisition cost reasonable?
-- What data is missing, stale, or uncertain?
+- why he is ranked there
+- what he helps most
+- what he does not solve
+- what role he would actually play on this Sixers roster
+- whether that role is open, blocked, or scenario-dependent
+- how he fits with Embiid, Maxey, and George
+- what the salary/acquisition reality looks like
+- what the best-case, realistic-case, downside, playoff, overpay, and missing-data scenarios are
+- what evidence supports the claims
+- what could make the recommendation wrong
 
-The final board is a blend of several imperfect signals. None of these scores is
-meant to be trusted by itself.
+Each profile is generated from structured artifacts, not by parsing a final CSV. The profile includes score breakdowns, salary cards, help-impact rows, scenarios, evidence objects, unsupported-claim flags, and missing/stale data flags.
 
-| Score | What it means | What goes into it | What a high score means | How it can mislead |
-| --- | --- | --- | --- | --- |
-| Need Match | How directly a player addresses the current PHI gaps. | The Sixers roster-gap analysis, player role/archetype features, position, shooting, creation, defense, size, and play-finishing signals. | The player fills something the roster actually needs, not just something he is good at. | It can overrate a specialist if the model identifies the right gap but misses whether that player can stay on the floor in the playoffs. |
-| Contender Similarity Gain | How much adding the player moves PHI toward patterns seen in stronger playoff teams. | Team fingerprints, roster archetypes, quality tiers, player roles, and contender-model outputs. | The player helps PHI look more like teams that usually survive deeper rounds. | It depends on historical patterns, so it can miss unusual roster builds or coaching contexts. |
-| Playoff Portability | Whether the player's value is likely to translate against playoff defenses. | Role stability, shooting profile, defensive indicators, size/position context, usage, efficiency, and archetype signals. | The player has traits that are less likely to disappear when matchups tighten. | Public stats are a rough proxy. They do not fully capture scheme discipline, decision-making, or how opponents would guard him. |
-| Contract Value | Whether the player looks useful relative to known salary context. | Manual and scraped/public contract fields where available: cap hit, AAV, years remaining, option status, salary bucket, and missing-data flags. | The player looks helpful without consuming too much salary flexibility. | Missing or stale contract data can make this score less reliable, so missing salary is not treated as a bargain. |
-| Risk | How much uncertainty or downside is attached to the candidate. | Age, role volatility, sample size, shooting stability, missing data, contract uncertainty, candidate type, and acquisition difficulty. | Lower risk means fewer known red flags in the data the project currently has. | It is not a full medical or scouting risk model. Injuries, private information, and locker-room/team context are mostly missing. |
-| Acquisition Feasibility | How plausible it is that the player belongs in a real target board lane. | Candidate type, salary bucket, contract status, current team, manual candidate overrides, transaction freshness, and watchlist rules. | The player is closer to an actual free-agent/trade target than a fantasy add. | It still does not know private team intent, exact asking price, or whether the other team would answer the phone. |
+## Best By Need
+
+The board is useful, but total score is not always the right way to search. MoreyMachine also builds `best_by_need` rankings for questions like:
+
+- backup center
+- non-Embiid rim protection
+- wing defense
+- point-of-attack defense
+- shooting volume
+- movement shooting
+- bench creation
+- low-usage connector
+- rebounding
+- size
+- regular-season depth
+- playoff rotation piece
+- stretch forward
+- matchup big
+
+This matters because the best player overall is not always the best answer to a specific roster problem.
 
 ## Data Pipeline
 
@@ -129,200 +125,115 @@ The app reads generated files. The scripts build those files.
 
 Current data inputs include:
 
-- `nba_api` / NBA.com Stats for team seasons, player seasons, player bio, and
-  tracking-style tables where available.
-- Hand-maintained playoff outcomes in `data/manual/playoff_tiers.csv`.
-- Public contract data and manual real-data CSVs for contracts/candidates when
-  reliable API coverage is not available.
-- A recent transaction cache from Spotrac's NBA transaction feed.
-- Local Parquet, CSV, JSON, and Markdown artifacts under `data/`.
+- `nba_api` / NBA.com Stats for team seasons, player seasons, player bio, and available tracking-style tables
+- manual playoff outcomes in `data/manual/playoff_tiers.csv`
+- public and manual real-data contract/candidate files when reliable API coverage is not available
+- a cached recent transaction feed
+- local Parquet, CSV, JSON, and Markdown artifacts under `data/`
 
-The important distinction:
+The key distinction:
 
 > The app is not truly live. It is refreshable.
 
-That means data can be updated by running the pipeline, but the Streamlit app
-itself reads cached, validated files. It does not scrape contracts, call
-`nba_api`, or fetch transactions during each page load.
-
-This is intentional. If a table is missing in real mode, the app should show a
-clear error and the script needed to rebuild it. It should not silently fall back
-to demo data.
+That means data can be updated by running the pipeline, but the Streamlit app itself reads cached, validated files. It does not scrape contracts, call `nba_api`, or fetch transactions during page loads. If a required artifact is missing, the app shows the script needed to rebuild it.
 
 ## Data Integrity And Validation
 
-Earlier versions of the board were too easy to fool. They could produce a
-reasonable-looking table even when the inputs were stale, the scores were
-saturated, or an unrealistic player leaked into a recommendation tier.
+Earlier versions were too easy to fool. They could show a polished table even when the board used demo rows, score distributions saturated, unrealistic players leaked into recommendation tiers, or a player was given credit for a skill the evidence did not support.
 
-The validation layer exists to make that harder.
+The current validation layer checks things like:
 
-Current target-board gates include:
+- no demo data in real mode
+- no more than 10 Priority Targets
+- no current Sixers players in acquisition boards
+- unrealistic/watchlist players cannot become Priority Targets
+- missing-contract or stale-status players cannot become Priority Targets
+- contract value and portability cannot saturate across the board
+- risk scores cannot collapse into one repeated value
+- every recommendation needs explanation and provenance columns
+- every claim needs an evidence object
+- no unsupported spacing, defense, rim protection, rebounding, creation, or starter claims
+- no center-starter conflict with Embiid
+- no high recommendation without a clear roster role
+- every board player needs a player profile, salary card, help areas, scenarios, and evidence summary
 
-- no demo data in real mode;
-- no more than 10 `Priority Target` rows;
-- no current Sixers players in acquisition boards;
-- unrealistic/watchlist players cannot become priority targets;
-- missing-contract players cannot become priority targets;
-- stale/manual-review status players cannot become priority targets;
-- contract value cannot saturate across the board;
-- portability cannot saturate across the board;
-- risk scores cannot collapse into one repeated value;
-- every candidate needs `candidate_type`;
-- every recommendation needs explanation and provenance columns;
-- every row needs data-source context;
-- the CSV export must carry the explanation columns too.
-
-The goal is not just to make a table. The goal is to make it hard for the app to
-show confident nonsense.
-
-The current local check suite is:
-
-```bash
-export PYTHONPATH=src
-python scripts/validate_data_contracts.py
-python scripts/validate_target_board.py
-pytest
-PYTHONPATH=src python -c "import moreymachine; print('import ok')"
-```
-
-Passing these checks means the artifacts satisfy the project's data contracts and
-guardrails. It does not prove the basketball recommendations are correct.
+Passing the checks means the artifacts satisfy the project's contracts and guardrails. It does not prove basketball truth.
 
 ## Build Process / What Changed Over Time
 
-This project changed a lot as the failure modes became more obvious.
+This project changed as the failure modes became obvious:
 
-1. The first version had the shape of a GM board, but it relied too much on
-   fake/demo data and loose assumptions.
-2. I rebuilt the pipeline around cached real NBA data so the app was not just a
-   nice-looking demo.
-3. The next issue was score saturation: too many players looked like perfect
-   contract values or perfect playoff fits. The scoring model had to be tightened
-   so elite scores were rare.
-4. Candidate types were split into realistic targets, free agents, trade targets,
-   unrealistic/watchlist players, missing-contract players, and manual-review
-   cases.
-5. The target board became explanation-first. A row now needs `why_fit`,
-   `concerns`, `gaps_addressed`, `role_on_sixers`, `salary_context`,
-   `acquisition_summary`, `risk_summary`, `data_sources`, and
-   `missing_data_flags`.
-6. Validation gates were added so regressions fail loudly instead of producing a
-   polished but wrong board.
-7. Backtesting was added to compare historical rankings against next-season
-   outcomes and simple baselines.
-8. The biggest remaining issue is candidate-status freshness, especially during
-   the offseason.
+1. The first version had the shape of a GM board but relied too much on fake/demo data.
+2. I rebuilt the pipeline around cached real NBA data.
+3. The next problem was score saturation: too many players looked like perfect contract values or perfect playoff fits.
+4. Candidate types were split into realistic targets, free agents, trade targets, watchlist players, missing-contract rows, and manual-review cases.
+5. Explanations and provenance were added to every recommendation.
+6. Validation gates and backtesting were added so failures would be loud.
+7. The latest rebuild added roster-world context, compatibility with Embiid/Maxey/George, roster-slot simulation, scenario-aware recommendations, evidence objects, player profiles, scouting-report exports, and reasoning validation.
 
-That last point matters. The model can only be as current as its contract,
-transaction, and candidate-status data.
-
-## Limitations
-
-These limitations are not bugs I want to hide. They are the exact places where
-public data stops being enough.
-
-- Public contract data can lag or be incomplete.
-- Some fields like base salary, cap hit, and AAV may be missing when sources do
-  not provide them.
-- Transaction status can go stale quickly during the offseason.
-- Recent signings, extensions, options, trades, and free-agent status changes
-  need verification before they should affect a real board.
-- The model does not fully know true trade availability.
-- The model does not know private team intent.
-- Injury status and medical risk are not fully sourced.
-- Historical free-agent and trade status are incomplete, so the backtest cannot
-  perfectly simulate real offseasons.
-- Contract-value backtesting is limited when historical salary coverage is
-  missing.
-- Fit score does not mean "the Sixers should actually acquire this player."
-- A player can fit statistically but be impossible, overpriced, redundant, or
-  just a bad real-world acquisition.
-- The model is better at basketball-fit diagnosis than real front-office
-  feasibility.
-
-This is why the app separates realistic boards, free-agent boards, trade boards,
-watchlists, manual-review rows, and missing-data flags instead of forcing
-everything into one confident ranking.
+The biggest remaining issue is candidate-status freshness. Transactions, options, extensions, and free-agent status can change faster than a local public-data pipeline can keep up.
 
 ## What Full Real-Time Data Would Improve
 
-A true front-office version would need a stronger status layer than this repo can
-currently provide with public and manual data.
+A true front-office version would need stronger status infrastructure than this repo can provide with public and manual data:
 
-Useful future infrastructure would include:
+- live transaction feed
+- current contract/API feed
+- injury and availability data
+- lineup and on/off data updated daily
+- play-by-play or possession-level data
+- trade asset and trade-cost model
+- team intent/context model
+- news/status verification layer
+- automatic stale-status warnings
+- manual review queue for recent signings, extensions, options, and trades
 
-- a live transaction feed;
-- a current contract/API feed;
-- injury and availability data;
-- lineup and on/off data updated daily;
-- play-by-play or possession-level data;
-- a trade-asset and trade-cost model;
-- a team intent/context model;
-- a news/status verification layer;
-- automatic stale-status warnings;
-- a manual review queue for recent signings, extensions, options, and trades.
+That would improve candidate type, acquisition feasibility, salary context, risk scoring, stale-offseason warnings, and player-specific explanations.
 
-That would improve the board in practical ways:
+## Limitations
 
-- more accurate `candidate_type`;
-- better acquisition feasibility;
-- better salary context;
-- better risk scoring;
-- fewer stale offseason recommendations;
-- better player-specific explanations;
-- clearer separation between "good basketball fit" and "actually obtainable."
+These limitations are not things I want to hide. They are the places where public data stops being enough.
 
-Right now, MoreyMachine has a transaction freshness layer, but it is still a
-cache plus validation system. It can flag conflicts and force manual review. It
-does not fully solve real-time status truth.
+- Public contract data can lag or be incomplete.
+- Base salary, cap hit, and AAV are separated because sources do not always provide all three.
+- Transaction status can go stale quickly during the offseason.
+- The model does not fully know true trade availability.
+- The model does not know private team intent.
+- Injury status and medical risk are not fully sourced.
+- Historical free-agent and trade status are incomplete, so backtesting cannot perfectly simulate real offseasons.
+- Contract-value backtesting is limited when historical salary coverage is missing.
+- Fit score does not mean "the Sixers should actually acquire this player."
+- A player can fit statistically but be impossible, overpriced, redundant, or dumb to acquire.
+- MoreyMachine is better at basketball-fit diagnosis than real-world front-office feasibility.
 
 ## Example Pick Explanation Format
 
-The target board is supposed to explain a pick, not just rank a name.
+The app is designed to explain a pick like this, using a real player profile row when available:
 
-Example format:
+```text
+Player X
 
-**Player X**
+Why the model likes him:
+Which Sixers gaps he addresses:
+Role next to Embiid/Maxey/George:
+Salary/acquisition context:
+Main concerns:
+Missing data:
+Recommendation interpretation:
+Evidence:
+```
 
-- **Why the model likes him:** He adds a specific skill the current roster is
-  missing and his role profile matches what the model values in playoff lineups.
-- **Which Sixers gaps he addresses:** Shooting, secondary creation, defensive
-  size, rebounding, or whatever gaps the roster diagnosis identified.
-- **Role next to Embiid/Maxey:** Spacer, connector, low-usage defender,
-  bench creator, movement shooter, small-ball big, or another explicit role.
-- **Salary/acquisition context:** Minimum, MLE, likely free agent, realistic
-  trade target, expensive but possible, contract blocked, or manual review.
-- **Main concerns:** Risk flags such as role volatility, shooting sample, age,
-  defense, contract uncertainty, stale transaction status, or missing data.
-- **Missing data:** Contract fields, injury data, transaction status, candidate
-  status, or other fields the system could not source.
-- **Recommendation interpretation:** Whether this is a real target, a conditional
-  target, a watchlist player, or a manual-review case.
+If the evidence is missing, the app should say the claim cannot be verified instead of filling in a scouting phrase.
 
-## Installation
-
-Use Python 3.11 or newer.
+## Installation / Running Locally
 
 ```bash
-git clone https://github.com/RaahilRussell/moreymachine.git
+git clone <repo-url>
 cd moreymachine
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install -e .
+pip install -r requirements.txt
 export PYTHONPATH=src
-```
-
-Optional local settings can be placed in `.env`:
-
-```bash
-REAL_DATA_MODE=true
-MOREYMACHINE_ENV=development
-MOREYMACHINE_LOG_LEVEL=INFO
-MOREYMACHINE_DATA_DIR=data
-MOREYMACHINE_NBA_LATEST_SEASON=2025-26
 ```
 
 ## Full Local Pipeline
@@ -330,7 +241,6 @@ MOREYMACHINE_NBA_LATEST_SEASON=2025-26
 Run from the repository root:
 
 ```bash
-source .venv/bin/activate
 export PYTHONPATH=src
 
 python scripts/refresh_current_data.py --season latest
@@ -346,65 +256,46 @@ python scripts/build_player_roles.py
 python scripts/analyze_roster_gaps.py --team PHI
 python scripts/build_candidate_universe.py --team PHI
 python scripts/rank_candidates.py --team PHI
+
+python scripts/validate_all_schemas.py
+python scripts/audit_data_lineage.py
+python scripts/build_roster_world.py
+python scripts/build_contender_blueprints.py
+python scripts/build_gap_model.py
+python scripts/build_player_skill_profiles.py
+python scripts/build_compatibility_matrix.py
+python scripts/simulate_roster_slots.py
+python scripts/build_acquisition_feasibility.py
+python scripts/build_candidate_scenarios.py
+python scripts/rank_candidates_v2.py --team PHI
+python scripts/build_player_categorization.py
+python scripts/build_help_impact.py
+python scripts/build_fit_breakdowns.py
+python scripts/build_salary_cards.py
+python scripts/build_explanations_v2.py
+python scripts/build_player_profiles.py
+python scripts/build_best_by_need.py
+python scripts/export_scouting_reports.py
+
 python scripts/validate_data_contracts.py
 python scripts/validate_target_board.py
+python scripts/validate_reasoning_v2.py
+python scripts/validate_player_profiles.py
 python scripts/run_backtest.py
+pytest
+python -c "import moreymachine; print('import ok')"
+
 streamlit run src/moreymachine/app/streamlit_app.py
 ```
 
-`refresh_transactions.py` is included because candidate-status freshness is now
-part of the ranking and validation layer.
+## Manual Contracts And Candidates
 
-## Manual Data
+Manual contracts live in `data/manual/contracts.csv`. Manual candidates live in `data/manual/candidates.csv`.
 
-Manual files are real-data inputs, not demo fixtures.
+Only enter sourced real values. If a contract, salary, injury, transaction, availability, or status field is missing, leave it missing and explain it with `missing_data_flags` or `source_note`. Do not use placeholder numbers to make the board look complete.
 
-Contracts live in `data/manual/contracts.csv`. Use `data_mode=real_manual` for
-verified manual rows. If a field is unknown, leave it blank and explain it in
-`missing_data_flags`; do not estimate it.
+## Interpreting Scores
 
-Manual candidate overrides live in `data/manual/candidates.csv`. They should be
-used to add sourced context, not to force an unavailable or missing-status player
-into a recommendation tier.
+The score is a product artifact, not advice. It combines need match, skill evidence, compatibility with the core, roster-slot fit, contender-blueprint fit, playoff role, scenario robustness, acquisition feasibility, contract value, risk, uncertainty, and contradiction penalties.
 
-After editing manual files, rerun:
-
-```bash
-python scripts/refresh_transactions.py
-python scripts/build_candidate_universe.py --team PHI
-python scripts/rank_candidates.py --team PHI
-python scripts/validate_target_board.py
-```
-
-## Backtest
-
-```bash
-python scripts/run_backtest.py
-```
-
-The backtest uses chronological offseason splits. For each historical offseason,
-it builds roster gaps using only data available before that offseason, ranks the
-candidate universe, then compares to next-season outcomes.
-
-Outputs:
-
-- `data/reports/backtest_results.json`
-- `data/reports/backtest_rankings.parquet`
-- `data/reports/backtest_summary.md`
-
-The backtest is useful, but it is not a clean simulation of what an NBA team
-would have known. Historical contract status, free-agent status, and trade
-availability are incomplete. Contract-value backtesting is separated from
-basketball-fit backtesting for that reason.
-
-## Run The App
-
-```bash
-cd moreymachine
-source .venv/bin/activate
-export PYTHONPATH=src
-streamlit run src/moreymachine/app/streamlit_app.py
-```
-
-If a required real table is missing, the app should say which file is missing and
-which script to run. It should not silently use demo data in real mode.
+The useful question is not "who has the highest score?" It is "what role is the model actually projecting, what evidence supports that role, and what would make the recommendation wrong?"

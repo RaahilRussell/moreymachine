@@ -32,8 +32,29 @@ python scripts/build_player_roles.py
 python scripts/analyze_roster_gaps.py --team PHI
 python scripts/build_candidate_universe.py --team PHI
 python scripts/rank_candidates.py --team PHI
+python scripts/validate_all_schemas.py
+python scripts/audit_data_lineage.py
+python scripts/build_roster_world.py
+python scripts/build_contender_blueprints.py
+python scripts/build_gap_model.py
+python scripts/build_player_skill_profiles.py
+python scripts/build_compatibility_matrix.py
+python scripts/simulate_roster_slots.py
+python scripts/build_acquisition_feasibility.py
+python scripts/build_candidate_scenarios.py
+python scripts/rank_candidates_v2.py --team PHI
+python scripts/build_player_categorization.py
+python scripts/build_help_impact.py
+python scripts/build_fit_breakdowns.py
+python scripts/build_salary_cards.py
+python scripts/build_explanations_v2.py
+python scripts/build_player_profiles.py
+python scripts/build_best_by_need.py
+python scripts/export_scouting_reports.py
 python scripts/validate_data_contracts.py
 python scripts/validate_target_board.py
+python scripts/validate_reasoning_v2.py
+python scripts/validate_player_profiles.py
 python scripts/run_backtest.py
 PYTHONPATH=src streamlit run src/moreymachine/app/streamlit_app.py
 ```
@@ -44,6 +65,8 @@ PYTHONPATH=src streamlit run src/moreymachine/app/streamlit_app.py
 export PYTHONPATH=src
 python scripts/validate_data_contracts.py
 python scripts/validate_target_board.py
+python scripts/validate_reasoning_v2.py
+python scripts/validate_player_profiles.py
 pytest
 PYTHONPATH=src python -c "import moreymachine; print('import ok')"
 ```
@@ -98,8 +121,27 @@ python scripts/refresh_current_data.py --season latest
 python scripts/refresh_transactions.py
 python scripts/build_candidate_universe.py --team PHI
 python scripts/rank_candidates.py --team PHI
+python scripts/build_roster_world.py
+python scripts/build_contender_blueprints.py
+python scripts/build_gap_model.py
+python scripts/build_player_skill_profiles.py
+python scripts/build_compatibility_matrix.py
+python scripts/simulate_roster_slots.py
+python scripts/build_acquisition_feasibility.py
+python scripts/build_candidate_scenarios.py
+python scripts/rank_candidates_v2.py --team PHI
+python scripts/build_player_categorization.py
+python scripts/build_help_impact.py
+python scripts/build_fit_breakdowns.py
+python scripts/build_salary_cards.py
+python scripts/build_explanations_v2.py
+python scripts/build_player_profiles.py
+python scripts/build_best_by_need.py
+python scripts/export_scouting_reports.py
 python scripts/validate_data_contracts.py
 python scripts/validate_target_board.py
+python scripts/validate_reasoning_v2.py
+python scripts/validate_player_profiles.py
 python scripts/run_backtest.py
 ```
 

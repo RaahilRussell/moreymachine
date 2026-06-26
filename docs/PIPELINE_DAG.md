@@ -41,7 +41,8 @@ from the repository root with `PYTHONPATH=src`.
 | `scripts/build_help_impact.py` | gap model, skill profiles, roster simulation | `data/features/player_help_impact.parquet` | gap model, skill profiles |
 | `scripts/build_fit_breakdowns.py` | v2 rankings and component artifacts | fit breakdown parquet/json | v2 rankings |
 | `scripts/build_salary_cards.py` | contracts, acquisition feasibility, candidate universe | `data/reports/player_salary_cards.parquet` | acquisition feasibility |
-| `scripts/build_player_profiles.py` | v2 rankings, profile support artifacts | `data/reports/player_profiles.parquet`, `.json`, index | all profile support artifacts |
+| `scripts/build_explanations_v2.py` | v2 rankings, skill profiles, acquisition, scenarios | explanation claims, evidence objects, player explanations | v2 rankings |
+| `scripts/build_player_profiles.py` | v2 rankings, explanations, profile support artifacts | `data/reports/player_profiles.parquet`, `.json`, index | explanations plus all profile support artifacts |
 | `scripts/build_best_by_need.py` | help impact, v2 rankings, gap model | `data/reports/best_by_need.parquet` | help impact |
 | `scripts/export_scouting_reports.py` | player profiles | `data/reports/scouting_reports/{slug}.md` | player profiles |
 | `scripts/validate_reasoning_v2.py` | v2 boards, profiles, explanations, validation flags | reasoning validation report | player profiles |
@@ -81,6 +82,7 @@ python scripts/build_player_categorization.py
 python scripts/build_help_impact.py
 python scripts/build_fit_breakdowns.py
 python scripts/build_salary_cards.py
+python scripts/build_explanations_v2.py
 python scripts/build_player_profiles.py
 python scripts/build_best_by_need.py
 python scripts/export_scouting_reports.py
@@ -102,4 +104,3 @@ python -c "import moreymachine; print('import ok')"
   scenarios, and v2 recommendations exist.
 - Streamlit v2 pages read cached artifacts only.
 - Validation must run after artifact generation and before deployment.
-
