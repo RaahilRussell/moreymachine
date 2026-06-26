@@ -1,0 +1,24 @@
+{
+  "artifact_name": "compatibility_examples.md",
+  "columns": [],
+  "created_at": "2026-06-26T08:32:48.554067+00:00",
+  "data_mode": [],
+  "known_limitations": [
+    "Compatibility uses public-stat skill gates and roster-context rules.",
+    "It does not include private lineup data, team intent, or medical data."
+  ],
+  "rows": null,
+  "run_id": "20260626T083248Z-343cdd00",
+  "seasons": [],
+  "source_files": [
+    "data/features/candidate_universe.parquet",
+    "data/features/player_skill_profiles.parquet",
+    "data/processed/roster_world_phi.parquet"
+  ],
+  "source_urls": [],
+  "upstream_artifacts": [
+    "data/features/candidate_universe.parquet",
+    "data/features/player_skill_profiles.parquet",
+    "data/processed/roster_world_phi.parquet"
+  ]
+}
