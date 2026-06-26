@@ -1,0 +1,50 @@
+{
+  "artifact_name": "player_salary_cards.parquet",
+  "columns": [
+    "player_id",
+    "player_name",
+    "salary_card_title",
+    "salary_summary",
+    "contract_status",
+    "cap_hit_millions",
+    "base_salary_millions",
+    "contract_aav_millions",
+    "years_remaining",
+    "option_status",
+    "free_agent_year",
+    "salary_bucket",
+    "salary_source",
+    "source_url",
+    "source_note",
+    "freshness_status",
+    "acquisition_path",
+    "feasibility_tier",
+    "what_makes_him_easy_or_hard_to_get",
+    "what_data_is_missing",
+    "manual_review_needed",
+    "salary_warning_flags",
+    "pulled_at",
+    "data_mode",
+    "missing_data_flags"
+  ],
+  "created_at": "2026-06-26T08:56:06.287750+00:00",
+  "data_mode": [
+    "derived"
+  ],
+  "known_limitations": [
+    "Cards separate cap hit, base salary, and AAV because sources differ.",
+    "Missing or stale status remains missing/manual review."
+  ],
+  "rows": 562,
+  "run_id": "20260626T085606Z-6e80e94e",
+  "seasons": [],
+  "source_files": [
+    "data/features/candidate_universe.parquet",
+    "data/features/acquisition_feasibility.parquet"
+  ],
+  "source_urls": [],
+  "upstream_artifacts": [
+    "data/features/candidate_universe.parquet",
+    "data/features/acquisition_feasibility.parquet"
+  ]
+}

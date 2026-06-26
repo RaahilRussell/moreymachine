@@ -25,7 +25,7 @@
 | evidence_objects | PASS | 6994 | 0 | 0 |
 | player_profiles | SKIP | 0 | 0 | 1 |
 | player_profiles_index | SKIP | 0 | 0 | 1 |
-| player_salary_cards | SKIP | 0 | 0 | 1 |
+| player_salary_cards | PASS | 562 | 0 | 0 |
 
 ## Details
 
@@ -181,6 +181,5 @@
 ### player_salary_cards
 
 - Path: `data/reports/player_salary_cards.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
