@@ -34,6 +34,26 @@ Required fields:
 - `season`
 - `source`
 
+## TeamContext
+
+Manual basketball context for one target team. This file can encode
+assumptions, but not fake statistics.
+
+Fields:
+
+- `team_abbr`
+- `team_name`
+- `context_mode`
+- `core_players`
+- `locked_roles`
+- `open_slots`
+- `blocked_slots`
+- `must_not_violate_rules`
+- `manual_notes`
+
+`PHI` has custom context. Other teams can use `GENERIC` context, but the app
+must label that lower-confidence assumption set.
+
 ## Season
 
 A normalized season key.
@@ -62,6 +82,51 @@ Fields:
 - `must_not_violate_rules`
 - `assumptions`
 - `sources`
+
+## TeamLevel
+
+The current-state classification for the selected team.
+
+Fields:
+
+- `team_abbr`
+- `team_level`
+- `level_score`
+- `contender_percentile`
+- `closest_archetype`
+- `closest_benchmark_teams`
+- `main_strengths`
+- `main_weaknesses`
+- `why_this_level`
+- `what_level_requires_next`
+- `confidence`
+- `evidence`
+- `missing_data_flags`
+
+This object is a strategic summary, not a claim that the model fully knows team
+quality.
+
+## BenchmarkPath
+
+A comparison between the selected team and a contender benchmark.
+
+Fields:
+
+- `selected_team`
+- `benchmark_name`
+- `benchmark_type`
+- `similarity_score`
+- `gap_to_benchmark_score`
+- `closest_archetype`
+- `strengths_vs_benchmark`
+- `weaknesses_vs_benchmark`
+- `biggest_delta_stats`
+- `biggest_delta_roles`
+- `what_needs_to_change`
+- `what_not_to_chase`
+- `evidence`
+- `confidence`
+- `missing_data_flags`
 
 ## CorePlayer
 
@@ -322,6 +387,92 @@ Fields:
 - `manual_review_required`
 - `source_summary`
 
+## OpportunityCost
+
+The strategic cost of using a resource on a move.
+
+Fields:
+
+- `player_id`
+- `player_name`
+- `move_type`
+- `resource_bucket`
+- `opportunity_cost_score`
+- `better_alternatives`
+- `cheaper_alternatives`
+- `roles_blocked_by_this_move`
+- `future_flexibility_cost`
+- `gap_priority_mismatch`
+- `why_this_cost_matters`
+- `confidence`
+- `evidence`
+
+Opportunity cost prevents expensive or redundant moves from looking clean only
+because the player is talented.
+
+## MoveRecommendation
+
+A GM action, not just a player row.
+
+Fields:
+
+- `move_id`
+- `move_rank`
+- `move_type`
+- `player_name`
+- `acquisition_path`
+- `feasibility_tier`
+- `salary_context`
+- `roster_gap_helped`
+- `team_level_impact`
+- `benchmark_impact`
+- `expected_role`
+- `primary_scenario`
+- `why_do_this`
+- `why_not_do_this`
+- `why_ranked_above_next`
+- `what_could_go_wrong`
+- `confidence`
+- `manual_review_required`
+- `evidence`
+- `missing_data_flags`
+- `final_move_score`
+
+## ActionCard
+
+The summary-first UI card used by the GM Executive Summary.
+
+Fields:
+
+- `action_category`
+- `title`
+- `player_name`
+- `move_type`
+- `score`
+- `feasibility`
+- `confidence`
+- `primary_reason`
+- `main_risk`
+- `evidence`
+- `profile_id`
+
+## NarrativePacket
+
+A JSON packet passed to Ollama or the deterministic fallback writer.
+
+Fields:
+
+- `packet_type`
+- `team`
+- `facts`
+- `evidence`
+- `missing_data_flags`
+- `confidence`
+- `source_artifacts`
+
+The packet is the source of truth. The generated text is only a readable view of
+the packet.
+
 ## ExplanationClaim
 
 A single statement the app wants to show.
@@ -380,4 +531,3 @@ Fields:
 - `message`
 - `blocking`
 - `evidence`
-

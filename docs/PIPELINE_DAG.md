@@ -48,6 +48,23 @@ from the repository root with `PYTHONPATH=src`.
 | `scripts/validate_reasoning_v2.py` | v2 boards, profiles, explanations, validation flags | reasoning validation report | player profiles |
 | `scripts/validate_player_profiles.py` | player profiles | profile validation report | player profiles |
 
+## Team-Scoped GM Product Scripts
+
+| Script | Inputs | Outputs | Depends on |
+| --- | --- | --- | --- |
+| `scripts/run_team_pipeline.py --team PHI` | cached global artifacts, manual team context | `data/team_outputs/{TEAM}/...` | existing pipeline artifacts |
+| `scripts/build_team_level.py --team PHI` | team seasons/fingerprints, contender blueprints, team context | `data/team_outputs/{TEAM}/reports/team_level.parquet`, `.json`, `.md` | roster world, contender blueprints |
+| `scripts/build_team_comparison.py --team PHI` | team level, contender blueprints, team seasons | `data/team_outputs/{TEAM}/reports/team_comparison.parquet`, `.json` | team level, blueprints |
+| `scripts/build_opportunity_cost.py --team PHI` | v2 rankings, roster simulation, acquisition feasibility, gap model | `data/team_outputs/{TEAM}/features/opportunity_cost.parquet` | v2 rankings, acquisition |
+| `scripts/build_move_recommendations.py --team PHI` | v2 rankings, opportunity cost, gap model, team comparison | `data/team_outputs/{TEAM}/reports/move_recommendations.parquet` | opportunity cost |
+| `scripts/build_action_cards.py --team PHI` | move recommendations, player profiles | `data/team_outputs/{TEAM}/reports/action_cards.parquet`, `.json` | move recommendations, profiles |
+| `scripts/build_narratives.py --team PHI` | action cards, team level, comparison, profiles, best by need | `data/team_outputs/{TEAM}/narratives/*.json` | action cards, profiles |
+| `scripts/validate_product_v2.py` | team-scoped outputs and app code | product validation report | team pipeline |
+
+Team-scoped outputs keep the app from assuming PHI-only paths forever. PHI uses
+custom context. Other teams may use generic context, but the app and validation
+must show that lower-confidence state.
+
 ## Target Full Pipeline
 
 ```bash
@@ -87,10 +104,14 @@ python scripts/build_player_profiles.py
 python scripts/build_best_by_need.py
 python scripts/export_scouting_reports.py
 
+python scripts/run_team_pipeline.py --team PHI --skip-refresh
+python scripts/build_narratives.py --team PHI
+
 python scripts/validate_data_contracts.py
 python scripts/validate_target_board.py
 python scripts/validate_reasoning_v2.py
 python scripts/validate_player_profiles.py
+python scripts/validate_product_v2.py
 pytest
 python -c "import moreymachine; print('import ok')"
 ```
@@ -104,3 +125,20 @@ python -c "import moreymachine; print('import ok')"
   scenarios, and v2 recommendations exist.
 - Streamlit v2 pages read cached artifacts only.
 - Validation must run after artifact generation and before deployment.
+
+## Team Output Directory Contract
+
+Each team output directory should contain:
+
+```text
+data/team_outputs/{TEAM}/features/
+data/team_outputs/{TEAM}/reports/
+data/team_outputs/{TEAM}/narratives/
+data/team_outputs/{TEAM}/scouting_reports/
+data/team_outputs/{TEAM}/metadata/
+```
+
+Every artifact should include `data_mode`, `source_summary`, `created_at` or
+`pulled_at`, `run_id`, `missing_data_flags`, `confidence`, and `evidence` where
+the file type supports tabular fields. Every artifact should also have a
+same-file `.metadata.json` sidecar.

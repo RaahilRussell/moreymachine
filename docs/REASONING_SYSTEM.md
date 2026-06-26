@@ -24,6 +24,21 @@ The v2 recommendation engine should form an opinion in this order:
 14. Generate explanations from evidence objects.
 15. Validate the profile and board row.
 
+The GM operating-system layer then forms a strategic action:
+
+1. Classify the selected team's current level.
+2. Compare the team to contender benchmarks.
+3. Rank gaps by severity, playoff importance, and fixability.
+4. Compute player-level opportunity cost.
+5. Convert candidate recommendations into move recommendations.
+6. Rank actions by gap priority, roster-slot fit, compatibility, feasibility,
+   benchmark impact, scenario robustness, confidence, and opportunity cost.
+7. Render action cards before raw tables.
+
+The product should not open by asking "who has the highest fit score?" It should
+open by asking "what does this team need to do next, why, and what could be
+wrong?"
+
 ## Allowed Claims
 
 Every visible explanation claim must have a type, evidence, and confidence.
@@ -144,3 +159,33 @@ The product should fail validation if it:
 - omits player profile links;
 - hides uncertainty in generic language.
 
+## Move Recommendation Rules
+
+A move recommendation can only appear if it has:
+
+- a player or stay-put/internal action object;
+- a route (`free_agent_pickup`, `trade_target`, `stay_put`, `avoid_move`, etc.);
+- at least one roster gap or strategic reason;
+- an acquisition/feasibility context;
+- an opportunity-cost estimate;
+- a scenario;
+- `why_do_this`;
+- `why_not_do_this`;
+- `what_could_go_wrong`;
+- evidence and confidence.
+
+Priority language is stricter for moves than for players. A move cannot be a
+top action when the underlying player is stale/unknown, low-feasibility,
+theoretical-only, blocked by roster-slot logic, or missing a scenario.
+
+## Ollama Boundary
+
+Ollama may turn a structured packet into readable prose. It may not create new
+facts, player labels, salary claims, trade claims, injury claims, or basketball
+evidence. Every prompt must say:
+
+> You are summarizing structured basketball ops data. Use only the JSON. Do not
+> invent facts. If evidence is missing, say it is missing.
+
+If Ollama is disabled, unavailable, times out, or returns unusable text, the
+deterministic fallback summary is the product output.

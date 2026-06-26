@@ -11,18 +11,26 @@ basketball claims.
 raw/cached data
 -> entity resolution
 -> data lineage
+-> team context
 -> current Sixers roster world
 -> contract/status state
 -> contender/championship blueprint
+-> team level
+-> benchmark comparison
 -> Sixers gap model
 -> player skill profiles
 -> player-to-player compatibility
 -> roster slot + minutes simulation
 -> acquisition feasibility
+-> opportunity cost
 -> scenario engine
 -> recommendation engine v2
+-> move recommendation engine
+-> action cards
 -> evidence-based explanation engine
 -> player profile builder
+-> best-by-need engine
+-> Ollama/deterministic narrative packets
 -> player profile validation
 -> Streamlit product UI
 ```
@@ -30,6 +38,46 @@ raw/cached data
 No downstream layer should silently infer facts that an upstream layer did not
 provide. Missing contract, status, transaction, injury, or availability data must
 stay missing and travel with the player profile.
+
+## GM Operating System Layer
+
+The product is no longer only a target board. The first page should answer a
+front-office strategy question:
+
+> What is this team, what benchmark is it chasing, what needs to change, what
+> should the GM do first, and what could make the recommendation wrong?
+
+The team-scoped pipeline writes artifacts under
+`data/team_outputs/{TEAM}/`:
+
+- `features/` for derived basketball features;
+- `reports/` for decision artifacts used by the UI;
+- `narratives/` for deterministic or Ollama-summarized JSON;
+- `scouting_reports/` for player memo exports;
+- `metadata/` for run state and validation summaries.
+
+The GM operating-system layer consumes the player-profile rebuild but changes
+the product object from "highest fit score" to "ranked strategic action."
+Candidate rows still exist, but move recommendations and action cards are what
+drive the executive summary.
+
+## Team-Scoped Execution
+
+`scripts/run_team_pipeline.py --team PHI` is the preferred end-to-end command
+for the Streamlit product. It does not fetch live data inside the app. It reads
+cached/global artifacts, builds or copies team-scoped outputs, and marks partial
+results when required upstream data is unavailable.
+
+For non-PHI teams, the pipeline may run with generic assumptions until a custom
+team context file exists. Generic context must be visible in the app and should
+lower confidence where roster-slot assumptions are not team-specific.
+
+## Narrative Layer
+
+Ollama is an optional readability layer, not a data source. Prompts receive
+structured JSON packets that already include evidence, confidence, missing data,
+and validation flags. If Ollama is disabled or unavailable, deterministic
+fallback summaries are written so the app remains usable and factual.
 
 ## 1. Data Ingestion
 
@@ -354,4 +402,3 @@ Primary workflows:
 
 The app reads cached artifacts only. If an artifact is missing, it shows the
 exact script needed to rebuild it.
-
