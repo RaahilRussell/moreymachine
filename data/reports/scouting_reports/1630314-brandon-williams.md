@@ -59,6 +59,7 @@ Acquisition path is minimum_signing with feasibility 88.0.
 | Cannot verify that he spaces the floor. | structured_artifact | high | none |
 | Cannot verify that he protects the rim. | structured_artifact | high | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| adds point-of-attack defense. | structured_artifact | medium | none |
 | adds secondary creation. | structured_artifact | high | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | high | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;draft year missing;foul_data_missing;maxey_usage_overlap;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition path is minimum_signing with feasibility 88.0.
 
 ## Concerns
 
-Contradictions: maxey_usage_overlap Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: high-usage guard lineups with Maxey.
+Brandon Williams: concern context for bench creator. Contradictions: maxey_usage_overlap Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: high-usage guard lineups with Maxey.
 
 ## Missing Data
 

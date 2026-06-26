@@ -59,6 +59,7 @@ Acquisition path is rookie_scale_trade with feasibility 49.29.
 | spaces the floor. | structured_artifact | medium | none |
 | Cannot verify that he protects the rim. | structured_artifact | medium | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | medium | none |
 | helps defensive rebounding. | structured_artifact | medium | none |
 | Has a simulated playoff-rotation pathway. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition path is rookie_scale_trade with feasibility 49.29.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he protects the rim. Cannot verify that he adds wing defense. Bad-fit context: none identified.
+Carter Bryant: concern context for low-usage spacer. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he protects the rim. Cannot verify that he adds wing defense. Bad-fit context: none identified.
 
 ## Missing Data
 

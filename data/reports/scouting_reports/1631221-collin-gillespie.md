@@ -59,6 +59,7 @@ Acquisition status requires manual review before recommendation.
 | spaces the floor. | structured_artifact | high | none |
 | Cannot verify that he protects the rim. | structured_artifact | high | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| adds point-of-attack defense. | structured_artifact | medium | none |
 | adds secondary creation. | structured_artifact | high | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | high | none |
 | Has a simulated playoff-rotation pathway. | structured_artifact | Low | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;conflict_between_sources;contract_aav_missing;draft year missing;foul_data_missing;manual_review_required;recent_transaction_present;shot_type_data_missing;tracking_data_missing;unknown_acquisition_path |
@@ -69,7 +70,7 @@ Acquisition status requires manual review before recommendation.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he protects the rim. Cannot verify that he adds wing defense. Bad-fit context: none identified.
+Collin Gillespie: concern context for bench creator. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he protects the rim. Cannot verify that he adds wing defense. Bad-fit context: none identified.
 
 ## Missing Data
 

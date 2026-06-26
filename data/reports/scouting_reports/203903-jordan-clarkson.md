@@ -59,6 +59,7 @@ Acquisition path is mle_or_exception_signing with feasibility 76.0.
 | Cannot verify that he spaces the floor. | structured_artifact | high | none |
 | Cannot verify that he protects the rim. | structured_artifact | high | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | high | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | high | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition path is mle_or_exception_signing with feasibility 76.0.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: closing playoff lineups.
+Jordan Clarkson: concern context for regular-season depth. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: closing playoff lineups.
 
 ## Missing Data
 

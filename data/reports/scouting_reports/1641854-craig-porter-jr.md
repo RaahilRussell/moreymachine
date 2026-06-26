@@ -59,6 +59,7 @@ Acquisition status requires manual review before recommendation.
 | Cannot verify that he spaces the floor. | structured_artifact | medium | none |
 | Cannot verify that he protects the rim. | structured_artifact | medium | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | medium | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | medium | none |
 | Has a simulated playoff-rotation pathway. | structured_artifact | Low | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;conflict_between_sources;contract_aav_missing;draft year missing;foul_data_missing;manual_review_required;recent_transaction_present;shot_type_data_missing;tracking_data_missing;unknown_acquisition_path |
@@ -69,7 +70,7 @@ Acquisition status requires manual review before recommendation.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: none identified.
+Craig Porter Jr.: concern context for point-of-attack defender next to Maxey. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: none identified.
 
 ## Missing Data
 

@@ -59,6 +59,7 @@ Acquisition path is rookie_scale_trade with feasibility 43.42.
 | Cannot verify that he spaces the floor. | structured_artifact | medium | none |
 | Cannot verify that he protects the rim. | structured_artifact | high | none |
 | adds wing defense. | structured_artifact | medium | none |
+| adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | high | none |
 | helps defensive rebounding. | structured_artifact | high | none |
 | Has a simulated playoff-rotation pathway. | structured_artifact | High | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;recent_transaction_present;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition path is rookie_scale_trade with feasibility 43.42.
 
 ## Concerns
 
-Unsupported claims: Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Cannot verify that he adds secondary creation. Bad-fit context: none identified.
+Moussa Diabaté: concern context for point-of-attack defender next to Maxey. Unsupported claims: Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Cannot verify that he adds secondary creation. Bad-fit context: none identified.
 
 ## Missing Data
 

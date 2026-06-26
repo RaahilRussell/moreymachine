@@ -59,6 +59,7 @@ Acquisition path is rookie_scale_trade with feasibility 52.08.
 | Cannot verify that he spaces the floor. | structured_artifact | low | none |
 | Cannot verify that he protects the rim. | structured_artifact | low | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | low | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | low | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;no_clear_role;shot_type_data_missing;small minutes sample;tracking_data_missing |
@@ -68,7 +69,7 @@ Acquisition path is rookie_scale_trade with feasibility 52.08.
 
 ## Concerns
 
-Contradictions: no_clear_role Unsupported claims: Projected role is no clear Sixers role from current evidence. Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Bad-fit context: none identified.
+Andre Jackson Jr.: concern context for no clear Sixers role from current evidence. Contradictions: no_clear_role Unsupported claims: Projected role is no clear Sixers role from current evidence. Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Bad-fit context: none identified.
 
 ## Missing Data
 

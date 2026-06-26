@@ -21,8 +21,8 @@
 | candidate_scenarios | PASS | 4496 | 0 | 0 |
 | candidate_fit_rankings_all | PASS | 562 | 0 | 1 |
 | candidate_fit_rankings_v2 | PASS | 562 | 0 | 0 |
-| explanation_claims | PASS | 6994 | 0 | 0 |
-| evidence_objects | PASS | 6994 | 0 | 0 |
+| explanation_claims | PASS | 7556 | 0 | 0 |
+| evidence_objects | PASS | 7556 | 0 | 0 |
 | player_profiles | PASS | 562 | 0 | 0 |
 | player_profiles_index | PASS | 562 | 0 | 4 |
 | player_salary_cards | PASS | 562 | 0 | 0 |

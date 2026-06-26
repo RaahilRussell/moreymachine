@@ -59,6 +59,7 @@ Acquisition path is free_agent_market with feasibility 72.0.
 | spaces the floor. | structured_artifact | medium | none |
 | protects the rim. | structured_artifact | medium | none |
 | adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | adds secondary creation. | structured_artifact | medium | none |
 | helps defensive rebounding. | structured_artifact | medium | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition path is free_agent_market with feasibility 72.0.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Playoff-rotation claim is not verified. Bad-fit context: none identified.
+Kristaps Porziņģis: concern context for matchup big and regular-season size option. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he adds point-of-attack defense. Playoff-rotation claim is not verified. Bad-fit context: none identified.
 
 ## Missing Data
 

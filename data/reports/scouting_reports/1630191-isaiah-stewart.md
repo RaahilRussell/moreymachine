@@ -59,6 +59,7 @@ Acquisition status requires manual review before recommendation.
 | Cannot verify that he spaces the floor. | structured_artifact | high | none |
 | protects the rim. | structured_artifact | high | none |
 | adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | high | none |
 | helps defensive rebounding. | structured_artifact | high | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Low | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;candidate_status_manual_review_required;conflict_between_sources;contract_aav_missing;foul_data_missing;manual_review_required;normal_starting_center_slot_blocked_by_embiid;recent_transaction_present;shot_type_data_missing;tracking_data_missing;unknown_acquisition_path |
@@ -69,7 +70,7 @@ Acquisition status requires manual review before recommendation.
 
 ## Concerns
 
-Contradictions: normal_starting_center_slot_blocked_by_embiid, candidate_status_manual_review_required Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he adds secondary creation. Bad-fit context: starting next to Embiid.
+Isaiah Stewart: concern context for non-Embiid center minutes, backup center, or matchup big. Contradictions: normal_starting_center_slot_blocked_by_embiid, candidate_status_manual_review_required Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he adds point-of-attack defense. Bad-fit context: starting next to Embiid.
 
 ## Missing Data
 

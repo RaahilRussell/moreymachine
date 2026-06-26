@@ -59,6 +59,7 @@ Acquisition path is small_trade with feasibility 53.99.
 | Cannot verify that he spaces the floor. | structured_artifact | low | none |
 | Cannot verify that he protects the rim. | structured_artifact | low | none |
 | Cannot verify that he adds wing defense. | structured_artifact | medium | none |
+| Cannot verify that he adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | low | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | low | none |
 | Playoff-rotation claim is not verified. | structured_artifact | Medium | AAV not in public source; option status not in public source;base salary not in public source;base_salary_missing;contract_aav_missing;foul_data_missing;maxey_usage_overlap;no_clear_role;recent_transaction_present;shot_type_data_missing;small minutes sample;tracking_data_missing |
@@ -68,7 +69,7 @@ Acquisition path is small_trade with feasibility 53.99.
 
 ## Concerns
 
-Contradictions: maxey_usage_overlap, no_clear_role Unsupported claims: Projected role is no clear Sixers role from current evidence. Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Bad-fit context: high-usage guard lineups with Maxey.
+D'Angelo Russell: concern context for no clear Sixers role from current evidence. Contradictions: maxey_usage_overlap, no_clear_role Unsupported claims: Projected role is no clear Sixers role from current evidence. Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Bad-fit context: high-usage guard lineups with Maxey.
 
 ## Missing Data
 

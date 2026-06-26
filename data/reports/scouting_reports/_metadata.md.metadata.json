@@ -1,13 +1,13 @@
 {
   "artifact_name": "_metadata.md",
   "columns": [],
-  "created_at": "2026-06-26T09:04:00.177439+00:00",
+  "created_at": "2026-06-26T09:11:57.857149+00:00",
   "data_mode": [],
   "known_limitations": [
     "Markdown reports mirror generated profile data."
   ],
   "rows": null,
-  "run_id": "20260626T090400Z-64d0e172",
+  "run_id": "20260626T091157Z-124aed17",
   "seasons": [],
   "source_files": [
     "data/reports/player_profiles.parquet"

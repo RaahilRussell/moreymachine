@@ -214,6 +214,12 @@ def _claim_specs(
         _skill_claim(row, "wing_defense", "wing_defense_proxy", "adds wing defense"),
         _skill_claim(
             row,
+            "point_of_attack_defense",
+            "point_of_attack_defense_proxy",
+            "adds point-of-attack defense",
+        ),
+        _skill_claim(
+            row,
             "creation",
             "secondary_creation",
             "adds secondary creation",
@@ -434,7 +440,12 @@ def _why_like(row: dict[str, Any], allowed_claims: list[str]) -> str:
 def _concerns(
     row: dict[str, Any], bad_fit: dict[str, Any], blocked_claims: list[str]
 ) -> str:
-    pieces = []
+    pieces = [
+        (
+            f"{row.get('player_name')}: concern context for "
+            f"{row.get('expected_role_on_phi')}."
+        )
+    ]
     flags = _json_list(row.get("contradiction_flags"))
     if flags:
         pieces.append("Contradictions: " + ", ".join(flags[:4]))

@@ -59,6 +59,7 @@ Acquisition status requires manual review before recommendation.
 | Cannot verify that he spaces the floor. | structured_artifact | medium | none |
 | Cannot verify that he protects the rim. | structured_artifact | medium | none |
 | adds wing defense. | structured_artifact | medium | none |
+| adds point-of-attack defense. | structured_artifact | medium | none |
 | Cannot verify that he adds secondary creation. | structured_artifact | medium | none |
 | Cannot verify that he helps defensive rebounding. | structured_artifact | medium | none |
 | Has a simulated playoff-rotation pathway. | structured_artifact | Low | base_salary_missing;cap hit missing;cap_hit_missing;contract_aav_missing;foul_data_missing;manual_review_required;shot_type_data_missing;tracking_data_missing |
@@ -69,7 +70,7 @@ Acquisition status requires manual review before recommendation.
 
 ## Concerns
 
-Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: none identified.
+Jamir Watkins: concern context for point-of-attack defender next to Maxey. Unsupported claims: Do not project as a starter from current roster simulation. Cannot verify that he spaces the floor. Cannot verify that he protects the rim. Bad-fit context: none identified.
 
 ## Missing Data
 
