@@ -15,7 +15,7 @@ clear app errors and demo files are never substituted.
 ## Local Build Before Deploy
 
 ```bash
-cd /Users/raahil/moreymachine
+cd moreymachine
 source .venv/bin/activate
 export PYTHONPATH=src
 
@@ -77,7 +77,7 @@ registered table.
 ## Local App Run
 
 ```bash
-cd /Users/raahil/moreymachine
+cd moreymachine
 source .venv/bin/activate
 export PYTHONPATH=src
 streamlit run src/moreymachine/app/streamlit_app.py

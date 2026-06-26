@@ -305,7 +305,8 @@ Example format:
 Use Python 3.11 or newer.
 
 ```bash
-cd /Users/raahil/moreymachine
+git clone https://github.com/RaahilRussell/moreymachine.git
+cd moreymachine
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -329,7 +330,6 @@ MOREYMACHINE_NBA_LATEST_SEASON=2025-26
 Run from the repository root:
 
 ```bash
-cd /Users/raahil/moreymachine
 source .venv/bin/activate
 export PYTHONPATH=src
 
@@ -400,7 +400,7 @@ basketball-fit backtesting for that reason.
 ## Run The App
 
 ```bash
-cd /Users/raahil/moreymachine
+cd moreymachine
 source .venv/bin/activate
 export PYTHONPATH=src
 streamlit run src/moreymachine/app/streamlit_app.py
