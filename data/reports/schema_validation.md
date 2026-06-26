@@ -20,7 +20,7 @@
 | acquisition_feasibility | PASS | 562 | 0 | 0 |
 | candidate_scenarios | PASS | 4496 | 0 | 0 |
 | candidate_fit_rankings_all | PASS | 562 | 0 | 1 |
-| candidate_fit_rankings_v2 | SKIP | 0 | 0 | 1 |
+| candidate_fit_rankings_v2 | PASS | 562 | 0 | 0 |
 | explanation_claims | SKIP | 0 | 0 | 1 |
 | evidence_objects | SKIP | 0 | 0 | 1 |
 | player_profiles | SKIP | 0 | 0 | 1 |
@@ -149,9 +149,8 @@
 ### candidate_fit_rankings_v2
 
 - Path: `data/reports/candidate_fit_rankings_v2.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### explanation_claims
 
