@@ -14,7 +14,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from moreymachine.app.data_sources import data_source_table
+from moreymachine.app.data_sources import REGISTRY_BY_KEY, data_source_table
 from moreymachine.data.freshness import REFRESH_COMMAND
 from moreymachine.models.best_by_need import BEST_BY_NEED_PATH
 from moreymachine.models.explanation_engine_v2 import (
@@ -160,6 +160,14 @@ def frame(path: Path, label: str, command: str) -> pd.DataFrame:
         st.code(command, language="bash")
         return pd.DataFrame()
     return _read_frame(str(path), path.stat().st_mtime)
+
+
+def load(key: str) -> pd.DataFrame:
+    """Compatibility loader for registered real datasets."""
+    dataset = REGISTRY_BY_KEY[key]
+    if is_demo_path(dataset.path) or not dataset.path.exists():
+        return pd.DataFrame()
+    return _read_frame(str(dataset.path), dataset.path.stat().st_mtime)
 
 
 def json_artifact(path: Path, label: str, command: str) -> Any:
