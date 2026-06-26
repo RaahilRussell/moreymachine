@@ -84,13 +84,13 @@ def infer_artifact_metadata(
         artifact_name=artifact_path.name,
         created_at=datetime.now(UTC).isoformat(),
         run_id=run_id,
-        source_files=tuple(str(Path(p)) for p in source_files),
+        source_files=tuple(_display_path(Path(p)) for p in source_files),
         source_urls=tuple(source_urls),
         rows=rows,
         columns=columns,
         seasons=seasons,
         data_mode=data_mode,
-        upstream_artifacts=tuple(str(Path(p)) for p in upstream_artifacts),
+        upstream_artifacts=tuple(_display_path(Path(p)) for p in upstream_artifacts),
         known_limitations=tuple(known_limitations),
     )
 
@@ -149,3 +149,9 @@ def _unique_column_values(frame: pd.DataFrame, column: str) -> tuple[str, ...]:
         return ()
     return tuple(sorted(set(frame[column].dropna().astype(str))))
 
+
+def _display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(Path.cwd()))
+    except ValueError:
+        return str(path)

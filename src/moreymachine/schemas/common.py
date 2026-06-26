@@ -220,7 +220,7 @@ def summarize_results(results: list[SchemaValidationResult]) -> str:
     for result in results:
         lines.append(f"### {result.schema_name}")
         lines.append("")
-        lines.append(f"- Path: `{result.path}`")
+        lines.append(f"- Path: `{_display_path(result.path)}`")
         lines.append(f"- Present: `{result.present}`")
         if result.errors:
             lines.append("- Errors:")
@@ -233,3 +233,9 @@ def summarize_results(results: list[SchemaValidationResult]) -> str:
         lines.append("")
     return "\n".join(lines)
 
+
+def _display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(Path.cwd()))
+    except ValueError:
+        return str(path)
