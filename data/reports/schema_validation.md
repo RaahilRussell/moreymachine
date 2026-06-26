@@ -9,8 +9,8 @@
 | manual_contracts | PASS | 0 | 0 | 0 |
 | transactions | PASS | 110 | 0 | 1 |
 | roster_world_phi | PASS | 20 | 0 | 0 |
-| contender_blueprints | SKIP | 0 | 0 | 1 |
-| team_construction_archetypes | SKIP | 0 | 0 | 1 |
+| contender_blueprints | PASS | 14 | 0 | 0 |
+| team_construction_archetypes | PASS | 330 | 0 | 0 |
 | phi_roster_gaps | PASS | 19 | 0 | 3 |
 | sixers_gap_model | SKIP | 0 | 0 | 1 |
 | player_roles | PASS | 582 | 0 | 2 |
@@ -77,16 +77,14 @@
 ### contender_blueprints
 
 - Path: `data/features/contender_blueprints.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### team_construction_archetypes
 
 - Path: `data/features/team_construction_archetypes.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### phi_roster_gaps
 
