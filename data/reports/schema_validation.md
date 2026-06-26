@@ -16,7 +16,7 @@
 | player_roles | PASS | 582 | 0 | 2 |
 | player_skill_profiles | PASS | 582 | 0 | 0 |
 | candidate_core_compatibility | PASS | 11240 | 0 | 0 |
-| candidate_roster_simulation | SKIP | 0 | 0 | 1 |
+| candidate_roster_simulation | PASS | 562 | 0 | 0 |
 | acquisition_feasibility | SKIP | 0 | 0 | 1 |
 | candidate_scenarios | SKIP | 0 | 0 | 1 |
 | candidate_fit_rankings_all | PASS | 562 | 0 | 1 |
@@ -124,9 +124,8 @@
 ### candidate_roster_simulation
 
 - Path: `data/features/candidate_roster_simulation.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### acquisition_feasibility
 
