@@ -109,7 +109,7 @@ def main() -> None:
     st.set_page_config(page_title="MoreyMachine", page_icon="MM", layout="wide")
     st.sidebar.title("MoreyMachine")
     st.sidebar.caption("Unofficial 76ers roster-construction decision product.")
-    page = st.sidebar.radio("Page", PAGES)
+    page = st.sidebar.radio("Page", PAGES, key="main_page_radio")
     _sidebar_status()
     {
         "Product Summary": render_product_summary,
@@ -184,6 +184,22 @@ def text_artifact(path: Path) -> str:
     if not path.exists():
         return ""
     return _read_text(str(path), path.stat().st_mtime)
+
+
+def _safe_widget_key(text: str) -> str:
+    return (
+        str(text)
+        .lower()
+        .strip()
+        .replace(" ", "*")
+        .replace("/", "*")
+        .replace("-", "*")
+        .replace("(", "")
+        .replace(")", "")
+        .replace(".", "")
+        .replace(":", "")
+        .replace("|", "_")
+    )
 
 
 def render_product_summary() -> None:
@@ -311,6 +327,7 @@ def render_blueprints() -> None:
         selected = st.selectbox(
             "Blueprint",
             blueprints["blueprint_id"].astype(str).tolist(),
+            key="contender_blueprint_select",
         )
         row = blueprints[blueprints["blueprint_id"].astype(str) == selected]
         st.dataframe(row.T, use_container_width=True)
@@ -333,6 +350,7 @@ def render_gap_model() -> None:
     category = st.multiselect(
         "Gap category",
         sorted(gaps["gap_category"].dropna().astype(str).unique()),
+        key="gap_model_category_filter",
     )
     filtered = gaps
     if category:
@@ -366,7 +384,7 @@ def render_skill_profiles() -> None:
     )
     if skills.empty:
         return
-    player = _player_select(skills)
+    player = _player_select(skills, key_prefix="skill_profiles")
     row = skills[skills["player_name"] == player].head(1)
     st.dataframe(row.T, use_container_width=True)
     claim_cols = [col for col in skills.columns if col.endswith("_claim_allowed")]
@@ -400,7 +418,7 @@ def render_compatibility() -> None:
     )
     if compat.empty:
         return
-    player = _candidate_select(compat, "candidate_name")
+    player = _candidate_select(compat, "candidate_name", key_prefix="compatibility")
     filtered = compat[compat["candidate_name"] == player]
     core = filtered[
         filtered["sixers_player_name"].isin(
@@ -422,7 +440,7 @@ def render_roster_simulation() -> None:
     )
     if simulation.empty:
         return
-    player = _player_select(simulation)
+    player = _player_select(simulation, key_prefix="roster_simulation")
     st.dataframe(
         simulation[simulation["player_name"] == player].T,
         use_container_width=True,
@@ -454,12 +472,13 @@ def render_scenarios() -> None:
     )
     if scenarios.empty:
         return
-    player = _player_select(scenarios)
+    player = _player_select(scenarios, key_prefix="candidate_scenarios")
     filtered = scenarios[scenarios["player_name"] == player]
     st.dataframe(filtered, use_container_width=True, hide_index=True)
     scenario_type = st.multiselect(
         "Scenario type",
         sorted(scenarios["scenario_type"].dropna().astype(str).unique()),
+        key="candidate_scenarios_type_filter",
     )
     view = scenarios
     if scenario_type:
@@ -539,7 +558,10 @@ def render_target_board() -> None:
     for tab, (label, mask) in zip(tabs, tab_specs, strict=True):
         with tab:
             st.caption(_board_tab_caption(label))
-            render_board_filters(rankings[mask])
+            render_board_filters(
+                rankings[mask],
+                key_prefix=f"target_board_v2_{label}",
+            )
 
 
 def render_player_detail() -> None:
@@ -548,7 +570,7 @@ def render_player_detail() -> None:
     profiles = profiles_frame()
     if profiles.empty:
         return
-    player = _player_select(profiles)
+    player = _player_select(profiles, key_prefix="player_detail")
     profile = profiles[profiles["player_name"] == player].iloc[0].to_dict()
     render_profile(profile)
 
@@ -560,7 +582,13 @@ def render_player_compare() -> None:
     if profiles.empty:
         return
     names = profiles["player_name"].dropna().astype(str).sort_values().tolist()
-    selected = st.multiselect("Players", names, default=names[:2], max_selections=4)
+    selected = st.multiselect(
+        "Players",
+        names,
+        default=names[:2],
+        max_selections=4,
+        key="player_compare_players",
+    )
     if not selected:
         return
     view = profiles[profiles["player_name"].isin(selected)]
@@ -595,7 +623,11 @@ def render_best_by_need() -> None:
     )
     if best.empty:
         return
-    need = st.selectbox("Need", best["need_name"].astype(str).tolist())
+    need = st.selectbox(
+        "Need",
+        best["need_name"].astype(str).tolist(),
+        key="best_by_need_select",
+    )
     row = best[best["need_name"].astype(str) == need].iloc[0].to_dict()
     st.write(row.get("why_these_players_fit"))
     st.warning(row.get("what_to_watch_out_for"))
@@ -767,15 +799,24 @@ def profiles_frame() -> pd.DataFrame:
     )
 
 
-def render_board_filters(board: pd.DataFrame) -> None:
+def render_board_filters(board: pd.DataFrame, key_prefix: str) -> None:
     """Render a filterable board table."""
     if board.empty:
         st.info("No players in this segment.")
         return
+    prefix = _safe_widget_key(key_prefix)
     positions = sorted(board["position"].dropna().astype(str).unique())
     slots = sorted(board["primary_roster_slot"].dropna().astype(str).unique())
-    selected_positions = st.multiselect("Position", positions)
-    selected_slots = st.multiselect("Roster slot", slots)
+    selected_positions = st.multiselect(
+        "Position",
+        positions,
+        key=f"{prefix}_position_filter",
+    )
+    selected_slots = st.multiselect(
+        "Roster slot",
+        slots,
+        key=f"{prefix}_roster_slot_filter",
+    )
     view = board
     if selected_positions:
         view = view[view["position"].isin(selected_positions)]
@@ -906,14 +947,18 @@ def _artifact_row(path: Path) -> dict[str, Any]:
     }
 
 
-def _player_select(frame_: pd.DataFrame) -> str:
+def _player_select(frame_: pd.DataFrame, key_prefix: str) -> str:
     names = frame_["player_name"].dropna().astype(str).sort_values().unique().tolist()
-    return st.selectbox("Player", names)
+    return st.selectbox("Player", names, key=f"{_safe_widget_key(key_prefix)}_player")
 
 
-def _candidate_select(frame_: pd.DataFrame, column: str) -> str:
+def _candidate_select(frame_: pd.DataFrame, column: str, key_prefix: str) -> str:
     names = frame_[column].dropna().astype(str).sort_values().unique().tolist()
-    return st.selectbox("Candidate", names)
+    return st.selectbox(
+        "Candidate",
+        names,
+        key=f"{_safe_widget_key(key_prefix)}_candidate",
+    )
 
 
 def _board_tab_caption(label: str) -> str:
