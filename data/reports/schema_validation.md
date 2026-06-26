@@ -18,7 +18,7 @@
 | candidate_core_compatibility | PASS | 11240 | 0 | 0 |
 | candidate_roster_simulation | PASS | 562 | 0 | 0 |
 | acquisition_feasibility | PASS | 562 | 0 | 0 |
-| candidate_scenarios | SKIP | 0 | 0 | 1 |
+| candidate_scenarios | PASS | 4496 | 0 | 0 |
 | candidate_fit_rankings_all | PASS | 562 | 0 | 1 |
 | candidate_fit_rankings_v2 | SKIP | 0 | 0 | 1 |
 | explanation_claims | SKIP | 0 | 0 | 1 |
@@ -136,9 +136,8 @@
 ### candidate_scenarios
 
 - Path: `data/features/candidate_scenarios.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### candidate_fit_rankings_all
 
