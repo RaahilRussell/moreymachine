@@ -1,0 +1,42 @@
+{
+  "artifact_name": "player_profiles_index.parquet",
+  "columns": [
+    "player_profile_id",
+    "player_id",
+    "player_name",
+    "current_team",
+    "candidate_type",
+    "recommendation",
+    "profile_path"
+  ],
+  "created_at": "2026-06-26T08:59:49.506109+00:00",
+  "data_mode": [],
+  "known_limitations": [
+    "Profiles are generated from cached validated public-data artifacts.",
+    "Incomplete salary, transaction, injury, and availability data remain flagged."
+  ],
+  "rows": 562,
+  "run_id": "20260626T085949Z-39b34bcd",
+  "seasons": [],
+  "source_files": [
+    "data/reports/candidate_fit_rankings_v2.parquet",
+    "data/reports/player_explanations_v2.parquet",
+    "data/reports/player_salary_cards.parquet",
+    "data/features/player_help_impact.parquet",
+    "data/reports/player_fit_breakdowns.parquet",
+    "data/features/candidate_scenarios.parquet",
+    "data/reports/explanation_claims.parquet",
+    "data/reports/evidence_objects.parquet"
+  ],
+  "source_urls": [],
+  "upstream_artifacts": [
+    "data/reports/candidate_fit_rankings_v2.parquet",
+    "data/reports/player_explanations_v2.parquet",
+    "data/reports/player_salary_cards.parquet",
+    "data/features/player_help_impact.parquet",
+    "data/reports/player_fit_breakdowns.parquet",
+    "data/features/candidate_scenarios.parquet",
+    "data/reports/explanation_claims.parquet",
+    "data/reports/evidence_objects.parquet"
+  ]
+}

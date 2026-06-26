@@ -23,8 +23,8 @@
 | candidate_fit_rankings_v2 | PASS | 562 | 0 | 0 |
 | explanation_claims | PASS | 6994 | 0 | 0 |
 | evidence_objects | PASS | 6994 | 0 | 0 |
-| player_profiles | SKIP | 0 | 0 | 1 |
-| player_profiles_index | SKIP | 0 | 0 | 1 |
+| player_profiles | PASS | 562 | 0 | 0 |
+| player_profiles_index | PASS | 562 | 0 | 4 |
 | player_salary_cards | PASS | 562 | 0 | 0 |
 
 ## Details
@@ -167,16 +167,18 @@
 ### player_profiles
 
 - Path: `data/reports/player_profiles.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### player_profiles_index
 
 - Path: `data/reports/player_profiles_index.parquet`
-- Present: `False`
+- Present: `True`
 - Warnings:
-  - artifact not generated yet
+  - missing data mode column: data_mode
+  - missing missing-data column: missing_data_flags
+  - no source/source_url/source_note column present
+  - no pulled_at/effective_date column present
 
 ### player_salary_cards
 
