@@ -12,7 +12,7 @@
 | contender_blueprints | PASS | 14 | 0 | 0 |
 | team_construction_archetypes | PASS | 330 | 0 | 0 |
 | phi_roster_gaps | PASS | 19 | 0 | 3 |
-| sixers_gap_model | SKIP | 0 | 0 | 1 |
+| sixers_gap_model | PASS | 20 | 0 | 0 |
 | player_roles | PASS | 582 | 0 | 2 |
 | player_skill_profiles | SKIP | 0 | 0 | 1 |
 | candidate_core_compatibility | SKIP | 0 | 0 | 1 |
@@ -98,9 +98,8 @@
 ### sixers_gap_model
 
 - Path: `data/features/sixers_gap_model.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### player_roles
 
