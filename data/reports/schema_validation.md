@@ -14,7 +14,7 @@
 | phi_roster_gaps | PASS | 19 | 0 | 3 |
 | sixers_gap_model | PASS | 20 | 0 | 0 |
 | player_roles | PASS | 582 | 0 | 2 |
-| player_skill_profiles | SKIP | 0 | 0 | 1 |
+| player_skill_profiles | PASS | 582 | 0 | 0 |
 | candidate_core_compatibility | SKIP | 0 | 0 | 1 |
 | candidate_roster_simulation | SKIP | 0 | 0 | 1 |
 | acquisition_feasibility | SKIP | 0 | 0 | 1 |
@@ -112,9 +112,8 @@
 ### player_skill_profiles
 
 - Path: `data/features/player_skill_profiles.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### candidate_core_compatibility
 
