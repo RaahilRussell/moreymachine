@@ -13,7 +13,7 @@
     "data_mode",
     "missing_data_flags"
   ],
-  "created_at": "2026-06-26T08:49:39.889537+00:00",
+  "created_at": "2026-06-26T09:03:57.392529+00:00",
   "data_mode": [
     "derived"
   ],
@@ -22,7 +22,7 @@
     "Missing or stale data is surfaced rather than inferred."
   ],
   "rows": 6994,
-  "run_id": "20260626T084939Z-79a65295",
+  "run_id": "20260626T090357Z-9bf0090a",
   "seasons": [],
   "source_files": [
     "data/reports/candidate_fit_rankings_v2.parquet",

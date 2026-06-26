@@ -418,8 +418,8 @@ def _player_explanation(
 
 def _executive_summary(row: dict[str, Any]) -> str:
     return (
-        f"{row.get('player_name')} is a {row.get('recommendation')} as "
-        f"{row.get('expected_role_on_phi')} with score "
+        f"{row.get('player_name')} is classified as {row.get('recommendation')} "
+        f"for a {row.get('expected_role_on_phi')} role with score "
         f"{row.get('final_recommendation_score')}."
     )
 
