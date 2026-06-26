@@ -202,13 +202,21 @@ def _simulation_row(
         "george_flags": george_flags,
         "claim_allowed": {
             "spacing": _bool(row, "spot_up_spacing_claim_allowed"),
+            "shooting_gravity": _bool(row, "shooting_gravity_claim_allowed"),
+            "fake_spacing_risk": _bool(row, "fake_spacing_risk_claim_allowed"),
             "movement": _bool(row, "movement_shooting_claim_allowed"),
             "rim_protection": _bool(row, "rim_protection_claim_allowed"),
+            "defensive_rebounding": _bool(row, "defensive_rebounding_claim_allowed"),
             "wing_defense": _bool(row, "wing_defense_proxy_claim_allowed"),
             "poa_defense": _bool(row, "point_of_attack_defense_proxy_claim_allowed"),
+            "switchability": _bool(row, "switchability_proxy_claim_allowed"),
             "secondary_creation": _bool(row, "secondary_creation_claim_allowed"),
             "connector": _bool(row, "connector_passing_claim_allowed"),
+            "ball_security": _bool(row, "ball_security_claim_allowed"),
             "low_usage": _bool(row, "low_usage_fit_claim_allowed"),
+            "playoff_portability": _bool(row, "playoff_portability_base_claim_allowed"),
+            "sample_reliability": _bool(row, "sample_reliability_claim_allowed"),
+            "role_stability": _bool(row, "role_stability_claim_allowed"),
         },
     }
     missing = _missing_flags(row, contradiction_flags)

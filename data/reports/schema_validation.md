@@ -21,8 +21,8 @@
 | candidate_scenarios | PASS | 4496 | 0 | 0 |
 | candidate_fit_rankings_all | PASS | 562 | 0 | 1 |
 | candidate_fit_rankings_v2 | PASS | 562 | 0 | 0 |
-| explanation_claims | SKIP | 0 | 0 | 1 |
-| evidence_objects | SKIP | 0 | 0 | 1 |
+| explanation_claims | PASS | 6994 | 0 | 0 |
+| evidence_objects | PASS | 6994 | 0 | 0 |
 | player_profiles | SKIP | 0 | 0 | 1 |
 | player_profiles_index | SKIP | 0 | 0 | 1 |
 | player_salary_cards | SKIP | 0 | 0 | 1 |
@@ -155,16 +155,14 @@
 ### explanation_claims
 
 - Path: `data/reports/explanation_claims.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### evidence_objects
 
 - Path: `data/reports/evidence_objects.parquet`
-- Present: `False`
-- Warnings:
-  - artifact not generated yet
+- Present: `True`
+- Clean.
 
 ### player_profiles
 

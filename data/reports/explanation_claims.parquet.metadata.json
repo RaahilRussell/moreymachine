@@ -1,0 +1,40 @@
+{
+  "artifact_name": "explanation_claims.parquet",
+  "columns": [
+    "player_id",
+    "player_name",
+    "claim",
+    "claim_type",
+    "allowed",
+    "evidence_object_ids",
+    "confidence",
+    "source",
+    "pulled_at",
+    "data_mode",
+    "missing_data_flags"
+  ],
+  "created_at": "2026-06-26T08:49:39.889537+00:00",
+  "data_mode": [
+    "derived"
+  ],
+  "known_limitations": [
+    "Explanations can only claim what structured evidence supports.",
+    "Missing or stale data is surfaced rather than inferred."
+  ],
+  "rows": 6994,
+  "run_id": "20260626T084939Z-79a65295",
+  "seasons": [],
+  "source_files": [
+    "data/reports/candidate_fit_rankings_v2.parquet",
+    "data/features/player_skill_profiles.parquet",
+    "data/features/acquisition_feasibility.parquet",
+    "data/features/candidate_scenarios.parquet"
+  ],
+  "source_urls": [],
+  "upstream_artifacts": [
+    "data/reports/candidate_fit_rankings_v2.parquet",
+    "data/features/player_skill_profiles.parquet",
+    "data/features/acquisition_feasibility.parquet",
+    "data/features/candidate_scenarios.parquet"
+  ]
+}

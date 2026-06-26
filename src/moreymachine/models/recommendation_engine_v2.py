@@ -182,7 +182,7 @@ def _ranking_row(
     compat_rows = compatibility.get(player_id, {})
     possible_slots = _json_list(row.get("possible_roster_slots"))
     contradiction_flags = _json_list(row.get("contradiction_flags"))
-    gaps_addressed = _gaps_for_slots(possible_slots, gaps)
+    gaps_addressed = _gaps_for_slots(possible_slots, gaps, row)
     gaps_not_addressed = _gaps_not_addressed(gaps_addressed, gaps)
 
     scores = _component_scores(row, compat_rows, scenario_rows, gaps_addressed, gaps)
@@ -536,13 +536,59 @@ def _gap_lookup(gaps: pd.DataFrame) -> dict[str, list[dict[str, Any]]]:
 
 
 def _gaps_for_slots(
-    slots: list[str], gap_lookup: dict[str, list[dict[str, Any]]]
+    slots: list[str], gap_lookup: dict[str, list[dict[str, Any]]], row: dict[str, Any]
 ) -> list[str]:
     names = []
     for slot in slots:
         for gap in gap_lookup.get(slot, [])[:2]:
-            names.append(str(gap["gap_name"]))
+            if _gap_allowed_by_skills(row, gap):
+                names.append(str(gap["gap_name"]))
     return _ordered_unique(names)
+
+
+def _gap_allowed_by_skills(row: dict[str, Any], gap: dict[str, Any]) -> bool:
+    requirements = _json_list(gap.get("skill_requirements"))
+    for requirement in requirements:
+        if not _requirement_allowed(requirement, row):
+            return False
+    return True
+
+
+def _requirement_allowed(requirement: str, row: dict[str, Any]) -> bool:
+    mapping = {
+        "spot_up_spacing": "spot_up_spacing_claim_allowed",
+        "shooting_gravity": "shooting_gravity_claim_allowed",
+        "movement_shooting": "movement_shooting_claim_allowed",
+        "rim_protection": "rim_protection_claim_allowed",
+        "defensive_rebounding": "defensive_rebounding_claim_allowed",
+        "wing_defense_proxy": "wing_defense_proxy_claim_allowed",
+        "point_of_attack_defense_proxy": "point_of_attack_defense_proxy_claim_allowed",
+        "switchability_proxy": "switchability_proxy_claim_allowed",
+        "secondary_creation": "secondary_creation_claim_allowed",
+        "connector_passing": "connector_passing_claim_allowed",
+        "ball_security": "ball_security_claim_allowed",
+        "low_usage_fit": "low_usage_fit_claim_allowed",
+        "playoff_portability_base": "playoff_portability_base_claim_allowed",
+        "sample_reliability": "sample_reliability_claim_allowed",
+        "role_stability": "role_stability_claim_allowed",
+        "minutes_context": "sample_reliability_claim_allowed",
+    }
+    if requirement == "fake_spacing_risk":
+        return not _bool(row, "fake_spacing_risk_claim_allowed")
+    if requirement == "defense_or_spacing":
+        return _bool(row, "wing_defense_proxy_claim_allowed") or _bool(
+            row, "spot_up_spacing_claim_allowed"
+        )
+    if requirement == "usage_compatibility":
+        return "maxey_usage_overlap" not in _json_list(row.get("contradiction_flags"))
+    if requirement == "size":
+        return _bool(row, "switchability_proxy_claim_allowed") or _bool(
+            row, "rim_protection_claim_allowed"
+        )
+    column = mapping.get(requirement)
+    if column is None:
+        return True
+    return _bool(row, column)
 
 
 def _gaps_not_addressed(
