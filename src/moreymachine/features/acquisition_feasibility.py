@@ -36,6 +36,8 @@ class AcquisitionFeasibilityResult:
 
 def build_acquisition_feasibility(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     candidate_universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
     contracts_path: str | Path = CONTRACTS_PATH,
     transactions_path: str | Path = TRANSACTIONS_PATH,
@@ -43,13 +45,20 @@ def build_acquisition_feasibility(
     report_path: str | Path = ACQUISITION_FEASIBILITY_REPORT_PATH,
 ) -> AcquisitionFeasibilityResult:
     """Build contract/acquisition feasibility rows for candidates."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     candidates = pd.read_parquet(candidate_universe_path)
     contracts = _optional_parquet(contracts_path)
     transactions = _optional_parquet(transactions_path)
     merged = _merge_contracts(candidates, contracts)
     latest_transactions = _latest_transactions(transactions)
     rows = [
-        _acquisition_row(row, latest_transactions)
+        _acquisition_row(
+            row,
+            latest_transactions,
+            target_team=target_team,
+            context_mode=str(context.get("context_mode") or "unknown"),
+        )
         for row in merged.to_dict(orient="records")
     ]
     frame = pd.DataFrame(rows)
@@ -133,7 +142,11 @@ def _latest_transactions(transactions: pd.DataFrame) -> dict[int, dict[str, Any]
 
 
 def _acquisition_row(
-    row: dict[str, Any], latest_transactions: dict[int, dict[str, Any]]
+    row: dict[str, Any],
+    latest_transactions: dict[int, dict[str, Any]],
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     candidate_type = str(row.get("candidate_type") or "")
     player_id = int(row["player_id"])
@@ -166,6 +179,7 @@ def _acquisition_row(
         "salary_source": row.get("salary_source"),
     }
     return {
+        "target_team": target_team,
         "candidate_id": player_id,
         "candidate_name": row.get("player_name"),
         "candidate_type": candidate_type,
@@ -188,6 +202,7 @@ def _acquisition_row(
         "manual_review_required": bool(manual_review),
         "evidence": json.dumps(evidence, sort_keys=True),
         "source": row.get("salary_source") or "candidate_universe/contracts",
+        "source_note": f"context_mode={context_mode}",
         "source_url": row.get("source_url") or row.get("salary_source") or "",
         "pulled_at": row.get("salary_pulled_at")
         or row.get("pulled_at_contract")

@@ -180,6 +180,10 @@ COPY_ARTIFACTS: dict[str, tuple[tuple[Path, str, str], ...]] = {
     "acquisition_feasibility": (
         (FEATURES_DATA_DIR / "acquisition_feasibility.parquet", "features", "acquisition_feasibility.parquet"),
     ),
+    "opportunity_cost": (
+        (FEATURES_DATA_DIR / "opportunity_cost.parquet", "features", "opportunity_cost.parquet"),
+        (REPORTS_DATA_DIR / "opportunity_cost.md", "reports", "opportunity_cost.md"),
+    ),
     "candidate_scenarios": (
         (FEATURES_DATA_DIR / "candidate_scenarios.parquet", "features", "candidate_scenarios.parquet"),
     ),

@@ -40,6 +40,8 @@ class RosterSimulationResult:
 
 def simulate_roster_slots(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     candidate_universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
     skill_profiles_path: str | Path = PLAYER_SKILL_PROFILES_PATH,
     compatibility_path: str | Path = CANDIDATE_CORE_COMPATIBILITY_PATH,
@@ -48,6 +50,8 @@ def simulate_roster_slots(
     report_path: str | Path = ROSTER_SIMULATION_EXAMPLES_PATH,
 ) -> RosterSimulationResult:
     """Simulate likely PHI roster slots for every acquisition candidate."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     candidates = pd.read_parquet(candidate_universe_path)
     skills = pd.read_parquet(skill_profiles_path)
     compatibility = pd.read_parquet(compatibility_path)
@@ -58,7 +62,13 @@ def simulate_roster_slots(
     gap_priority = _slot_priority(gaps)
     compatibility_lookup = _compatibility_lookup(compatibility)
     rows = [
-        _simulation_row(row, compatibility_lookup, gap_priority)
+        _simulation_row(
+            row,
+            compatibility_lookup,
+            gap_priority,
+            target_team=target_team,
+            context_mode=str(context.get("context_mode") or "unknown"),
+        )
         for row in frame.to_dict(orient="records")
     ]
     out = pd.DataFrame(rows)
@@ -124,6 +134,9 @@ def _simulation_row(
     row: dict[str, Any],
     compatibility_lookup: dict[int, dict[str, dict[str, Any]]],
     gap_priority: dict[str, float],
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     player_id = int(row["player_id"])
     position = str(row.get("position") or row.get("position_skill") or "")
@@ -222,6 +235,7 @@ def _simulation_row(
     missing = _missing_flags(row, contradiction_flags)
 
     return {
+        "target_team": target_team,
         "player_id": player_id,
         "player_name": row.get("player_name"),
         "possible_roster_slots": json.dumps(possible_slots),
@@ -248,10 +262,18 @@ def _simulation_row(
         "role_confidence": role_confidence,
         "data_evidence": json.dumps(evidence, sort_keys=True),
         "source": "candidate_universe + skill_profiles + compatibility + gap_model",
+        "source_note": f"context_mode={context_mode}",
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
         "missing_data_flags": ";".join(missing) if missing else "none",
     }
+
+
+def build_roster_simulation(
+    **kwargs: Any,
+) -> RosterSimulationResult:
+    """Compatibility alias used by the team-scoped pipeline."""
+    return simulate_roster_slots(**kwargs)
 
 
 def _possible_slots(
