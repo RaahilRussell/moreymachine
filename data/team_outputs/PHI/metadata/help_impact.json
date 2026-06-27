@@ -1,0 +1,8 @@
+{
+  "message": "help_impact complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/player_help_impact.parquet"
+  ],
+  "stage_name": "help_impact",
+  "status": "success"
+}

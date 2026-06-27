@@ -1,0 +1,9 @@
+{
+  "message": "opportunity_cost complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/opportunity_cost.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/opportunity_cost.md"
+  ],
+  "stage_name": "opportunity_cost",
+  "status": "success"
+}

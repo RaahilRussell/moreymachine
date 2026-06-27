@@ -1,0 +1,10 @@
+{
+  "message": "player_profiles complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_profiles.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_profiles.json",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_profiles_index.parquet"
+  ],
+  "stage_name": "player_profiles",
+  "status": "success"
+}

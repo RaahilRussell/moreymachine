@@ -1,0 +1,9 @@
+{
+  "message": "action_cards complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/action_cards.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/action_cards.json"
+  ],
+  "stage_name": "action_cards",
+  "status": "success"
+}

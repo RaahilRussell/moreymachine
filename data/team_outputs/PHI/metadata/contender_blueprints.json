@@ -1,0 +1,10 @@
+{
+  "message": "contender_blueprints complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/contender_blueprints.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/team_construction_archetypes.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/contender_blueprints.md"
+  ],
+  "stage_name": "contender_blueprints",
+  "status": "success"
+}

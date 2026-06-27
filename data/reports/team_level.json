@@ -1,0 +1,55 @@
+{
+  "closest_archetype": "Wing Depth Switchable",
+  "closest_benchmark_teams": [
+    "2024-25 OKC",
+    "2025-26 OKC",
+    "2025-26 DET",
+    "2025-26 SAS",
+    "2021-22 BOS"
+  ],
+  "confidence": "High",
+  "contender_percentile": 43.33,
+  "created_at": "2026-06-27T06:36:35.186030+00:00",
+  "data_mode": "derived",
+  "evidence": [
+    "latest cached team fingerprint for PHI: season 2025-26",
+    "closest benchmark archetype: Wing Depth Switchable",
+    "20 gap-model rows available"
+  ],
+  "level_score": 51.87,
+  "main_strengths": [
+    "No clear above-median team-strength signal in cached data"
+  ],
+  "main_weaknesses": [
+    "Matchup big option",
+    "Closing lineup flexibility",
+    "Bench creation",
+    "Real spacing vs fake spacing",
+    "Stretch-forward option",
+    "team defense trails contender-level benchmarks"
+  ],
+  "missing_data_flags": [
+    "none"
+  ],
+  "season": "2025-26",
+  "source_summary": "team_fingerprints; contender_blueprints; team_construction_archetypes; gap_model; manual_team_context",
+  "team_abbr": "PHI",
+  "team_level": "Play-In / High-Variance",
+  "team_name": "Philadelphia 76ers",
+  "what_level_requires_next": [
+    "add playoff rotation wings",
+    "add low-mistake role players",
+    "add multiple playable wings",
+    "add switchable forwards",
+    "Matchup big option: matchup big, mobile big",
+    "Closing lineup flexibility: two-way role player, spacer who can defend",
+    "Bench creation: secondary creator, bench guard with passing and turnover evidence"
+  ],
+  "why_this_level": [
+    "net rating is -0.1 in the latest cached season",
+    "net-rating percentile component is 43.33",
+    "defense percentile component is 43.33",
+    "gap-health component is 62.68",
+    "top gap priorities are Matchup big option, Closing lineup flexibility, Bench creation"
+  ]
+}

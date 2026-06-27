@@ -1,0 +1,8 @@
+{
+  "message": "player_categorization complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/player_categorizations.parquet"
+  ],
+  "stage_name": "player_categorization",
+  "status": "success"
+}

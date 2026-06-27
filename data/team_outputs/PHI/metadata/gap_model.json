@@ -1,0 +1,9 @@
+{
+  "message": "gap_model complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/gap_model.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/gap_model.md"
+  ],
+  "stage_name": "gap_model",
+  "status": "success"
+}

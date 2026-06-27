@@ -1,0 +1,8 @@
+{
+  "message": "move_recommendations complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/move_recommendations.parquet"
+  ],
+  "stage_name": "move_recommendations",
+  "status": "success"
+}

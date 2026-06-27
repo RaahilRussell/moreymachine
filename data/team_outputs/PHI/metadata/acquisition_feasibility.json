@@ -1,0 +1,8 @@
+{
+  "message": "acquisition_feasibility complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/acquisition_feasibility.parquet"
+  ],
+  "stage_name": "acquisition_feasibility",
+  "status": "success"
+}

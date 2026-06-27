@@ -1,0 +1,8 @@
+{
+  "message": "player_skill_profiles complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/player_skill_profiles.parquet"
+  ],
+  "stage_name": "player_skill_profiles",
+  "status": "success"
+}

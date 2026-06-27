@@ -1,0 +1,8 @@
+{
+  "message": "compatibility_matrix complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/compatibility_matrix.parquet"
+  ],
+  "stage_name": "compatibility_matrix",
+  "status": "success"
+}

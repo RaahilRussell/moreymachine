@@ -1,0 +1,9 @@
+{
+  "message": "roster_world complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/roster_world.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/roster_world.md"
+  ],
+  "stage_name": "roster_world",
+  "status": "success"
+}

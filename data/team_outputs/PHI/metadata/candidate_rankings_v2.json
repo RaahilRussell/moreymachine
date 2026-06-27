@@ -1,0 +1,13 @@
+{
+  "message": "candidate_rankings_v2 complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_v2.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_v2.csv",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_realistic_v2.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_free_agents_v2.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_trade_targets_v2.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/candidate_fit_rankings_watchlist_v2.parquet"
+  ],
+  "stage_name": "candidate_rankings_v2",
+  "status": "success"
+}

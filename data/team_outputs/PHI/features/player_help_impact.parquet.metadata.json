@@ -1,0 +1,35 @@
+{
+  "artifact_name": "player_help_impact",
+  "columns": [
+    "player_id",
+    "player_name",
+    "top_help_areas",
+    "does_not_help",
+    "helps_most_summary",
+    "does_not_help_summary",
+    "source",
+    "pulled_at",
+    "data_mode",
+    "missing_data_flags",
+    "source_summary",
+    "run_id",
+    "confidence",
+    "evidence"
+  ],
+  "created_at": "2026-06-27T06:36:37.091851+00:00",
+  "data_mode": "derived",
+  "known_limitations": [
+    "Team-scoped output is generated from cached local artifacts.",
+    "No live API calls are made inside Streamlit page loads."
+  ],
+  "rows": 562,
+  "run_id": "20260627T063633Z-3007399f",
+  "source_files": [
+    "/Users/raahil/moreymachine/data/features/player_help_impact.parquet"
+  ],
+  "source_urls": [],
+  "team": "PHI",
+  "upstream_artifacts": [
+    "/Users/raahil/moreymachine/data/features/player_help_impact.parquet"
+  ]
+}

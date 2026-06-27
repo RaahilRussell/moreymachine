@@ -1,0 +1,8 @@
+{
+  "message": "candidate_scenarios complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/candidate_scenarios.parquet"
+  ],
+  "stage_name": "candidate_scenarios",
+  "status": "success"
+}

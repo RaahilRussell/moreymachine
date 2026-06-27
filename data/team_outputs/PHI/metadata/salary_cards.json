@@ -1,0 +1,8 @@
+{
+  "message": "salary_cards complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_salary_cards.parquet"
+  ],
+  "stage_name": "salary_cards",
+  "status": "success"
+}

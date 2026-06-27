@@ -1,0 +1,10 @@
+{
+  "created_at": "2026-06-27T06:36:43.258662+00:00",
+  "missing_data_flags": [
+    "none"
+  ],
+  "structured_packet_path": "/Users/raahil/moreymachine/data/team_outputs/PHI/narratives/gm_narrative_packet.json",
+  "summary_markdown": "# PHI GM Executive Summary\n\nLevel: Play-In / High-Variance (51.87).\nClosest benchmark/archetype: Wing Depth Switchable.\n\n## What To Do First\n- Best overall action: Jaylin Williams: Consider Jaylin Williams only for low-usage spacer because the structured board links him to Stretch-forward option, Playoff-playable size, Wing defense.\n- Best realistic free-agent action: Rui Hachimura: Consider Rui Hachimura only for low-usage spacer because the structured board links him to Stretch-forward option, Playoff-playable size, Wing defense.\n- Best realistic trade action: Jaylin Williams: Consider Jaylin Williams only for low-usage spacer because the structured board links him to Stretch-forward option, Playoff-playable size, Wing defense.\n\n## What Not To Do\n- Top avoid move: Myles Turner: opportunity cost: low_acquisition_feasibility, high_salary_matching_complexity, embiid_blocks_normal_starting_center; does not solve: Matchup big option, Closing lineup flexibility, Bench creation; missing/stale data:  AAV not in public source,  option status not in public source, base salary not in public source\n\n## What Could Be Wrong\n- No packet-level artifact is missing, but public salary/status data can still be incomplete.\n\n## Evidence Boundary\n- Narrative may only summarize this JSON. It cannot add salary, injury, availability, transaction, or team-intent claims.",
+  "summary_source": "deterministic_fallback",
+  "team_abbr": "PHI"
+}

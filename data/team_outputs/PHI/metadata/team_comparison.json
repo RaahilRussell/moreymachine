@@ -1,0 +1,9 @@
+{
+  "message": "team_comparison complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/team_comparison.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/team_comparison.json"
+  ],
+  "stage_name": "team_comparison",
+  "status": "success"
+}

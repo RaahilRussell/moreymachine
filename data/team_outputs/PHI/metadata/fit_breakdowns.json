@@ -1,0 +1,9 @@
+{
+  "message": "fit_breakdowns complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_fit_breakdowns.parquet",
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/reports/player_fit_breakdowns.json"
+  ],
+  "stage_name": "fit_breakdowns",
+  "status": "success"
+}

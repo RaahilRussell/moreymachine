@@ -1,0 +1,32 @@
+{
+  "artifact_name": "product_validation_v2",
+  "columns": [
+    "team",
+    "passed",
+    "failures",
+    "created_at"
+  ],
+  "created_at": "2026-06-27T06:37:07.094981+00:00",
+  "data_mode": "derived",
+  "known_limitations": [
+    "Validation checks product contracts and guardrails, not basketball truth."
+  ],
+  "rows": 1,
+  "run_id": "20260627T063707Z-8d47132c",
+  "source_files": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI"
+  ],
+  "source_urls": [],
+  "team": "PHI",
+  "upstream_artifacts": [
+    "reports/team_level.parquet",
+    "reports/team_level.json",
+    "reports/team_comparison.parquet",
+    "features/gap_model.parquet",
+    "reports/move_recommendations.parquet",
+    "reports/action_cards.parquet",
+    "reports/action_cards.json",
+    "reports/candidate_fit_rankings_v2.parquet",
+    "reports/player_profiles.parquet"
+  ]
+}

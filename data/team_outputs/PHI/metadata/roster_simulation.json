@@ -1,0 +1,8 @@
+{
+  "message": "roster_simulation complete",
+  "output_paths": [
+    "/Users/raahil/moreymachine/data/team_outputs/PHI/features/roster_simulation.parquet"
+  ],
+  "stage_name": "roster_simulation",
+  "status": "success"
+}
