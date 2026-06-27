@@ -26,7 +26,7 @@ from moreymachine.utils.paths import (
     REPORTS_DATA_DIR,
 )
 
-TEAM_CONTEXT_PATH = MANUAL_DATA_DIR / "team_context" / "phi.yml"
+TEAM_CONTEXT_PATH = MANUAL_DATA_DIR / "team_context" / "PHI.yml"
 ROSTER_WORLD_PATH = PROCESSED_DATA_DIR / "roster_world_phi.parquet"
 ROSTER_WORLD_REPORT_PATH = REPORTS_DATA_DIR / "roster_world_phi.md"
 
@@ -45,6 +45,11 @@ class RosterWorldResult:
 
 def build_roster_world(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
+    no_ollama: bool = False,
+    skip_refresh: bool = False,
+    force: bool = False,
     roster_reference_path: str | Path = CURRENT_ROSTER_REFERENCE_PATH,
     player_seasons_path: str | Path = PLAYER_SEASONS_PATH,
     player_bio_path: str | Path = PLAYER_BIO_PATH,
@@ -53,7 +58,9 @@ def build_roster_world(
     report_path: str | Path = ROSTER_WORLD_REPORT_PATH,
 ) -> RosterWorldResult:
     """Build the PHI roster-world artifact."""
-    context = load_team_context(team_context_path)
+    del no_ollama, skip_refresh, force
+    context = context or load_team_context(team_context_path)
+    context = _normalize_context(context, team)
     roster = pd.read_parquet(roster_reference_path)
     seasons = _latest_seasons(pd.read_parquet(player_seasons_path))
     bio = _optional_parquet(player_bio_path)
@@ -86,12 +93,12 @@ def build_roster_world(
             ),
         )
 
-    core_names = {row["player_name"] for row in context.get("core_players", [])}
+    core_names = set(_core_roles(context))
     return RosterWorldResult(
         rows=len(world),
         core_players=int(world["player_name"].isin(core_names).sum()),
-        open_slots=len(context.get("open_roster_slots", [])),
-        blocked_slots=len(context.get("blocked_roster_slots", [])),
+        open_slots=len(_open_slots(context)),
+        blocked_slots=len(_blocked_slots(context)),
         output_path=output,
         report_path=report,
     )
@@ -144,15 +151,19 @@ def _merge_roster_inputs(
 
 
 def _build_world_rows(frame: pd.DataFrame, context: dict[str, Any]) -> pd.DataFrame:
-    core_roles = {
-        item["player_name"]: item
-        for item in context.get("core_players", [])
-        if "player_name" in item
-    }
+    core_roles = _core_roles(context)
     likely_starters = set(context.get("likely_starters", []))
     high_rotation = set(context.get("high_rotation_players", []))
-    assumptions = "; ".join(context.get("assumptions", []))
-    source = "current_roster_reference; player_seasons; player_bio; phi.yml"
+    assumptions = "; ".join(
+        str(item)
+        for item in (
+            context.get("assumptions")
+            or context.get("lineup_constraints")
+            or context.get("manual_notes")
+            or []
+        )
+    )
+    source = "current_roster_reference; player_seasons; player_bio; team_context"
     pulled_at = datetime.now(UTC).date().isoformat()
 
     records = []
@@ -379,10 +390,12 @@ def _missing_flags(row: dict) -> str:
 def _render_report(world: pd.DataFrame, context: dict[str, Any]) -> str:
     slot_counts = world["roster_slot"].value_counts().to_dict()
     core = world[world["locked_role_status"] == "locked_core_role"]
+    team_label = context.get("team_abbr") or context.get("target_team") or "PHI"
+    team_name = context.get("team_name") or team_label
     lines = [
-        "# Current Sixers Roster World",
+        f"# Current {team_name} Roster World",
         "",
-        f"- Team: `{context.get('target_team', 'PHI')}`",
+        f"- Team: `{team_label}`",
         f"- Season: `{context.get('season', '')}`",
         f"- Players: `{len(world)}`",
         f"- Core players represented: `{len(core)}`",
@@ -400,11 +413,11 @@ def _render_report(world: pd.DataFrame, context: dict[str, Any]) -> str:
             "",
             "## Open Slots",
             "",
-            *[f"- {slot}" for slot in context.get("open_roster_slots", [])],
+            *[f"- {slot}" for slot in _open_slots(context)],
             "",
             "## Blocked Slots",
             "",
-            *[f"- {slot}" for slot in context.get("blocked_roster_slots", [])],
+            *[f"- {slot}" for slot in _blocked_slots(context)],
             "",
             "## Roster Slot Counts",
             "",
@@ -434,6 +447,57 @@ def _render_report(world: pd.DataFrame, context: dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _normalize_context(context: dict[str, Any], team: str) -> dict[str, Any]:
+    normalized = dict(context)
+    normalized.setdefault("team_abbr", team)
+    if "open_roster_slots" not in normalized and "open_slots" in normalized:
+        normalized["open_roster_slots"] = normalized["open_slots"]
+    if "blocked_roster_slots" not in normalized and "blocked_slots" in normalized:
+        normalized["blocked_roster_slots"] = normalized["blocked_slots"]
+    return normalized
+
+
+def _core_roles(context: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    roles: dict[str, dict[str, Any]] = {}
+    locked_roles = context.get("locked_roles") or {}
+    if isinstance(locked_roles, dict):
+        for name, payload in locked_roles.items():
+            if isinstance(payload, dict):
+                role = dict(payload)
+            else:
+                role = {"role": payload}
+            role["player_name"] = name
+            role.setdefault("locked_role", role.get("role") or "core_player")
+            roles[str(name)] = role
+
+    core_players = context.get("core_players") or []
+    if isinstance(core_players, list):
+        for item in core_players:
+            if isinstance(item, dict):
+                name = item.get("player_name")
+                if name:
+                    role = dict(item)
+                    role.setdefault("locked_role", role.get("role") or "core_player")
+                    roles.setdefault(str(name), role)
+            elif item:
+                name = str(item)
+                roles.setdefault(
+                    name,
+                    {"player_name": name, "locked_role": "core_player"},
+                )
+    return roles
+
+
+def _open_slots(context: dict[str, Any]) -> list[str]:
+    slots = context.get("open_roster_slots") or context.get("open_slots") or []
+    return [str(slot) for slot in slots]
+
+
+def _blocked_slots(context: dict[str, Any]) -> list[str]:
+    slots = context.get("blocked_roster_slots") or context.get("blocked_slots") or []
+    return [str(slot) for slot in slots]
 
 
 def _latest_seasons(frame: pd.DataFrame) -> pd.DataFrame:
