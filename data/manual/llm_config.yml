@@ -1,0 +1,7 @@
+enabled: false
+model: llama3.1
+base_url: http://localhost:11434
+timeout_seconds: 45
+max_tokens: 700
+temperature: 0.2
+cache_enabled: true
