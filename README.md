@@ -152,30 +152,37 @@ Default config lives at `data/manual/llm_config.yml`.
 
 ## Professional App Design
 
-The Streamlit app is intentionally summary-first. No page should open with a giant dataframe before explaining what matters.
+The Streamlit app is a summary-first GM console — the "War Room". No page opens with a giant dataframe before explaining what matters. The visual system (`src/moreymachine/app/ui.py`) gives meaning a consistent color vocabulary: court navy for the brand, a single hardwood-amber accent, signal red reserved for "avoid" and high-severity gaps, and mono numerals so every metric reads like a scoreboard.
 
-The page order follows the GM workflow:
+Navigation is grouped into the GM's actual workflow instead of a flat list, using `st.navigation` sections:
 
 ```text
-GM Executive Summary
--> Product Summary
--> Team Selector / Analyze Any Team
--> Data Sources / Freshness
--> Current Team Roster World
--> Team Level
--> Contender Blueprint Explorer
--> Benchmark Path
--> Gap Priority Model
--> Move Recommendations
--> Target Board v2
--> Player Detail v2
--> Player Compare
--> Move Compare
--> Best By Need
--> diagnostics, backtest proof, and limitations
+War Room
+  -> Command Center            (status band, scoreboard KPIs, do-first decision
+                                cards, biggest gaps, closest benchmark, GM read)
+Team Read
+  -> Roster & Depth Chart      (depth chart by role, contention window, composition)
+  -> Team Level
+  -> Benchmark Path            (distance-by-dimension bars)
+  -> Gap Priority Model        (severity-ranked bars)
+  -> Contender Blueprints
+Decisions
+  -> Move Recommendations      (action cards rendered as decision cards)
+  -> Target Board
+  -> Best By Need
+  -> Move Compare
+Player Research
+  -> Player Detail / Compare / Skill Profiles / Core Compatibility
+  -> Roster Slot Simulation / Candidate Scenarios
+Front Office Ops
+  -> Transaction Review / Manual Review Queue / Data Sources / Analyze Any Team
+Trust & Method
+  -> Reasoning Diagnostics / Backtest Proof / Limitations / How It Reasons
 ```
 
-Repeated widgets use stable unique keys. Empty states are supposed to be clean and useful: if an artifact is missing, the UI should show the exact command to rebuild it.
+The Command Center is the landing page: a team status band, a scoreboard KPI strip, the top "do first" moves as decision cards (each with the call, why to do it, and what would make it wrong), the biggest roster gaps as severity bars, and the distance to the closest contender benchmark. The Roster & Depth Chart adds the planning view a GM opens first — who is on the team, where they slot, and how the contention window looks against the core's ages.
+
+Repeated widgets use stable unique keys. Empty states are clean and useful: if an artifact is missing, the UI shows the exact command to rebuild it.
 
 ## Interactive Player Profiles
 
