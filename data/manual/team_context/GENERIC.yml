@@ -1,0 +1,43 @@
+team_abbr: GENERIC
+team_name: Generic NBA Team
+context_mode: generic
+season: "latest"
+
+core_players: []
+locked_roles: {}
+
+likely_starters: []
+high_rotation_players: []
+
+open_slots:
+  - backup_center
+  - movement_shooter
+  - wing_defender
+  - point_of_attack_defender
+  - low_usage_connector
+  - bench_creator
+  - stretch_forward
+  - regular_season_depth
+
+blocked_slots: []
+lineup_constraints: []
+
+strategic_needs:
+  - shooting_volume
+  - point_of_attack_defense
+  - wing_depth
+  - bench_creation
+  - rebounding
+  - regular_season_depth
+
+must_not_violate_rules:
+  - Do not claim spacing without shooting volume evidence.
+  - Do not claim defense without defensive evidence.
+  - Do not treat theoretical star fits as realistic actions.
+
+manual_notes:
+  - Generic context is a low-confidence fallback for teams without custom roster assumptions.
+  - It should not be treated as team-specific strategy.
+
+sources:
+  - Generic MoreyMachine context fallback.
