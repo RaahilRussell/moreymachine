@@ -195,6 +195,13 @@ COPY_ARTIFACTS: dict[str, tuple[tuple[Path, str, str], ...]] = {
         (REPORTS_DATA_DIR / "candidate_fit_rankings_trade_targets_v2.parquet", "reports", "candidate_fit_rankings_trade_targets_v2.parquet"),
         (REPORTS_DATA_DIR / "candidate_fit_rankings_watchlist_v2.parquet", "reports", "candidate_fit_rankings_watchlist_v2.parquet"),
     ),
+    "move_recommendations": (
+        (REPORTS_DATA_DIR / "move_recommendations.parquet", "reports", "move_recommendations.parquet"),
+    ),
+    "action_cards": (
+        (REPORTS_DATA_DIR / "action_cards.parquet", "reports", "action_cards.parquet"),
+        (REPORTS_DATA_DIR / "action_cards.json", "reports", "action_cards.json"),
+    ),
     "player_categorization": (
         (FEATURES_DATA_DIR / "player_categorizations.parquet", "features", "player_categorizations.parquet"),
     ),

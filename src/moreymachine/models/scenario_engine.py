@@ -45,6 +45,8 @@ class ScenarioBuildResult:
 
 def build_candidate_scenarios(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     roster_simulation_path: str | Path = CANDIDATE_ROSTER_SIMULATION_PATH,
     acquisition_feasibility_path: str | Path = ACQUISITION_FEASIBILITY_PATH,
     compatibility_path: str | Path = CANDIDATE_CORE_COMPATIBILITY_PATH,
@@ -53,6 +55,8 @@ def build_candidate_scenarios(
     report_path: str | Path = SCENARIO_EXAMPLES_PATH,
 ) -> ScenarioBuildResult:
     """Build all scenario rows for every candidate."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     simulation = pd.read_parquet(roster_simulation_path)
     acquisition = pd.read_parquet(acquisition_feasibility_path)
     compatibility = pd.read_parquet(compatibility_path)
@@ -71,7 +75,14 @@ def build_candidate_scenarios(
     for row in merged.to_dict(orient="records"):
         for scenario_type in SCENARIO_TYPES:
             rows.append(
-                _scenario_row(row, scenario_type, compatibility_summary, gap_lookup)
+                _scenario_row(
+                    row,
+                    scenario_type,
+                    compatibility_summary,
+                    gap_lookup,
+                    target_team=target_team,
+                    context_mode=str(context.get("context_mode") or "unknown"),
+                )
             )
     frame = pd.DataFrame(rows)
 
@@ -139,6 +150,9 @@ def _scenario_row(
     scenario_type: str,
     compatibility: dict[int, dict[str, dict[str, Any]]],
     gap_lookup: dict[str, list[dict[str, Any]]],
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     player_id = int(row["player_id"])
     player_name = str(row.get("player_name") or "")
@@ -169,6 +183,7 @@ def _scenario_row(
         scenario_missing.extend(contradictions)
 
     return {
+        "target_team": target_team,
         "scenario_id": f"{player_id}_{scenario_type}",
         "player_id": player_id,
         "player_name": player_name,
@@ -186,6 +201,7 @@ def _scenario_row(
         "confidence": _scenario_confidence(row, scenario_type, scenario_missing),
         "recommendation_under_this_scenario": text["recommendation"],
         "source": "roster_simulation + acquisition_feasibility + compatibility",
+        "source_note": f"context_mode={context_mode}",
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
         "missing_data_flags": ";".join(sorted(set(scenario_missing)))

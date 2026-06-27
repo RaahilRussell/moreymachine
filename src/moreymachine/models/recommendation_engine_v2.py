@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,6 +19,7 @@ from moreymachine.features.gap_model import SIXERS_GAP_MODEL_PATH
 from moreymachine.features.player_skill_profiles import PLAYER_SKILL_PROFILES_PATH
 from moreymachine.features.roster_simulation import CANDIDATE_ROSTER_SIMULATION_PATH
 from moreymachine.models.scenario_engine import CANDIDATE_SCENARIOS_PATH
+from moreymachine.models.opportunity_cost import OPPORTUNITY_COST_PATH
 from moreymachine.utils.paths import CANDIDATE_UNIVERSE_PATH, REPORTS_DATA_DIR
 
 CANDIDATE_FIT_RANKINGS_V2_PATH = REPORTS_DATA_DIR / "candidate_fit_rankings_v2.parquet"
@@ -79,6 +81,7 @@ def rank_candidates_v2(
     acquisition_feasibility_path: str | Path = ACQUISITION_FEASIBILITY_PATH,
     compatibility_path: str | Path = CANDIDATE_CORE_COMPATIBILITY_PATH,
     scenarios_path: str | Path = CANDIDATE_SCENARIOS_PATH,
+    opportunity_cost_path: str | Path = OPPORTUNITY_COST_PATH,
     gap_model_path: str | Path = SIXERS_GAP_MODEL_PATH,
     output_path: str | Path = CANDIDATE_FIT_RANKINGS_V2_PATH,
     csv_path: str | Path = CANDIDATE_FIT_RANKINGS_V2_CSV_PATH,
@@ -90,6 +93,7 @@ def rank_candidates_v2(
     acquisition = pd.read_parquet(acquisition_feasibility_path)
     compatibility = pd.read_parquet(compatibility_path)
     scenarios = pd.read_parquet(scenarios_path)
+    opportunity_cost = _optional_parquet(opportunity_cost_path)
     gaps = pd.read_parquet(gap_model_path)
 
     frame = candidates.merge(
@@ -103,6 +107,13 @@ def rank_candidates_v2(
         how="left",
         suffixes=("", "_acquisition"),
     )
+    if not opportunity_cost.empty:
+        frame = frame.merge(
+            opportunity_cost,
+            on="player_id",
+            how="left",
+            suffixes=("", "_opportunity"),
+        )
     compatibility_lookup = _compatibility_lookup(compatibility)
     scenario_lookup = _scenario_lookup(scenarios)
     gap_lookup = _gap_lookup(gaps)
@@ -144,6 +155,7 @@ def rank_candidates_v2(
                 acquisition_feasibility_path,
                 compatibility_path,
                 scenarios_path,
+                opportunity_cost_path,
                 gap_model_path,
             ),
             upstream_artifacts=(
@@ -153,6 +165,7 @@ def rank_candidates_v2(
                 acquisition_feasibility_path,
                 compatibility_path,
                 scenarios_path,
+                opportunity_cost_path,
                 gap_model_path,
             ),
             known_limitations=(
@@ -198,6 +211,7 @@ def _ranking_row(
 
     return {
         "player_id": player_id,
+        "player_profile_id": _profile_id(player_id, row.get("player_name")),
         "player_name": row.get("player_name"),
         "current_team": row.get("current_team") or row.get("current_team_skill"),
         "position": row.get("position") or row.get("position_skill"),
@@ -222,6 +236,11 @@ def _ranking_row(
         "compatibility_with_maxey": _compat_text(compat_rows, "Tyrese Maxey"),
         "compatibility_with_george": _compat_text(compat_rows, "Paul George"),
         **scores,
+        "opportunity_cost_flags": row.get("opportunity_cost_flags") or "[]",
+        "opportunity_cost_summary": row.get("role_cost_summary") or "",
+        "opportunity_cost_evidence": row.get("evidence_opportunity")
+        or row.get("evidence")
+        or "",
         "final_recommendation_score": final_score,
         "recommendation": recommendation,
         "recommendation_confidence": confidence,
@@ -231,7 +250,7 @@ def _ranking_row(
         "evidence_summary": _evidence_summary(row, scores, gaps_addressed),
         "source_summary": (
             "candidate_universe; player_skill_profiles; roster_simulation; "
-            "acquisition_feasibility; compatibility; scenarios"
+            "acquisition_feasibility; opportunity_cost; compatibility; scenarios"
         ),
         "source_url": row.get("source_url") or row.get("salary_source") or "",
         "source_note": f"Generated for {team} from cached validated artifacts",
@@ -272,6 +291,11 @@ def _component_scores(
         "acquisition_feasibility_score": acquisition,
         "contract_value_score": contract,
         "risk_score": risk,
+        "opportunity_cost_score": _float(row.get("opportunity_cost_score")),
+        "opportunity_cost_penalty": round(
+            max(0.0, _float(row.get("opportunity_cost_score"))) * 0.18,
+            2,
+        ),
         "uncertainty_penalty": uncertainty,
         "contradiction_penalty": contradiction,
     }
@@ -290,7 +314,11 @@ def _final_score(scores: dict[str, float]) -> float:
         + 0.06 * scores["contract_value_score"]
         + 0.08 * (100 - scores["risk_score"])
     )
-    raw -= scores["uncertainty_penalty"] + scores["contradiction_penalty"]
+    raw -= (
+        scores["uncertainty_penalty"]
+        + scores["contradiction_penalty"]
+        + scores.get("opportunity_cost_penalty", 0.0)
+    )
     return round(max(0.0, min(100.0, raw)), 2)
 
 
@@ -324,6 +352,8 @@ def _recommendation(
     fatal = {"maxey_usage_overlap", "candidate_status_manual_review_required"}
     if fatal.intersection(contradiction_flags):
         return "Avoid"
+    if scores.get("opportunity_cost_score", 0.0) >= 65:
+        return "Avoid"
     if (
         final_score >= 78
         and scores["gap_match_score"] >= 35
@@ -331,6 +361,7 @@ def _recommendation(
         and scores["scenario_robustness_score"] >= 65
         and scores["acquisition_feasibility_score"] >= 55
         and scores["contradiction_penalty"] <= 8
+        and scores.get("opportunity_cost_score", 0.0) < 40
         and bool(row.get("playoff_rotation_possible"))
     ):
         return "Priority Target"
@@ -346,7 +377,11 @@ def _recommendation(
 def _recommendation_confidence(
     row: dict[str, Any], scores: dict[str, float], contradiction_flags: list[str]
 ) -> str:
-    if bool(row.get("manual_review_required")) or scores["uncertainty_penalty"] >= 20:
+    if (
+        bool(row.get("manual_review_required"))
+        or scores["uncertainty_penalty"] >= 20
+        or scores.get("opportunity_cost_score", 0.0) >= 65
+    ):
         return "Low"
     if contradiction_flags or scores["risk_score"] >= 55:
         return "Medium"
@@ -521,6 +556,13 @@ def _compatibility_lookup(frame: pd.DataFrame) -> dict[int, dict[str, dict[str, 
     return lookup
 
 
+def _optional_parquet(path: str | Path) -> pd.DataFrame:
+    file_path = Path(path)
+    if not file_path.exists():
+        return pd.DataFrame()
+    return pd.read_parquet(file_path)
+
+
 def _scenario_lookup(frame: pd.DataFrame) -> dict[int, dict[str, dict[str, Any]]]:
     lookup: dict[int, dict[str, dict[str, Any]]] = {}
     for row in frame.to_dict(orient="records"):
@@ -622,7 +664,8 @@ def _evidence_summary(
         f"Slot={slot}; role={role}; gaps={', '.join(gaps_addressed[:3])}; "
         f"gap={scores['gap_match_score']:.1f}; "
         f"slot_fit={scores['roster_slot_fit_score']:.1f}; "
-        f"acquisition={scores['acquisition_feasibility_score']:.1f}"
+        f"acquisition={scores['acquisition_feasibility_score']:.1f}; "
+        f"opportunity_cost={scores.get('opportunity_cost_score', 0.0):.1f}"
     )
 
 
@@ -634,6 +677,7 @@ def _combined_missing_flags(
     flags.update(_split_flags(row.get("missing_data_flags_skill")))
     flags.update(_split_flags(row.get("missing_data_flags_sim")))
     flags.update(_split_flags(row.get("missing_data_flags_acquisition")))
+    flags.update(_split_flags(row.get("missing_data_flags_opportunity")))
     for scenario in scenario_rows.values():
         flags.update(_split_flags(scenario.get("missing_data_flags")))
     return sorted(flag for flag in flags if flag != "none")
@@ -716,6 +760,19 @@ def _ordered_unique(values: list[str]) -> list[str]:
             out.append(value)
             seen.add(value)
     return out
+
+
+def _profile_id(player_id: int, player_name: Any) -> str:
+    normalized = unicodedata.normalize("NFKD", str(player_name))
+    ascii_name = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = (
+        ascii_name.lower()
+        .replace(" ", "-")
+        .replace(".", "")
+        .replace("'", "")
+        .replace("’", "")
+    )
+    return f"{player_id}-{slug}"
 
 
 def _bool(row: dict[str, Any], column: str) -> bool:
