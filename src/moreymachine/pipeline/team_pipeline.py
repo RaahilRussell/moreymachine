@@ -155,6 +155,15 @@ COPY_ARTIFACTS: dict[str, tuple[tuple[Path, str, str], ...]] = {
         (FEATURES_DATA_DIR / "team_construction_archetypes.parquet", "features", "team_construction_archetypes.parquet"),
         (REPORTS_DATA_DIR / "contender_blueprints.md", "reports", "contender_blueprints.md"),
     ),
+    "team_level": (
+        (REPORTS_DATA_DIR / "team_level.parquet", "reports", "team_level.parquet"),
+        (REPORTS_DATA_DIR / "team_level.json", "reports", "team_level.json"),
+        (REPORTS_DATA_DIR / "team_level.md", "reports", "team_level.md"),
+    ),
+    "team_comparison": (
+        (REPORTS_DATA_DIR / "team_comparison.parquet", "reports", "team_comparison.parquet"),
+        (REPORTS_DATA_DIR / "team_comparison.json", "reports", "team_comparison.json"),
+    ),
     "gap_model": (
         (FEATURES_DATA_DIR / "sixers_gap_model.parquet", "features", "gap_model.parquet"),
         (REPORTS_DATA_DIR / "sixers_gap_model.md", "reports", "gap_model.md"),
