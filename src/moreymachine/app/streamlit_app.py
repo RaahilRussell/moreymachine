@@ -15,6 +15,17 @@ import pandas as pd
 import streamlit as st
 
 from moreymachine.app.data_sources import REGISTRY_BY_KEY, data_source_table
+from moreymachine.app.loaders import (
+    get_missing_artifact_message,
+    get_team_output_dir,
+    load_available_teams,
+)
+from moreymachine.app.state import (
+    SELECTED_BENCHMARK_KEY,
+    SELECTED_PLAYER_ID_KEY,
+    SELECTED_TEAM_KEY,
+)
+from moreymachine.config.teams import SUPPORTED_TEAM_ABBRS, normalize_team, team_name
 from moreymachine.data.freshness import REFRESH_COMMAND
 from moreymachine.models.best_by_need import BEST_BY_NEED_PATH
 from moreymachine.models.explanation_engine_v2 import (
@@ -39,20 +50,27 @@ from moreymachine.utils.paths import (
 from moreymachine.utils.real_data import is_demo_path
 
 PAGES = (
+    "GM Executive Summary",
     "Product Summary",
+    "Team Selector / Analyze Any Team",
     "Data Sources / Freshness",
-    "Current Sixers Roster World",
+    "Current Team Roster World",
+    "Team Level",
     "Contender Blueprint Explorer",
-    "Sixers Gap Model",
+    "Benchmark Path",
+    "Gap Priority Model",
+    "Move Recommendations",
+    "Target Board v2",
+    "Player Detail v2",
+    "Player Compare",
+    "Move Compare",
+    "Best By Need",
     "Player Skill Profiles",
     "Player-to-Player Compatibility",
     "Roster Slot Simulation",
     "Candidate Scenarios",
-    "Target Board v2",
-    "Player Detail v2",
-    "Player Compare",
-    "Best By Need",
     "Transaction Review",
+    "Manual Review Queue",
     "Reasoning Diagnostics",
     "Backtest Proof",
     "Limitations / Missing Data",
@@ -94,6 +112,7 @@ BOARD_COLUMNS = (
     "acquisition_feasibility_score",
     "contract_value_score",
     "risk_score",
+    "opportunity_cost_score",
     "gaps_addressed",
     "gaps_not_addressed",
     "compatibility_with_embiid",
@@ -108,24 +127,32 @@ def main() -> None:
     """Run the Streamlit app."""
     st.set_page_config(page_title="MoreyMachine", page_icon="MM", layout="wide")
     st.sidebar.title("MoreyMachine")
-    st.sidebar.caption("Unofficial 76ers roster-construction decision product.")
+    st.sidebar.caption("Basketball-ops decision product.")
+    _sidebar_team_controls()
     page = st.sidebar.radio("Page", PAGES, key="main_page_radio")
     _sidebar_status()
     {
+        "GM Executive Summary": render_gm_executive_summary,
         "Product Summary": render_product_summary,
+        "Team Selector / Analyze Any Team": render_team_selector,
         "Data Sources / Freshness": render_data_sources,
-        "Current Sixers Roster World": render_roster_world,
+        "Current Team Roster World": render_roster_world,
+        "Team Level": render_team_level,
         "Contender Blueprint Explorer": render_blueprints,
-        "Sixers Gap Model": render_gap_model,
+        "Benchmark Path": render_benchmark_path,
+        "Gap Priority Model": render_gap_model,
+        "Move Recommendations": render_move_recommendations,
+        "Target Board v2": render_target_board,
+        "Player Detail v2": render_player_detail,
+        "Player Compare": render_player_compare,
+        "Move Compare": render_move_compare,
+        "Best By Need": render_best_by_need,
         "Player Skill Profiles": render_skill_profiles,
         "Player-to-Player Compatibility": render_compatibility,
         "Roster Slot Simulation": render_roster_simulation,
         "Candidate Scenarios": render_scenarios,
-        "Target Board v2": render_target_board,
-        "Player Detail v2": render_player_detail,
-        "Player Compare": render_player_compare,
-        "Best By Need": render_best_by_need,
         "Transaction Review": render_transaction_review,
+        "Manual Review Queue": render_manual_review_queue,
         "Reasoning Diagnostics": render_reasoning_diagnostics,
         "Backtest Proof": render_backtest,
         "Limitations / Missing Data": render_limitations,
@@ -186,6 +213,53 @@ def text_artifact(path: Path) -> str:
     return _read_text(str(path), path.stat().st_mtime)
 
 
+def selected_team() -> str:
+    """Return the selected team abbreviation."""
+    return normalize_team(st.session_state.get(SELECTED_TEAM_KEY, "PHI"))
+
+
+def team_artifact_path(relative_path: str) -> Path:
+    """Return a team-scoped artifact path."""
+    return get_team_output_dir(selected_team()) / relative_path
+
+
+def team_frame(
+    relative_path: str,
+    fallback_path: Path,
+    label: str,
+    command: str,
+) -> pd.DataFrame:
+    """Load team-scoped artifact, falling back to the legacy global PHI artifact."""
+    path = team_artifact_path(relative_path)
+    if path.exists():
+        return frame(path, label, command)
+    if selected_team() == "PHI":
+        return frame(fallback_path, label, command)
+    st.error(f"Missing required artifact: `{path}`")
+    st.code(command, language="bash")
+    return pd.DataFrame()
+
+
+def team_json(relative_path: str, fallback_path: Path | None = None) -> Any:
+    """Load team-scoped JSON with optional global fallback."""
+    path = team_artifact_path(relative_path)
+    if path.exists():
+        return _read_json(str(path), path.stat().st_mtime)
+    if selected_team() == "PHI" and fallback_path and fallback_path.exists():
+        return _read_json(str(fallback_path), fallback_path.stat().st_mtime)
+    return None
+
+
+def team_text(relative_path: str, fallback_path: Path | None = None) -> str:
+    """Load team-scoped Markdown/text with optional global fallback."""
+    path = team_artifact_path(relative_path)
+    if path.exists():
+        return _read_text(str(path), path.stat().st_mtime)
+    if selected_team() == "PHI" and fallback_path and fallback_path.exists():
+        return text_artifact(fallback_path)
+    return ""
+
+
 def _safe_widget_key(text: str) -> str:
     return (
         str(text)
@@ -199,6 +273,242 @@ def _safe_widget_key(text: str) -> str:
         .replace(".", "")
         .replace(":", "")
         .replace("|", "_")
+    )
+
+
+def render_gm_executive_summary() -> None:
+    """Render summary-first GM operating-system home page."""
+    team = selected_team()
+    st.title(f"{team} GM Executive Summary")
+    team_level = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
+    action_cards = team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or []
+    narrative = team_text("narratives/gm_executive_summary.md")
+    if not team_level and not action_cards:
+        st.warning(get_missing_artifact_message(team))
+        st.code(_run_command(team), language="bash")
+        return
+    cols = st.columns(4)
+    cols[0].metric("Team", team_name(team))
+    cols[1].metric("Level", team_level.get("team_level", "Missing"))
+    cols[2].metric("Level score", team_level.get("level_score", "Missing"))
+    cols[3].metric("Closest archetype", team_level.get("closest_archetype", "Missing"))
+    if narrative:
+        st.markdown(narrative)
+    st.subheader("Action Cards")
+    card_frame = pd.DataFrame(action_cards)
+    if card_frame.empty:
+        st.info("No action cards found.")
+    else:
+        card_cols = [
+            "action_category",
+            "action_title",
+            "recommendation",
+            "priority",
+            "confidence",
+            "why_do_this",
+            "why_not_do_this",
+            "missing_data_flags",
+        ]
+        st.dataframe(_cols(card_frame, card_cols), use_container_width=True, hide_index=True)
+
+
+def render_team_selector() -> None:
+    """Render team selection and analysis command."""
+    team = selected_team()
+    st.title("Team Selector / Analyze Any Team")
+    st.metric("Selected team", f"{team} - {team_name(team)}")
+    root = get_team_output_dir(team)
+    st.write(f"Output directory: `{root}`")
+    st.code(_run_command(team), language="bash")
+    artifacts = _team_artifact_status(team)
+    st.dataframe(pd.DataFrame(artifacts), use_container_width=True, hide_index=True)
+
+
+def render_team_level() -> None:
+    """Render team-level diagnosis."""
+    team = selected_team()
+    st.title("Team Level")
+    payload = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
+    if not payload:
+        st.warning(get_missing_artifact_message(team))
+        st.code(_run_command(team), language="bash")
+        return
+    cols = st.columns(3)
+    cols[0].metric("Current level", payload.get("team_level"))
+    cols[1].metric("Level score", payload.get("level_score"))
+    cols[2].metric("Contender percentile", payload.get("contender_percentile"))
+    st.subheader("Why This Level")
+    st.write(payload.get("why_this_level", []))
+    st.subheader("What The Next Level Requires")
+    st.write(payload.get("what_level_requires_next", []))
+    st.subheader("Evidence")
+    st.write(payload.get("evidence", []))
+    st.subheader("Missing Data Flags")
+    st.write(payload.get("missing_data_flags", []))
+
+
+def render_benchmark_path() -> None:
+    """Render benchmark comparison path."""
+    team = selected_team()
+    st.title("Benchmark Path")
+    level = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
+    comparison = team_frame(
+        "reports/team_comparison.parquet",
+        REPORTS_DATA_DIR / "team_comparison.parquet",
+        "Team comparison",
+        _run_command(team),
+    )
+    if level:
+        st.metric("Closest archetype", level.get("closest_archetype", "Missing"))
+        st.write(level.get("closest_benchmark_teams", []))
+    if comparison.empty:
+        return
+    benchmarks = comparison["benchmark"].dropna().astype(str).tolist()
+    selected = st.selectbox(
+        "Benchmark",
+        benchmarks,
+        key="benchmark_path_select",
+    )
+    st.session_state[SELECTED_BENCHMARK_KEY] = selected
+    row = comparison[comparison["benchmark"].astype(str) == selected]
+    st.dataframe(row.T, use_container_width=True)
+    st.subheader("All Benchmarks")
+    st.dataframe(comparison, use_container_width=True, hide_index=True)
+
+
+def render_move_recommendations() -> None:
+    """Render action-card-first move recommendations."""
+    team = selected_team()
+    st.title("Move Recommendations")
+    cards = pd.DataFrame(team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or [])
+    moves = team_frame(
+        "reports/move_recommendations.parquet",
+        REPORTS_DATA_DIR / "move_recommendations.parquet",
+        "Move recommendations",
+        _run_command(team),
+    )
+    if not cards.empty:
+        st.subheader("GM Action Cards")
+        st.dataframe(
+            _cols(
+                cards,
+                [
+                    "action_category",
+                    "action_title",
+                    "recommendation",
+                    "why_do_this",
+                    "why_not_do_this",
+                    "confidence",
+                    "missing_data_flags",
+                ],
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+    if moves.empty:
+        return
+    st.subheader("Move Rows")
+    action_types = sorted(moves["action_type"].dropna().astype(str).unique())
+    selected_types = st.multiselect(
+        "Action type",
+        action_types,
+        key="move_recommendations_action_type_filter",
+    )
+    view = moves[moves["action_type"].isin(selected_types)] if selected_types else moves
+    st.dataframe(view.head(100), use_container_width=True, hide_index=True)
+
+
+def render_move_compare() -> None:
+    """Render side-by-side move comparison."""
+    team = selected_team()
+    st.title("Move Compare")
+    moves = team_frame(
+        "reports/move_recommendations.parquet",
+        REPORTS_DATA_DIR / "move_recommendations.parquet",
+        "Move recommendations",
+        _run_command(team),
+    )
+    if moves.empty:
+        return
+    labels = (
+        moves["player_name"].fillna("Internal")
+        + " - "
+        + moves["action_type"].fillna("")
+        + " - "
+        + moves["recommendation"].fillna("")
+    ).tolist()
+    selected = st.multiselect(
+        "Moves",
+        labels,
+        default=labels[:2],
+        max_selections=4,
+        key="move_compare_select",
+    )
+    if not selected:
+        return
+    view = moves.iloc[[labels.index(item) for item in selected]]
+    st.dataframe(
+        _cols(
+            view,
+            [
+                "player_name",
+                "action_type",
+                "recommendation",
+                "move_score",
+                "roster_slot",
+                "acquisition_path",
+                "opportunity_cost_score",
+                "why_do_this",
+                "why_not_do_this",
+                "confidence",
+                "missing_data_flags",
+            ],
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
+def render_manual_review_queue() -> None:
+    """Render manual review queue from rankings and action cards."""
+    team = selected_team()
+    st.title("Manual Review Queue")
+    rankings = rankings_frame()
+    cards = pd.DataFrame(team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or [])
+    if not cards.empty:
+        review_cards = cards[
+            cards["action_category"].astype(str).str.contains("manual", case=False)
+        ]
+        st.subheader("Manual Review Action")
+        st.dataframe(review_cards, use_container_width=True, hide_index=True)
+    if rankings.empty:
+        return
+    mask = rankings["manual_review_required"].fillna(False).astype(bool)
+    mask |= rankings["missing_data_flags"].fillna("").astype(str).str.contains(
+        "manual|stale|conflict|unknown|recent_transaction",
+        case=False,
+    )
+    queue = rankings[mask]
+    if queue.empty:
+        st.success("No manual review rows in current artifacts.")
+        return
+    st.dataframe(
+        _cols(
+            queue,
+            [
+                "rank",
+                "player_name",
+                "candidate_type",
+                "recommendation",
+                "primary_roster_slot",
+                "acquisition_path",
+                "manual_review_required",
+                "missing_data_flags",
+                "evidence_summary",
+            ],
+        ),
+        use_container_width=True,
+        hide_index=True,
     )
 
 
@@ -282,11 +592,13 @@ def render_data_sources() -> None:
 
 def render_roster_world() -> None:
     """Render current Sixers roster world."""
-    st.title("Current Sixers Roster World")
-    roster = frame(
+    team = selected_team()
+    st.title("Current Team Roster World")
+    roster = team_frame(
+        "features/roster_world.parquet",
         ROSTER_WORLD_PATH,
-        "Current Sixers roster world",
-        "python scripts/build_roster_world.py",
+        "Current roster world",
+        _run_command(team),
     )
     if roster.empty:
         return
@@ -339,11 +651,13 @@ def render_blueprints() -> None:
 
 def render_gap_model() -> None:
     """Render Sixers gap model."""
-    st.title("Sixers Gap Model")
-    gaps = frame(
+    team = selected_team()
+    st.title("Gap Priority Model")
+    gaps = team_frame(
+        "features/gap_model.parquet",
         GAP_MODEL_PATH,
-        "Sixers gap model",
-        "python scripts/build_gap_model.py",
+        "Gap priority model",
+        _run_command(team),
     )
     if gaps.empty:
         return
@@ -615,11 +929,13 @@ def render_player_compare() -> None:
 
 def render_best_by_need() -> None:
     """Render best-by-need rankings."""
+    team = selected_team()
     st.title("Best By Need")
-    best = frame(
+    best = team_frame(
+        "reports/best_by_need.parquet",
         BEST_BY_NEED_PATH,
         "Best by need",
-        "python scripts/build_best_by_need.py",
+        _run_command(team),
     )
     if best.empty:
         return
@@ -783,19 +1099,23 @@ def render_limitations() -> None:
 
 def rankings_frame() -> pd.DataFrame:
     """Load v2 rankings."""
-    return frame(
+    team = selected_team()
+    return team_frame(
+        "reports/candidate_fit_rankings_v2.parquet",
         CANDIDATE_FIT_RANKINGS_V2_PATH,
         "Candidate fit rankings v2",
-        "python scripts/rank_candidates_v2.py --team PHI",
+        _run_command(team),
     )
 
 
 def profiles_frame() -> pd.DataFrame:
     """Load player profiles."""
-    return frame(
+    team = selected_team()
+    return team_frame(
+        "reports/player_profiles.parquet",
         PLAYER_PROFILES_PATH,
         "Player profiles",
-        "python scripts/build_player_profiles.py",
+        _run_command(team),
     )
 
 
@@ -905,25 +1225,89 @@ def _scenario_summary(profile: dict[str, Any]) -> str:
     return "\n\n".join(parts)
 
 
-def _sidebar_status() -> None:
-    required = [
-        CANDIDATE_FIT_RANKINGS_V2_PATH,
-        PLAYER_PROFILES_PATH,
-        REASONING_VALIDATION_PATH,
-    ]
-    missing = [path.name for path in required if not path.exists()]
-    if missing:
-        st.sidebar.error("Missing: " + ", ".join(missing))
-        st.sidebar.code(
-            "export PYTHONPATH=src\n"
-            "python scripts/rank_candidates_v2.py --team PHI\n"
-            "python scripts/build_explanations_v2.py\n"
-            "python scripts/build_player_profiles.py\n"
-            "python scripts/validate_reasoning_v2.py",
-            language="bash",
+def _sidebar_team_controls() -> None:
+    """Render team, benchmark, and player controls."""
+    available = sorted(set(load_available_teams()) | set(SUPPORTED_TEAM_ABBRS))
+    current = selected_team()
+    index = available.index(current) if current in available else available.index("PHI")
+    team = st.sidebar.selectbox(
+        "Selected team",
+        available,
+        index=index,
+        key=SELECTED_TEAM_KEY,
+    )
+    st.sidebar.caption(team_name(team))
+    comparison = team_frame(
+        "reports/team_comparison.parquet",
+        REPORTS_DATA_DIR / "team_comparison.parquet",
+        "Team comparison",
+        _run_command(team),
+    )
+    if not comparison.empty and "benchmark" in comparison.columns:
+        benchmarks = comparison["benchmark"].dropna().astype(str).tolist()
+        if benchmarks:
+            st.sidebar.selectbox(
+                "Benchmark",
+                benchmarks,
+                key=SELECTED_BENCHMARK_KEY,
+            )
+    rankings = rankings_frame()
+    if not rankings.empty:
+        names = rankings["player_name"].dropna().astype(str).sort_values().tolist()
+        search = st.sidebar.selectbox(
+            "Quick player search",
+            [""] + names,
+            key="sidebar_quick_player_search",
         )
+        if search:
+            match = rankings[rankings["player_name"].astype(str) == search].head(1)
+            if not match.empty:
+                st.session_state[SELECTED_PLAYER_ID_KEY] = int(match.iloc[0]["player_id"])
+                st.sidebar.caption(f"Rank {int(match.iloc[0]['rank'])}: {search}")
+
+
+def _run_command(team: str | None = None) -> str:
+    """Return the exact team pipeline command."""
+    normalized = normalize_team(team or selected_team())
+    return (
+        "export PYTHONPATH=src\n"
+        f"python3 scripts/run_team_pipeline.py --team {normalized} --skip-refresh"
+    )
+
+
+def _team_artifact_status(team: str) -> list[dict[str, Any]]:
+    """Return status rows for key team artifacts."""
+    root = get_team_output_dir(team)
+    artifacts = [
+        "reports/team_level.json",
+        "reports/team_comparison.parquet",
+        "reports/action_cards.json",
+        "reports/move_recommendations.parquet",
+        "reports/candidate_fit_rankings_v2.parquet",
+        "reports/player_profiles.parquet",
+        "reports/best_by_need.parquet",
+        "narratives/gm_executive_summary.md",
+    ]
+    return [
+        {
+            "artifact": artifact,
+            "present": (root / artifact).exists(),
+            "path": str(root / artifact),
+        }
+        for artifact in artifacts
+    ]
+
+
+def _sidebar_status() -> None:
+    team = selected_team()
+    required = _team_artifact_status(team)
+    missing = [row["artifact"] for row in required if not row["present"]]
+    if missing:
+        st.sidebar.error("Missing team outputs")
+        st.sidebar.caption(", ".join(missing[:4]))
+        st.sidebar.code(_run_command(team), language="bash")
     else:
-        st.sidebar.success("V2 artifacts loaded")
+        st.sidebar.success("Team artifacts loaded")
 
 
 def _artifact_row(path: Path) -> dict[str, Any]:
