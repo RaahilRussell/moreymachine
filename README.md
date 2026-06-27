@@ -1,6 +1,6 @@
 # MoreyMachine
 
-MoreyMachine is an unofficial NBA roster-construction project that ranks potential 76ers acquisition targets by fit, role, contract context, risk, and how much they address specific roster gaps.
+MoreyMachine is an unofficial NBA roster-construction project that has grown into a basketball-operations / GM operating system. It starts at the team level, identifies the benchmark path, turns gaps into priorities, and only then ranks potential moves and player targets.
 
 It is not affiliated with Daryl Morey, the Philadelphia 76ers, the NBA, or any team or league data provider.
 
@@ -10,7 +10,9 @@ MoreyMachine is an unofficial NBA front-office analytics app built around a simp
 
 > If I were trying to improve the Philadelphia 76ers like an analytics-heavy GM, which players would actually make sense, and why?
 
-The app does not just rank players by talent or box-score stats. It builds a target board by combining:
+The app used to be too table-driven: useful rows, not enough actual decision flow. The current version is strategy-first. It builds a team read, compares that team to contender benchmarks, identifies the gaps that matter, then turns those gaps into action cards, move recommendations, target boards, player profiles, and evidence.
+
+The app does not rank players by talent or box-score stats alone. It builds the basketball case by combining:
 
 - Philadelphia's current roster gaps
 - historical contender team patterns
@@ -43,6 +45,22 @@ At its best, MoreyMachine helps answer:
 
 This project is intentionally built around data integrity. Earlier versions were too easy to fool with fake/demo rankings or overly confident scores, so the current version includes validation gates, provenance columns, candidate-type separation, scenario-aware role logic, evidence objects, and player profiles for every recommendation.
 
+## GM Executive Summary
+
+The first page is designed to answer the questions a GM-style user would ask before opening any table:
+
+- what team is selected
+- what level the team is currently at
+- which contender archetype or benchmark it is closest to
+- what the roster needs to become a real contender
+- what to do first
+- what not to do
+- which players and moves matter
+- why the model believes that
+- what missing data could change the answer
+
+The executive summary is built from action cards and validated artifacts, not from a raw ranking table. If the narrative layer is disabled or Ollama is unavailable, the app shows a deterministic fallback summary generated from the same structured JSON.
+
 ## Why I Built This
 
 I wanted to understand what an analytics-heavy GM model would actually have to consider. I did not want to rank players by points per game, sort by a fit score, and call it a front-office tool.
@@ -55,7 +73,7 @@ That question forced the project to separate raw talent, roster fit, acquisition
 
 I started with a simple fit board, realized it was too naive, then rebuilt the project around cached real data, provenance, validation, roster-slot logic, and explanations. The table is not the hard part. The hard part is stopping the table from saying confident basketball things it cannot support.
 
-## Industry-Level Reasoning Architecture
+## Industry-Grade Reasoning Architecture
 
 MoreyMachine does not rank players directly from stats. The current pipeline is sequenced so the product understands the roster context before it recommends anyone:
 
@@ -80,6 +98,84 @@ raw/cached data
 ```
 
 The important rule is that general player quality cannot override roster-slot logic. A candidate is not called a starter unless the simulated Sixers role supports it. A player does not get credit for spacing, defense, rim protection, rebounding, or creation unless the skill-profile gates allow that claim. A recommendation is not allowed to outrun scenario robustness, acquisition feasibility, stale status, or missing contract context.
+
+## Team Selector / Analyze Any Team
+
+The app is team-scoped. The sidebar has a selected team, benchmark selector, quick player search, artifact status, and the exact pipeline command needed when outputs are missing.
+
+Philadelphia has custom context because Embiid, Maxey, and George create specific roster constraints. Other teams can still be selected, but missing team-specific artifacts are shown honestly. The app should not silently fall back to Philadelphia outputs for another team.
+
+The team pipeline command is:
+
+```bash
+python3 scripts/run_team_pipeline.py --team PHI --skip-refresh
+```
+
+Optional flags:
+
+```bash
+python3 scripts/run_team_pipeline.py --team PHI --skip-refresh --stages team_level,move_recommendations --no-ollama
+```
+
+## Benchmark Comparison
+
+The team comparison layer is meant to make the target concrete. It compares the selected team to champion average, finalist average, conference finalist average, top net-rating groups, style benchmarks, and current teams when the data is available.
+
+The comparison does not say "be Boston" or "be Denver" as a slogan. It asks which measurable traits are close, which are far away, and what level of improvement is required before a team can be treated like a credible contender.
+
+## Move Recommendations
+
+Move recommendations are downstream of roster simulation, compatibility, feasibility, opportunity cost, scenarios, and evidence validation. That order matters. A player cannot become a real recommendation just because he has a high general fit score.
+
+The action-card layer turns the board into decision categories:
+
+- best overall action
+- best realistic free-agent action
+- best realistic trade action
+- best low-cost depth action
+- best backup-center route
+- best wing-defense route
+- best shooting route
+- best internal or stay-put action
+- top avoid move
+- manual review action
+
+Every move card needs `why_do_this`, `why_not_do_this`, and evidence. If the evidence is missing, the system should say that instead of smoothing it over.
+
+## Ollama Narrative Layer
+
+Ollama is optional and disabled by default. It is never the source of truth.
+
+The narrative layer sends structured JSON packets to Ollama only after the pipeline has already produced validated team level, comparison, action cards, rankings, and evidence. Every prompt includes the rule that it must use only the JSON and must not invent facts. If Ollama is unavailable, the deterministic fallback summary is used.
+
+Default config lives at `data/manual/llm_config.yml`.
+
+## Professional App Design
+
+The Streamlit app is intentionally summary-first. No page should open with a giant dataframe before explaining what matters.
+
+The page order follows the GM workflow:
+
+```text
+GM Executive Summary
+-> Product Summary
+-> Team Selector / Analyze Any Team
+-> Data Sources / Freshness
+-> Current Team Roster World
+-> Team Level
+-> Contender Blueprint Explorer
+-> Benchmark Path
+-> Gap Priority Model
+-> Move Recommendations
+-> Target Board v2
+-> Player Detail v2
+-> Player Compare
+-> Move Compare
+-> Best By Need
+-> diagnostics, backtest proof, and limitations
+```
+
+Repeated widgets use stable unique keys. Empty states are supposed to be clean and useful: if an artifact is missing, the UI should show the exact command to rebuild it.
 
 ## Interactive Player Profiles
 
@@ -137,7 +233,7 @@ The key distinction:
 
 That means data can be updated by running the pipeline, but the Streamlit app itself reads cached, validated files. It does not scrape contracts, call `nba_api`, or fetch transactions during page loads. If a required artifact is missing, the app shows the script needed to rebuild it.
 
-## Data Integrity And Validation
+## Data Integrity and Validation
 
 Earlier versions were too easy to fool. They could show a polished table even when the board used demo rows, score distributions saturated, unrealistic players leaked into recommendation tiers, or a player was given credit for a skill the evidence did not support.
 
@@ -225,7 +321,7 @@ Evidence:
 
 If the evidence is missing, the app should say the claim cannot be verified instead of filling in a scouting phrase.
 
-## Installation / Running Locally
+## Running Locally
 
 ```bash
 git clone <repo-url>
@@ -234,6 +330,9 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export PYTHONPATH=src
+python3 scripts/run_team_pipeline.py --team PHI --skip-refresh
+python3 scripts/build_narratives.py --team PHI
+streamlit run src/moreymachine/app/streamlit_app.py
 ```
 
 ## Full Local Pipeline
