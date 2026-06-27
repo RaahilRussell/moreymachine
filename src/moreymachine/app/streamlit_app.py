@@ -364,12 +364,16 @@ def render_benchmark_path() -> None:
     if comparison.empty:
         return
     benchmarks = comparison["benchmark"].dropna().astype(str).tolist()
+    benchmark_path_key = "benchmark_path_select"
+    sidebar_benchmark = st.session_state.get(SELECTED_BENCHMARK_KEY)
+    default_benchmark = sidebar_benchmark if sidebar_benchmark in benchmarks else benchmarks[0]
+    if st.session_state.get(benchmark_path_key) not in benchmarks:
+        st.session_state[benchmark_path_key] = default_benchmark
     selected = st.selectbox(
         "Benchmark",
         benchmarks,
-        key="benchmark_path_select",
+        key=benchmark_path_key,
     )
-    st.session_state[SELECTED_BENCHMARK_KEY] = selected
     row = comparison[comparison["benchmark"].astype(str) == selected]
     st.dataframe(row.T, use_container_width=True)
     st.subheader("All Benchmarks")
