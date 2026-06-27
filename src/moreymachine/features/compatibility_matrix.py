@@ -39,6 +39,8 @@ class CompatibilityResult:
 
 def build_compatibility_matrix(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     candidate_universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
     skill_profiles_path: str | Path = PLAYER_SKILL_PROFILES_PATH,
     roster_world_path: str | Path = ROSTER_WORLD_PATH,
@@ -46,6 +48,8 @@ def build_compatibility_matrix(
     report_path: str | Path = COMPATIBILITY_EXAMPLES_PATH,
 ) -> CompatibilityResult:
     """Build compatibility rows for every candidate against current PHI players."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     candidates = pd.read_parquet(candidate_universe_path)
     skills = pd.read_parquet(skill_profiles_path)
     roster = pd.read_parquet(roster_world_path)
@@ -58,7 +62,14 @@ def build_compatibility_matrix(
     rows = []
     for candidate in candidate_frame.to_dict(orient="records"):
         for sixer in roster.to_dict(orient="records"):
-            rows.append(_compatibility_row(candidate, sixer))
+            rows.append(
+                _compatibility_row(
+                    candidate,
+                    sixer,
+                    target_team=target_team,
+                    context_mode=str(context.get("context_mode") or "unknown"),
+                )
+            )
     frame = pd.DataFrame(rows)
 
     output = Path(output_path)
@@ -104,7 +115,11 @@ def build_compatibility_matrix(
 
 
 def _compatibility_row(
-    candidate: dict[str, Any], sixer: dict[str, Any]
+    candidate: dict[str, Any],
+    sixer: dict[str, Any],
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     positives: list[str] = []
     negatives: list[str] = []
@@ -171,6 +186,7 @@ def _compatibility_row(
         "low_usage_fit_claim_allowed": _bool(candidate, "low_usage_fit_claim_allowed"),
     }
     return {
+        "target_team": target_team,
         "candidate_id": candidate.get("player_id"),
         "candidate_name": candidate_name,
         "sixers_player_id": sixer.get("player_id"),
@@ -183,7 +199,11 @@ def _compatibility_row(
         "lineup_contexts": json.dumps(contexts or ["general_rotation_context"]),
         "evidence": json.dumps(evidence, sort_keys=True),
         "confidence": "low" if missing else "medium",
-        "source": "candidate_universe + player_skill_profiles + roster_world_phi",
+        "source": (
+            "candidate_universe + player_skill_profiles + "
+            f"roster_world_{target_team.lower()}"
+        ),
+        "source_note": f"context_mode={context_mode}",
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
         "missing_data_flags": ";".join(sorted(missing)) if missing else "none",

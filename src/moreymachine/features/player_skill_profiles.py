@@ -43,6 +43,8 @@ class SkillProfileResult:
 
 def build_player_skill_profiles(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     player_seasons_path: str | Path = PLAYER_SEASONS_PATH,
     player_bio_path: str | Path = PLAYER_BIO_PATH,
     candidate_universe_path: str | Path = CANDIDATE_UNIVERSE_PATH,
@@ -51,13 +53,18 @@ def build_player_skill_profiles(
     season: str | None = None,
 ) -> SkillProfileResult:
     """Build one evidence-backed skill row per latest player."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     seasons = pd.read_parquet(player_seasons_path)
     bio = _optional_parquet(player_bio_path)
     candidates = _optional_parquet(candidate_universe_path)
     players = _latest_player_rows(seasons, season=season)
     players = _merge_bio(players, bio)
     players = _merge_candidate_context(players, candidates)
-    rows = [_profile_row(row) for row in players.to_dict(orient="records")]
+    rows = [
+        _profile_row(row, target_team=target_team, context_mode=str(context.get("context_mode") or "unknown"))
+        for row in players.to_dict(orient="records")
+    ]
     frame = pd.DataFrame(rows)
     frame = _add_percentiles(frame)
     frame["evidence"] = frame.apply(_evidence_json, axis=1)
@@ -168,9 +175,15 @@ def _merge_candidate_context(
     return merged
 
 
-def _profile_row(row: dict[str, Any]) -> dict[str, Any]:
+def _profile_row(
+    row: dict[str, Any],
+    *,
+    target_team: str,
+    context_mode: str,
+) -> dict[str, Any]:
     details = _dimension_details(row)
     out: dict[str, Any] = {
+        "target_team": target_team,
         "player_id": row.get("player_id"),
         "player_name": row.get("player_name"),
         "season": row.get("season"),
@@ -183,7 +196,10 @@ def _profile_row(row: dict[str, Any]) -> dict[str, Any]:
         "candidate_status_freshness": row.get("candidate_status_freshness"),
         "source": "player_seasons + player_bio + candidate_universe",
         "source_url": "",
-        "source_note": "NBA.com public stats plus derived candidate context",
+        "source_note": (
+            "NBA.com public stats plus derived candidate context; "
+            f"context_mode={context_mode}"
+        ),
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
     }

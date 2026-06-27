@@ -577,6 +577,8 @@ GAP_SPECS: tuple[GapSpec, ...] = (
 
 def build_gap_model(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     roster_world_path: str | Path = ROSTER_WORLD_PATH,
     contender_blueprints_path: str | Path = CONTENDER_BLUEPRINTS_PATH,
     team_fingerprints_path: str | Path = TEAM_FINGERPRINTS_PATH,
@@ -585,16 +587,25 @@ def build_gap_model(
     report_path: str | Path = SIXERS_GAP_MODEL_REPORT_PATH,
 ) -> GapModelResult:
     """Build the role-specific Sixers gap model."""
+    normalized_team = str(team or "PHI").upper()
+    context = context or {}
     roster_world = pd.read_parquet(roster_world_path)
     blueprints = pd.read_parquet(contender_blueprints_path)
     team_fingerprints = pd.read_parquet(team_fingerprints_path)
     current_gaps = _optional_parquet(current_gap_report_path)
 
-    phi_team = _latest_team_row(team_fingerprints, "PHI")
-    current_metrics = _current_metrics(roster_world, phi_team)
+    current_team = _latest_team_row(team_fingerprints, normalized_team)
+    current_metrics = _current_metrics(roster_world, current_team)
     percentile_lookup = _current_gap_percentiles(current_gaps)
     rows = [
-        _gap_row(spec, current_metrics, blueprints, percentile_lookup)
+        _gap_row(
+            spec,
+            current_metrics,
+            blueprints,
+            percentile_lookup,
+            team=normalized_team,
+            context_mode=str(context.get("context_mode") or "unknown"),
+        )
         for spec in GAP_SPECS
     ]
     frame = pd.DataFrame(rows)
@@ -777,6 +788,9 @@ def _gap_row(
     current_metrics: dict[str, float],
     blueprints: pd.DataFrame,
     percentile_lookup: dict[str, float],
+    *,
+    team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     blueprint = _blueprint_row(blueprints, spec.source_blueprint)
     current = float(current_metrics.get(spec.metric, 0.0))
@@ -793,6 +807,7 @@ def _gap_row(
         "lineup_contexts": list(spec.lineup_contexts),
     }
     return {
+        "team_abbr": team,
         "gap_id": spec.gap_id,
         "gap_name": spec.gap_name,
         "gap_category": spec.gap_category,
@@ -812,7 +827,10 @@ def _gap_row(
         "evidence": json.dumps(evidence, sort_keys=True),
         "assumptions": "; ".join(spec.assumptions),
         "source_url": "",
-        "source_note": "roster_world_phi + contender_blueprints + team_fingerprints",
+        "source_note": (
+            f"roster_world_{team.lower()} + contender_blueprints + "
+            f"team_fingerprints; context_mode={context_mode}"
+        ),
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
         "missing_data_flags": ";".join(missing) if missing else "none",
