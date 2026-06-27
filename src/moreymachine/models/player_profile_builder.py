@@ -42,6 +42,8 @@ class PlayerProfileBuildResult:
 
 def build_player_profiles(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     rankings_path: str | Path = CANDIDATE_FIT_RANKINGS_V2_PATH,
     explanations_path: str | Path = PLAYER_EXPLANATIONS_V2_PATH,
     salary_cards_path: str | Path = PLAYER_SALARY_CARDS_PATH,
@@ -55,6 +57,8 @@ def build_player_profiles(
     index_path: str | Path = PLAYER_PROFILES_INDEX_PATH,
 ) -> PlayerProfileBuildResult:
     """Build full player profiles from structured artifacts."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     rankings = pd.read_parquet(rankings_path)
     explanations = pd.read_parquet(explanations_path)
     salary = pd.read_parquet(salary_cards_path)
@@ -81,7 +85,14 @@ def build_player_profiles(
     claim_lookup = _group_by_player(claims)
     evidence_lookup = _group_by_player(evidence)
     rows = [
-        _profile_row(row, scenario_lookup, claim_lookup, evidence_lookup)
+        _profile_row(
+            row,
+            scenario_lookup,
+            claim_lookup,
+            evidence_lookup,
+            target_team=target_team,
+            context_mode=str(context.get("context_mode") or "unknown"),
+        )
         for row in merged.to_dict(orient="records")
     ]
     profiles = pd.DataFrame(rows)
@@ -143,6 +154,9 @@ def _profile_row(
     scenario_lookup: dict[int, list[dict[str, Any]]],
     claim_lookup: dict[int, list[dict[str, Any]]],
     evidence_lookup: dict[int, list[dict[str, Any]]],
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     player_id = int(row["player_id"])
     scenarios = scenario_lookup.get(player_id, [])
@@ -151,9 +165,10 @@ def _profile_row(
     scenario_by_type = {item["scenario_type"]: item for item in scenarios}
     salary_card = _salary_card(row)
     unsupported = [claim for claim in claims if not bool(claim.get("allowed"))]
-    profile_id = _profile_id(player_id, row.get("player_name"))
+    profile_id = row.get("player_profile_id") or _profile_id(player_id, row.get("player_name"))
     completeness = _completeness(row, claims, evidence, salary_card)
     return {
+        "target_team": target_team,
         "player_profile_id": profile_id,
         "player_id": player_id,
         "player_name": row.get("player_name"),
@@ -168,6 +183,10 @@ def _profile_row(
         "source_summary": row.get("source_summary"),
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
+        "score_breakdown_json": row.get("score_waterfall_data")
+        or _score_breakdown_json(row),
+        "help_areas_json": row.get("top_help_areas") or "[]",
+        "does_not_help_json": row.get("does_not_help") or "[]",
         "final_fit_score": row.get("final_recommendation_score"),
         "recommendation": row.get("recommendation"),
         "recommendation_confidence": row.get("recommendation_confidence"),
@@ -199,6 +218,7 @@ def _profile_row(
         "redundancy_flags": row.get("role_redundancy_flags"),
         "role_conflict_flags": row.get("contradiction_flags"),
         "salary_card_json": json.dumps(salary_card, sort_keys=True),
+        "salary_card_status": _salary_card_status(row, salary_card),
         "contract_status": row.get("contract_status"),
         "cap_hit_millions": row.get("cap_hit_millions"),
         "base_salary_millions": row.get("base_salary_millions"),
@@ -207,6 +227,9 @@ def _profile_row(
         "feasibility_tier": row.get("feasibility_tier"),
         "trade_cost_proxy": row.get("trade_cost_proxy"),
         "salary_matching_complexity": row.get("salary_matching_complexity"),
+        "opportunity_cost_score": row.get("opportunity_cost_score"),
+        "opportunity_cost_flags": row.get("opportunity_cost_flags"),
+        "opportunity_cost_summary": row.get("opportunity_cost_summary"),
         "shooting_summary": _skill_summary(row, "spacing"),
         "creation_summary": _skill_summary(row, "creation"),
         "defense_summary": _skill_summary(row, "defense"),
@@ -245,7 +268,7 @@ def _profile_row(
             [claim["claim_type"] for claim in unsupported]
         ),
         "data_sources": row.get("source_summary"),
-        "source_note": "full player profile builder",
+        "source_note": f"full player profile builder; context_mode={context_mode}",
         "missing_data_flags": row.get("missing_data_flags") or "none",
         "profile_completeness": completeness,
     }
@@ -264,6 +287,40 @@ def _salary_card(row: dict[str, Any]) -> dict[str, Any]:
         "manual_review_needed": bool(row.get("manual_review_needed")),
         "salary_warning_flags": row.get("salary_warning_flags"),
     }
+
+
+def _salary_card_status(row: dict[str, Any], salary_card: dict[str, Any]) -> str:
+    missing = str(row.get("missing_data_flags") or "")
+    if salary_card.get("cap_hit_millions") is None:
+        return "missing_salary_flagged"
+    if "base_salary_missing" in missing or "contract_aav_missing" in missing:
+        return "partial_salary_flagged"
+    return "salary_card_present"
+
+
+def _score_breakdown_json(row: dict[str, Any]) -> str:
+    labels = (
+        ("Need Match", "gap_match_score"),
+        ("Skill Evidence", "skill_evidence_score"),
+        ("Core Compatibility", "core_compatibility_score"),
+        ("Roster Slot Fit", "roster_slot_fit_score"),
+        ("Contender Blueprint Fit", "contender_blueprint_fit_score"),
+        ("Playoff Role", "playoff_role_score"),
+        ("Scenario Robustness", "scenario_robustness_score"),
+        ("Acquisition Feasibility", "acquisition_feasibility_score"),
+        ("Contract Value", "contract_value_score"),
+        ("Risk", "risk_score"),
+        ("Opportunity Cost", "opportunity_cost_score"),
+        ("Final", "final_recommendation_score"),
+    )
+    return json.dumps(
+        [
+            {"label": label, "value": row.get(column)}
+            for label, column in labels
+            if column in row
+        ],
+        sort_keys=True,
+    )
 
 
 def _profile_index(profiles: pd.DataFrame) -> pd.DataFrame:

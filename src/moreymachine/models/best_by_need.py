@@ -44,13 +44,24 @@ class BestByNeedResult:
 
 def build_best_by_need(
     *,
+    team: str = "PHI",
+    context: dict[str, Any] | None = None,
     rankings_path: str | Path = CANDIDATE_FIT_RANKINGS_V2_PATH,
     output_path: str | Path = BEST_BY_NEED_PATH,
 ) -> BestByNeedResult:
     """Build best-by-need ranking rows."""
+    target_team = str(team or "PHI").upper()
+    context = context or {}
     rankings = pd.read_parquet(rankings_path)
     rows = [
-        _need_row(need_id, keywords, rankings) for need_id, keywords in NEEDS.items()
+        _need_row(
+            need_id,
+            keywords,
+            rankings,
+            target_team=target_team,
+            context_mode=str(context.get("context_mode") or "unknown"),
+        )
+        for need_id, keywords in NEEDS.items()
     ]
     frame = pd.DataFrame(rows)
     output = Path(output_path)
@@ -69,7 +80,12 @@ def build_best_by_need(
 
 
 def _need_row(
-    need_id: str, keywords: tuple[str, ...], rankings: pd.DataFrame
+    need_id: str,
+    keywords: tuple[str, ...],
+    rankings: pd.DataFrame,
+    *,
+    target_team: str,
+    context_mode: str,
 ) -> dict[str, Any]:
     mask = (
         rankings["gaps_addressed"]
@@ -77,7 +93,18 @@ def _need_row(
         .str.lower()
         .apply(lambda text: any(keyword in text for keyword in keywords))
     )
-    pool = rankings[mask].sort_values("final_recommendation_score", ascending=False)
+    pool = rankings[mask].copy()
+    pool = pool[
+        ~pool["recommendation"].isin(
+            [
+                "Avoid",
+                "Unrealistic / Unavailable",
+                "Manual Review Required",
+                "Missing Data / Cannot Evaluate",
+                "Contract Blocked",
+            ]
+        )
+    ].sort_values("final_recommendation_score", ascending=False)
     realistic = pool[
         pool["board_type"].isin(["realistic", "free_agent", "trade_target"])
     ]
@@ -86,6 +113,7 @@ def _need_row(
     low_cost = pool[_low_cost_mask(pool)]
     high_upside = pool[pool["recommendation"].isin(["Strong Fit If Affordable"])]
     return {
+        "target_team": target_team,
         "need_id": need_id,
         "need_name": need_id.replace("_", " ").title(),
         "top_players": json.dumps(_players(pool)),
@@ -96,6 +124,14 @@ def _need_row(
         "high_upside_top_players": json.dumps(_players(high_upside)),
         "why_these_players_fit": _why_fit(pool, need_id),
         "what_to_watch_out_for": _watch(pool),
+        "evidence": json.dumps(
+            {
+                "keywords": list(keywords),
+                "matching_rows": len(pool),
+                "context_mode": context_mode,
+            },
+            sort_keys=True,
+        ),
         "source": "candidate_fit_rankings_v2",
         "pulled_at": datetime.now(UTC).date().isoformat(),
         "data_mode": "derived",
@@ -106,14 +142,18 @@ def _need_row(
 def _players(frame: pd.DataFrame, limit: int = 10) -> list[dict[str, Any]]:
     cols = [
         "player_id",
+        "player_profile_id",
         "player_name",
         "recommendation",
         "final_recommendation_score",
         "primary_roster_slot",
         "acquisition_path",
         "board_type",
+        "opportunity_cost_score",
+        "missing_data_flags",
     ]
-    return frame.head(limit)[cols].to_dict(orient="records")
+    available = [col for col in cols if col in frame.columns]
+    return frame.head(limit)[available].to_dict(orient="records")
 
 
 def _low_cost_mask(frame: pd.DataFrame) -> pd.Series:
