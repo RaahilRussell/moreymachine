@@ -14,6 +14,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from moreymachine.app import ui
 from moreymachine.app.data_sources import REGISTRY_BY_KEY, data_source_table
 from moreymachine.app.loaders import (
     get_missing_artifact_message,
@@ -48,33 +49,6 @@ from moreymachine.utils.paths import (
     TRANSACTIONS_PATH,
 )
 from moreymachine.utils.real_data import is_demo_path
-
-PAGES = (
-    "GM Executive Summary",
-    "Product Summary",
-    "Team Selector / Analyze Any Team",
-    "Data Sources / Freshness",
-    "Current Team Roster World",
-    "Team Level",
-    "Contender Blueprint Explorer",
-    "Benchmark Path",
-    "Gap Priority Model",
-    "Move Recommendations",
-    "Target Board v2",
-    "Player Detail v2",
-    "Player Compare",
-    "Move Compare",
-    "Best By Need",
-    "Player Skill Profiles",
-    "Player-to-Player Compatibility",
-    "Roster Slot Simulation",
-    "Candidate Scenarios",
-    "Transaction Review",
-    "Manual Review Queue",
-    "Reasoning Diagnostics",
-    "Backtest Proof",
-    "Limitations / Missing Data",
-)
 
 ROSTER_WORLD_PATH = PROCESSED_DATA_DIR / "roster_world_phi.parquet"
 CONTENDER_BLUEPRINTS_PATH = FEATURES_DATA_DIR / "contender_blueprints.parquet"
@@ -124,39 +98,75 @@ BOARD_COLUMNS = (
 
 
 def main() -> None:
-    """Run the Streamlit app."""
-    st.set_page_config(page_title="MoreyMachine", page_icon="MM", layout="wide")
-    st.sidebar.title("MoreyMachine")
-    st.sidebar.caption("Basketball-ops decision product.")
+    """Run the Streamlit app.
+
+    Navigation follows the GM's actual workflow: read the team, decide on moves,
+    research players, run front-office ops, then check the model's own trust
+    record. The sidebar carries the team selector and live artifact status.
+    """
+    st.set_page_config(
+        page_title="MoreyMachine — GM War Room",
+        page_icon="🏀",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+    ui.inject_theme()
+    _sidebar_brand()
     _sidebar_team_controls()
-    page = st.sidebar.radio("Page", PAGES, key="main_page_radio")
+
+    nav = st.navigation(
+        {
+            "War Room": [
+                st.Page(render_war_room, title="Command Center", icon=":material/dashboard:", default=True),
+            ],
+            "Team Read": [
+                st.Page(render_roster_lab, title="Roster & Depth Chart", icon=":material/groups:"),
+                st.Page(render_team_level, title="Team Level", icon=":material/speed:"),
+                st.Page(render_benchmark_path, title="Benchmark Path", icon=":material/timeline:"),
+                st.Page(render_gap_model, title="Gap Priority Model", icon=":material/crisis_alert:"),
+                st.Page(render_blueprints, title="Contender Blueprints", icon=":material/architecture:"),
+            ],
+            "Decisions": [
+                st.Page(render_move_recommendations, title="Move Recommendations", icon=":material/swap_horiz:"),
+                st.Page(render_target_board, title="Target Board", icon=":material/list_alt:"),
+                st.Page(render_best_by_need, title="Best By Need", icon=":material/search:"),
+                st.Page(render_move_compare, title="Move Compare", icon=":material/compare_arrows:"),
+            ],
+            "Player Research": [
+                st.Page(render_player_detail, title="Player Detail", icon=":material/person:"),
+                st.Page(render_player_compare, title="Player Compare", icon=":material/compare:"),
+                st.Page(render_skill_profiles, title="Skill Profiles", icon=":material/insights:"),
+                st.Page(render_compatibility, title="Core Compatibility", icon=":material/hub:"),
+                st.Page(render_roster_simulation, title="Roster Slot Simulation", icon=":material/dynamic_feed:"),
+                st.Page(render_scenarios, title="Candidate Scenarios", icon=":material/alt_route:"),
+            ],
+            "Front Office Ops": [
+                st.Page(render_transaction_review, title="Transaction Review", icon=":material/receipt_long:"),
+                st.Page(render_manual_review_queue, title="Manual Review Queue", icon=":material/flag:"),
+                st.Page(render_data_sources, title="Data Sources & Freshness", icon=":material/database:"),
+                st.Page(render_team_selector, title="Analyze Any Team", icon=":material/groups_2:"),
+            ],
+            "Trust & Method": [
+                st.Page(render_reasoning_diagnostics, title="Reasoning Diagnostics", icon=":material/fact_check:"),
+                st.Page(render_backtest, title="Backtest Proof", icon=":material/history:"),
+                st.Page(render_limitations, title="Limitations", icon=":material/warning:"),
+                st.Page(render_product_summary, title="How It Reasons", icon=":material/menu_book:"),
+            ],
+        }
+    )
     _sidebar_status()
-    {
-        "GM Executive Summary": render_gm_executive_summary,
-        "Product Summary": render_product_summary,
-        "Team Selector / Analyze Any Team": render_team_selector,
-        "Data Sources / Freshness": render_data_sources,
-        "Current Team Roster World": render_roster_world,
-        "Team Level": render_team_level,
-        "Contender Blueprint Explorer": render_blueprints,
-        "Benchmark Path": render_benchmark_path,
-        "Gap Priority Model": render_gap_model,
-        "Move Recommendations": render_move_recommendations,
-        "Target Board v2": render_target_board,
-        "Player Detail v2": render_player_detail,
-        "Player Compare": render_player_compare,
-        "Move Compare": render_move_compare,
-        "Best By Need": render_best_by_need,
-        "Player Skill Profiles": render_skill_profiles,
-        "Player-to-Player Compatibility": render_compatibility,
-        "Roster Slot Simulation": render_roster_simulation,
-        "Candidate Scenarios": render_scenarios,
-        "Transaction Review": render_transaction_review,
-        "Manual Review Queue": render_manual_review_queue,
-        "Reasoning Diagnostics": render_reasoning_diagnostics,
-        "Backtest Proof": render_backtest,
-        "Limitations / Missing Data": render_limitations,
-    }[page]()
+    nav.run()
+
+
+def _sidebar_brand() -> None:
+    """Render the product mark at the top of the nav rail."""
+    st.sidebar.markdown(
+        '<div style="font-family:Archivo,sans-serif;font-weight:800;font-size:1.3rem;'
+        'letter-spacing:-0.01em;color:#fff;line-height:1;">MOREY<span style="color:#C9872E;">MACHINE</span></div>'
+        '<div style="font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;'
+        'color:#8FA4BC;margin:4px 0 6px;">GM War Room</div>',
+        unsafe_allow_html=True,
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -276,40 +286,134 @@ def _safe_widget_key(text: str) -> str:
     )
 
 
-def render_gm_executive_summary() -> None:
-    """Render summary-first GM operating-system home page."""
+def render_war_room() -> None:
+    """Render the command-center home: status, do-first moves, gaps, benchmark."""
     team = selected_team()
-    st.title(f"{team} GM Executive Summary")
     team_level = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
     action_cards = team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or []
     narrative = team_text("narratives/gm_executive_summary.md")
+    rankings = rankings_frame()
+
     if not team_level and not action_cards:
+        st.title(f"{team_name(team)} — Command Center")
         st.warning(get_missing_artifact_message(team))
         st.code(_run_command(team), language="bash")
         return
-    cols = st.columns(4)
-    cols[0].metric("Team", team_name(team))
-    cols[1].metric("Level", team_level.get("team_level", "Missing"))
-    cols[2].metric("Level score", team_level.get("level_score", "Missing"))
-    cols[3].metric("Closest archetype", team_level.get("closest_archetype", "Missing"))
-    if narrative:
-        st.markdown(narrative)
-    st.subheader("Action Cards")
-    card_frame = pd.DataFrame(action_cards)
-    if card_frame.empty:
-        st.info("No action cards found.")
-    else:
-        card_cols = [
-            "action_category",
-            "action_title",
-            "recommendation",
-            "priority",
-            "confidence",
-            "why_do_this",
-            "why_not_do_this",
-            "missing_data_flags",
+
+    ui.status_band(
+        team_name(team),
+        level=team_level.get("team_level", "Unknown"),
+        score=team_level.get("level_score", "—"),
+        percentile=team_level.get("contender_percentile", "—"),
+        archetype=team_level.get("closest_archetype", "—"),
+        season=team_level.get("season", "—"),
+    )
+
+    strong_fits = (
+        int((rankings["recommendation"] == "Strong Fit If Affordable").sum())
+        if not rankings.empty
+        else 0
+    )
+    manual = (
+        int(rankings.get("manual_review_required", pd.Series(dtype=bool)).sum())
+        if not rankings.empty
+        else 0
+    )
+    high_priority_moves = sum(1 for c in action_cards if str(c.get("priority", "")).lower() == "high")
+    ui.scoreboard(
+        [
+            {"label": "Team Level", "value": team_level.get("team_level", "—"), "sub": f"score {team_level.get('level_score', '—')}"},
+            {"label": "Contender %ile", "value": team_level.get("contender_percentile", "—"), "accent": "amber", "sub": "vs league field"},
+            {"label": "Strong Fits", "value": strong_fits, "accent": "green", "sub": "if affordable"},
+            {"label": "Priority Moves", "value": high_priority_moves, "accent": "amber", "sub": "high priority cards"},
+            {"label": "Manual Review", "value": manual, "accent": "red" if manual else "slate", "sub": "needs verification"},
         ]
-        st.dataframe(_cols(card_frame, card_cols), use_container_width=True, hide_index=True)
+    )
+
+    left, right = st.columns([3, 2], gap="large")
+
+    with left:
+        ui.eyebrow("Do First — Top Moves on the Board")
+        do_first = [
+            c
+            for c in action_cards
+            if c.get("action_category")
+            in ("best_overall_action", "best_realistic_free_agent", "best_realistic_trade")
+        ] or action_cards[:3]
+        for card in do_first[:3]:
+            ui.decision_card(card)
+
+        avoid = next((c for c in action_cards if c.get("action_category") == "top_avoid_move"), None)
+        if avoid:
+            ui.eyebrow("Do Not Do This")
+            ui.decision_card(avoid)
+
+    with right:
+        ui.eyebrow("Biggest Roster Gaps")
+        gaps = team_frame(
+            "features/gap_model.parquet", GAP_MODEL_PATH, "Gap priority model", _run_command(team)
+        )
+        if not gaps.empty and "severity" in gaps.columns:
+            top_gaps = gaps.copy()
+            top_gaps["severity_num"] = pd.to_numeric(top_gaps["severity"], errors="coerce").fillna(0)
+            top_gaps = top_gaps.sort_values("severity_num", ascending=False).head(6)
+            max_sev = max(float(top_gaps["severity_num"].max()), 1.0)
+            for _, row in top_gaps.iterrows():
+                sev = float(row["severity_num"])
+                ui.stat_bar(
+                    str(row.get("gap_name", "Gap")),
+                    sev,
+                    max_value=max_sev,
+                    kind=ui.severity_kind(sev, hi=max_sev * 0.66, mid=max_sev * 0.33),
+                    right=f"{sev:.0f}",
+                )
+        else:
+            st.info("No gap model loaded.")
+
+        ui.eyebrow("Closest Benchmark")
+        comparison = team_frame(
+            "reports/team_comparison.parquet",
+            REPORTS_DATA_DIR / "team_comparison.parquet",
+            "Team comparison",
+            _run_command(team),
+        )
+        if not comparison.empty:
+            _benchmark_snapshot(comparison, team_level.get("closest_archetype"))
+
+    if narrative:
+        ui.eyebrow("GM Read")
+        ui.note(narrative)
+
+
+def _benchmark_snapshot(comparison: pd.DataFrame, closest: Any) -> None:
+    """Render gap bars for the closest benchmark on the home page."""
+    row = None
+    if closest:
+        match = comparison[comparison["benchmark"].astype(str) == str(closest)]
+        if not match.empty:
+            row = match.iloc[0]
+    if row is None:
+        row = comparison.iloc[0]
+    st.caption(f"Gap to **{row.get('benchmark', 'benchmark')}** (higher bar = further away)")
+    dims = [
+        ("Net rating", "net_rating_gap"),
+        ("Offense", "offense_gap"),
+        ("Defense", "defense_gap"),
+        ("Shooting", "shooting_gap"),
+        ("Two-way", "two_way_gap"),
+    ]
+    values = [abs(float(row[col])) for _, col in dims if col in row and pd.notna(row[col])]
+    max_gap = max(values + [1.0])
+    for label, col in dims:
+        if col in row and pd.notna(row[col]):
+            gap = abs(float(row[col]))
+            ui.stat_bar(
+                label,
+                gap,
+                max_value=max_gap,
+                kind=ui.severity_kind(gap, hi=max_gap * 0.66, mid=max_gap * 0.33),
+                right=f"{float(row[col]):+.1f}",
+            )
 
 
 def render_team_selector() -> None:
@@ -327,30 +431,48 @@ def render_team_selector() -> None:
 def render_team_level() -> None:
     """Render team-level diagnosis."""
     team = selected_team()
-    st.title("Team Level")
+    st.title(f"{team_name(team)} — Team Level")
     payload = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
     if not payload:
         st.warning(get_missing_artifact_message(team))
         st.code(_run_command(team), language="bash")
         return
-    cols = st.columns(3)
-    cols[0].metric("Current level", payload.get("team_level"))
-    cols[1].metric("Level score", payload.get("level_score"))
-    cols[2].metric("Contender percentile", payload.get("contender_percentile"))
-    st.subheader("Why This Level")
-    st.write(payload.get("why_this_level", []))
-    st.subheader("What The Next Level Requires")
-    st.write(payload.get("what_level_requires_next", []))
-    st.subheader("Evidence")
+    ui.scoreboard(
+        [
+            {"label": "Current Level", "value": payload.get("team_level", "—")},
+            {"label": "Level Score", "value": payload.get("level_score", "—"), "accent": "amber"},
+            {"label": "Contender %ile", "value": payload.get("contender_percentile", "—"), "accent": "amber"},
+            {"label": "Confidence", "value": str(payload.get("confidence", "—")).title(), "accent": "slate"},
+        ]
+    )
+    left, right = st.columns(2, gap="large")
+    with left:
+        ui.eyebrow("Strengths")
+        for item in payload.get("main_strengths", []) or ["No clear above-median strength signal."]:
+            st.markdown(f"- {item}")
+        ui.eyebrow("Why This Level")
+        for item in _json_list(payload.get("why_this_level")):
+            st.markdown(f"- {item}")
+    with right:
+        ui.eyebrow("Weaknesses")
+        for item in payload.get("main_weaknesses", []) or ["—"]:
+            st.markdown(f"- {item}")
+        ui.eyebrow("What The Next Level Requires")
+        for item in _json_list(payload.get("what_level_requires_next")):
+            st.markdown(f"- {item}")
+    ui.eyebrow("Evidence")
     st.write(payload.get("evidence", []))
-    st.subheader("Missing Data Flags")
-    st.write(payload.get("missing_data_flags", []))
+    flags = payload.get("missing_data_flags", [])
+    if flags:
+        ui.eyebrow("Missing Data Flags")
+        st.write(flags)
 
 
 def render_benchmark_path() -> None:
     """Render benchmark comparison path."""
     team = selected_team()
-    st.title("Benchmark Path")
+    st.title(f"{team_name(team)} — Benchmark Path")
+    st.caption("How far the team sits from contender reference groups, dimension by dimension.")
     level = team_json("reports/team_level.json", REPORTS_DATA_DIR / "team_level.json") or {}
     comparison = team_frame(
         "reports/team_comparison.parquet",
@@ -358,60 +480,70 @@ def render_benchmark_path() -> None:
         "Team comparison",
         _run_command(team),
     )
-    if level:
-        st.metric("Closest archetype", level.get("closest_archetype", "Missing"))
-        st.write(level.get("closest_benchmark_teams", []))
     if comparison.empty:
         return
     benchmarks = comparison["benchmark"].dropna().astype(str).tolist()
     benchmark_path_key = "benchmark_path_select"
     sidebar_benchmark = st.session_state.get(SELECTED_BENCHMARK_KEY)
-    default_benchmark = sidebar_benchmark if sidebar_benchmark in benchmarks else benchmarks[0]
+    closest = str(level.get("closest_archetype")) if level else None
+    default_benchmark = (
+        sidebar_benchmark
+        if sidebar_benchmark in benchmarks
+        else (closest if closest in benchmarks else benchmarks[0])
+    )
     if st.session_state.get(benchmark_path_key) not in benchmarks:
         st.session_state[benchmark_path_key] = default_benchmark
-    selected = st.selectbox(
-        "Benchmark",
-        benchmarks,
-        key=benchmark_path_key,
+    selected = st.selectbox("Benchmark", benchmarks, key=benchmark_path_key)
+    row = comparison[comparison["benchmark"].astype(str) == selected].iloc[0]
+
+    ui.scoreboard(
+        [
+            {"label": "Benchmark", "value": selected},
+            {"label": "Overall Gap", "value": _fmt_num(row.get("overall_gap_score")), "accent": "amber"},
+            {"label": "Net Rating Gap", "value": _fmt_num(row.get("net_rating_gap")), "accent": "red"},
+            {"label": "Confidence", "value": str(row.get("confidence", "—")).title(), "accent": "slate"},
+        ]
     )
-    row = comparison[comparison["benchmark"].astype(str) == selected]
-    st.dataframe(row.T, use_container_width=True)
-    st.subheader("All Benchmarks")
+    ui.eyebrow("Distance by Dimension")
+    _benchmark_snapshot(comparison, selected)
+    if row.get("why_it_matters"):
+        ui.note(f"<p><b>Why it matters.</b> {ui._h(row.get('why_it_matters'))}</p>")
+    ui.eyebrow("All Benchmarks")
     st.dataframe(comparison, use_container_width=True, hide_index=True)
+
+
+def _fmt_num(value: Any) -> str:
+    try:
+        return f"{float(value):.1f}"
+    except (TypeError, ValueError):
+        return "—"
 
 
 def render_move_recommendations() -> None:
     """Render action-card-first move recommendations."""
     team = selected_team()
-    st.title("Move Recommendations")
-    cards = pd.DataFrame(team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or [])
+    st.title(f"{team_name(team)} — Move Recommendations")
+    st.caption("Each card is a decision, not a ranking row: what to do, why, and what would make it wrong.")
+    cards = team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or []
     moves = team_frame(
         "reports/move_recommendations.parquet",
         REPORTS_DATA_DIR / "move_recommendations.parquet",
         "Move recommendations",
         _run_command(team),
     )
-    if not cards.empty:
-        st.subheader("GM Action Cards")
-        st.dataframe(
-            _cols(
-                cards,
-                [
-                    "action_category",
-                    "action_title",
-                    "recommendation",
-                    "why_do_this",
-                    "why_not_do_this",
-                    "confidence",
-                    "missing_data_flags",
-                ],
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
+    if cards:
+        ui.eyebrow("GM Action Cards")
+        positive = [c for c in cards if c.get("action_category") != "top_avoid_move"]
+        avoid = [c for c in cards if c.get("action_category") == "top_avoid_move"]
+        columns = st.columns(2, gap="medium")
+        for i, card in enumerate(positive):
+            with columns[i % 2]:
+                ui.decision_card(card)
+        for card in avoid:
+            ui.decision_card(card)
     if moves.empty:
         return
-    st.subheader("Move Rows")
+    ui.eyebrow("Move Rows")
     action_types = sorted(moves["action_type"].dropna().astype(str).unique())
     selected_types = st.multiselect(
         "Action type",
@@ -475,8 +607,7 @@ def render_move_compare() -> None:
 
 def render_manual_review_queue() -> None:
     """Render manual review queue from rankings and action cards."""
-    team = selected_team()
-    st.title("Manual Review Queue")
+    st.title(f"{team_name(selected_team())} — Manual Review Queue")
     rankings = rankings_frame()
     cards = pd.DataFrame(team_json("reports/action_cards.json", REPORTS_DATA_DIR / "action_cards.json") or [])
     if not cards.empty:
@@ -594,10 +725,32 @@ def render_data_sources() -> None:
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
-def render_roster_world() -> None:
-    """Render current Sixers roster world."""
+SLOT_LABELS = {
+    "starting_center": "Starting Center",
+    "backup_center": "Backup Center",
+    "secondary_creator": "Guards / Creators",
+    "movement_shooter": "Wings / Shooters",
+    "defensive_forward": "Forwards / Defense",
+    "regular_season_depth": "Depth / Development",
+}
+SLOT_ORDER = [
+    "secondary_creator",
+    "movement_shooter",
+    "defensive_forward",
+    "starting_center",
+    "backup_center",
+    "regular_season_depth",
+]
+
+
+def render_roster_lab() -> None:
+    """Render the roster: depth chart, contention window, and composition.
+
+    This is the planning surface a GM opens first — who is on the team, where
+    they slot, and how the contention window looks against the core's ages.
+    """
     team = selected_team()
-    st.title("Current Team Roster World")
+    st.title(f"{team_name(team)} — Roster & Depth Chart")
     roster = team_frame(
         "features/roster_world.parquet",
         ROSTER_WORLD_PATH,
@@ -606,11 +759,44 @@ def render_roster_world() -> None:
     )
     if roster.empty:
         return
+
+    work = roster.copy()
+    work["age_num"] = pd.to_numeric(work.get("age"), errors="coerce")
+    work["min_num"] = pd.to_numeric(work.get("current_minutes"), errors="coerce").fillna(0)
+
+    # --- Composition KPIs ---
+    avg_age = work["age_num"].mean()
+    weighted_age = (
+        (work["age_num"] * work["min_num"]).sum() / work["min_num"].sum()
+        if work["min_num"].sum()
+        else avg_age
+    )
+    over_33 = int((work["age_num"] >= 33).sum())
+    rotation = int((work["min_num"] >= 1000).sum())
+    ui.scoreboard(
+        [
+            {"label": "Players", "value": len(work), "sub": "on roster world"},
+            {"label": "Minutes-Weighted Age", "value": f"{weighted_age:.1f}" if pd.notna(weighted_age) else "—", "accent": "amber", "sub": "true team age"},
+            {"label": "Rotation Bodies", "value": rotation, "accent": "green", "sub": "≥1000 min"},
+            {"label": "Age 33+", "value": over_33, "accent": "red" if over_33 >= 3 else "slate", "sub": "window risk"},
+        ]
+    )
+
+    # --- Contention window ---
+    ui.eyebrow("Contention Window")
+    _render_contention_window(work)
+
+    # --- Depth chart whiteboard ---
+    ui.eyebrow("Depth Chart by Role")
+    _render_depth_chart(work)
+
+    # --- Full roster detail ---
+    ui.eyebrow("Roster Detail")
     cols = [
         "player_name",
         "position",
+        "age",
         "current_role",
-        "locked_role_status",
         "roster_slot",
         "usage_burden",
         "shooting_gravity",
@@ -618,12 +804,95 @@ def render_roster_world() -> None:
         "creation_role",
         "replaceability",
         "role_confidence",
-        "evidence",
-        "assumptions",
         "missing_data_flags",
     ]
     st.dataframe(_cols(roster, cols), use_container_width=True, hide_index=True)
-    st.markdown(text_artifact(REPORTS_DATA_DIR / "roster_world_phi.md"))
+    narrative = text_artifact(REPORTS_DATA_DIR / "roster_world_phi.md")
+    if narrative:
+        with st.expander("Roster world narrative"):
+            st.markdown(narrative)
+
+
+def _select_core(work: pd.DataFrame) -> pd.DataFrame:
+    """Identify the cornerstone players, not just whoever logs the most minutes.
+
+    The roster pipeline marks franchise cornerstones with
+    ``locked_role_status == "locked_core_role"`` (e.g. Embiid, Maxey, George),
+    so those come first. If too few are flagged, fall back to the hardest
+    players to replace, then to minutes load as a last resort.
+    """
+    usage_rank = {"primary_high": 3, "secondary": 2, "moderate": 1, "low": 0}
+    ranked = work.copy()
+    ranked["usage_rank"] = ranked.get("usage_burden", "").map(usage_rank).fillna(0)
+
+    locked = ranked[ranked.get("locked_role_status", "") == "locked_core_role"]
+    if len(locked) >= 2:
+        core = locked
+    else:
+        irreplaceable = ranked[
+            ranked.get("replaceability", "").isin(["not_replaceable", "hard_to_replace"])
+        ]
+        core = pd.concat([locked, irreplaceable]).drop_duplicates(subset="player_name")
+        if len(core) < 2:
+            core = ranked
+    return core.sort_values(["usage_rank", "min_num"], ascending=False).head(4)
+
+
+def _render_contention_window(work: pd.DataFrame) -> None:
+    """Show the core's ages and a plain-language window read."""
+    core = _select_core(work)
+    cards = []
+    for _, row in core.iterrows():
+        age = row["age_num"]
+        accent = "red" if pd.notna(age) and age >= 33 else ("amber" if pd.notna(age) and age >= 30 else "green")
+        cards.append(
+            {
+                "label": "Cornerstone",
+                "value": str(row.get("player_name")),
+                "sub": f"age {int(age)} · {str(row.get('roster_slot','')).replace('_',' ')}" if pd.notna(age) else "age ?",
+                "accent": accent,
+            }
+        )
+    ui.scoreboard(cards)
+    core_ages = core["age_num"].dropna()
+    if not core_ages.empty:
+        oldest_core = core_ages.max()
+        core_avg = core_ages.mean()
+        if oldest_core >= 35 or core_avg >= 31:
+            verdict = (
+                "Win-now window. A cornerstone is past his prime — value certainty and "
+                "playoff readiness over long-term upside."
+            )
+        elif core_avg >= 28:
+            verdict = (
+                "Compressed window. Lean toward ready-now role players over multi-year "
+                "development bets."
+            )
+        else:
+            verdict = "Open window. There is room to add youth or take a longer view on fit."
+        ui.note(f"<p><b>Window read.</b> {verdict} <span style='color:#5B6B7B;'>"
+                f"Core avg age {core_avg:.1f}, oldest {int(oldest_core)}.</span></p>")
+
+
+def _render_depth_chart(work: pd.DataFrame) -> None:
+    """Render a whiteboard-style depth chart grouped by roster slot."""
+    slots_present = [s for s in SLOT_ORDER if s in set(work["roster_slot"].dropna())]
+    extras = [s for s in work["roster_slot"].dropna().unique() if s not in SLOT_ORDER]
+    slots_present += list(extras)
+    columns = st.columns(min(3, max(1, len(slots_present))))
+    for i, slot in enumerate(slots_present):
+        group = work[work["roster_slot"] == slot].sort_values("min_num", ascending=False)
+        players = [
+            {
+                "name": r.get("player_name"),
+                "age": r.get("age_num"),
+                "mins": f"{int(r['min_num'])} min" if pd.notna(r["min_num"]) else "",
+            }
+            for _, r in group.iterrows()
+        ]
+        label = SLOT_LABELS.get(slot, str(slot).replace("_", " ").title())
+        with columns[i % len(columns)]:
+            ui.render(ui.depth_slot(label, len(players), players))
 
 
 def render_blueprints() -> None:
@@ -656,7 +925,8 @@ def render_blueprints() -> None:
 def render_gap_model() -> None:
     """Render Sixers gap model."""
     team = selected_team()
-    st.title("Gap Priority Model")
+    st.title(f"{team_name(team)} — Gap Priority Model")
+    st.caption("Where the roster trails contender-level reference values, ranked by severity.")
     gaps = team_frame(
         "features/gap_model.parquet",
         GAP_MODEL_PATH,
@@ -673,8 +943,25 @@ def render_gap_model() -> None:
     filtered = gaps
     if category:
         filtered = filtered[filtered["gap_category"].isin(category)]
+
+    ranked = filtered.copy()
+    ranked["severity_num"] = pd.to_numeric(ranked.get("severity"), errors="coerce").fillna(0)
+    ranked = ranked.sort_values("severity_num", ascending=False)
+    max_sev = max(float(ranked["severity_num"].max()) if not ranked.empty else 1.0, 1.0)
+
+    ui.eyebrow("Severity Ranking")
+    for _, row in ranked.iterrows():
+        sev = float(row["severity_num"])
+        ui.stat_bar(
+            f"{row.get('gap_name', 'Gap')}  ·  {str(row.get('gap_category', '')).replace('_', ' ')}",
+            sev,
+            max_value=max_sev,
+            kind=ui.severity_kind(sev, hi=max_sev * 0.66, mid=max_sev * 0.33),
+            right=f"sev {sev:.0f}",
+        )
+
+    ui.eyebrow("Gap Detail")
     cols = [
-        "gap_id",
         "gap_name",
         "gap_category",
         "severity",
@@ -685,11 +972,13 @@ def render_gap_model() -> None:
         "playoff_failure_mode",
         "what_fixes_it",
         "what_does_not_fix_it",
-        "evidence",
         "missing_data_flags",
     ]
-    st.dataframe(_cols(filtered, cols), use_container_width=True, hide_index=True)
-    st.markdown(text_artifact(REPORTS_DATA_DIR / "sixers_gap_model.md"))
+    st.dataframe(_cols(ranked, cols), use_container_width=True, hide_index=True)
+    narrative = text_artifact(REPORTS_DATA_DIR / "sixers_gap_model.md")
+    if narrative:
+        with st.expander("Gap model narrative"):
+            st.markdown(narrative)
 
 
 def render_skill_profiles() -> None:
@@ -1166,11 +1455,35 @@ def render_board_table(board: pd.DataFrame, *, include_profile_link: bool) -> No
 
 def render_profile(profile: dict[str, Any]) -> None:
     """Render a full player profile from one profile row."""
-    header_cols = st.columns([2, 1, 1, 1])
-    header_cols[0].subheader(str(profile.get("player_name")))
-    header_cols[1].metric("Fit score", profile.get("final_fit_score"))
-    header_cols[2].metric("Recommendation", str(profile.get("recommendation")))
-    header_cols[3].metric("Confidence", str(profile.get("recommendation_confidence")))
+    name = str(profile.get("player_name"))
+    meta_bits = [
+        str(profile.get("position", "")),
+        f"age {int(profile['age'])}" if str(profile.get("age", "")).replace(".", "").isdigit() else "",
+        str(profile.get("current_team", "")),
+        str(profile.get("acquisition_path", "")).replace("_", " "),
+    ]
+    meta = " · ".join([bit for bit in meta_bits if bit])
+    chips = ui.tier_chip(profile.get("recommendation"))
+    if profile.get("recommendation_confidence"):
+        chips += ui.chip(
+            f"{profile.get('recommendation_confidence')} confidence",
+            ui.confidence_kind(profile.get("recommendation_confidence")),
+        )
+    if profile.get("overall_tier"):
+        chips += ui.chip(str(profile.get("overall_tier")), "neutral")
+    ui.render(
+        f'<div class="mm-band"><div><div class="team">{ui._h(name)}</div>'
+        f'<div class="meta">{ui._h(meta)}</div></div>'
+        f'<div class="band-right">{chips}</div></div>'
+    )
+    ui.scoreboard(
+        [
+            {"label": "Fit Score", "value": _fmt_num(profile.get("final_fit_score"))},
+            {"label": "Roster Slot", "value": str(profile.get("primary_roster_slot", "—")).replace("_", " "), "accent": "slate"},
+            {"label": "Feasibility", "value": _fmt_num(profile.get("acquisition_feasibility_score")), "accent": "amber"},
+            {"label": "Scenario Robustness", "value": _fmt_num(profile.get("scenario_robustness_score")), "accent": "green"},
+        ]
+    )
     if profile.get("manual_review_required"):
         st.error("Manual review required before treating this as a recommendation.")
 
